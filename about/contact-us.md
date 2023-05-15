@@ -16,4 +16,4 @@ for i in range
 ___
 
 [link](https://www.example.com/my%20great%20page)
-<a href="google">lin</a>
+> [legend](https://raw.githubusercontent.com/linx-zhang/blog-img/main/category/1ab22a9abdc7c26061c05ef9697f817d.jpg)
