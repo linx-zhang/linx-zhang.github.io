@@ -1,4 +1,9 @@
+# Generate has timestamp id
+- The timestamp can be restored by id
+- Does not expose timestamp
+- The probability of duplicate id generated per second is `1 / (1<<rand_bit_num)` 
 
+```golang
 import (
 	"crypto/rand"
 	"fmt"
@@ -7,7 +12,9 @@ import (
 )
 
 const (
+	// Set any milliseconds timestamp 
 	time_const   = 1657009310393
+	// Random number bits
 	rand_bit_num = 23
 )
 
@@ -30,3 +37,4 @@ func main() {
 	fmt.Println(bigMath.Add(rsh_id, big.NewInt(time_const)))
 
 }
+```
