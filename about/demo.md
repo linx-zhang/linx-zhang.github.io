@@ -18,6 +18,5 @@ ___
 > [legend](https://raw.githubusercontent.com/linx-zhang/blog-img/main/category/1ab22a9abdc7c26061c05ef9697f817d.jpg)
 
 ![avatar](https://raw.githubusercontent.com/linx-zhang/blog-img/main/category/1ab22a9abdc7c26061c05ef9697f817d.jpg)
-![Alt text](https://raw.githubusercontent.com/linx-zhang/blog-img/main/category/1ab22a9abdc7c26061c05ef9697f817d.jpg)
 
 [cc](../README.md)

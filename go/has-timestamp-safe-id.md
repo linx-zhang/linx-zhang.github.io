@@ -1,4 +1,5 @@
 # Generate has timestamp id
+
 - The timestamp can be restored by id
 - Does not expose timestamp
 - The probability of duplicate id generated per second is `1 / (1<<rand_bit_num)` 
@@ -30,7 +31,7 @@ func MakeId() *big.Int {
 
 func main() {
 	id := MakeId()
-	fmt.Println("Db saved ID :", id)
+	fmt.Println("Database saved ID:", id)
 
 	// Reset id to timestamp
 	rsh_id := bigMath.Rsh(id, rand_bit_num)
