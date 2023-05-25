@@ -4,7 +4,7 @@ import os
 
 
 class GenMenu:
-    DIR_PATH = r"..\linx-zhang.github.io"
+    DIR_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io"
     # DIR_PATH = os.path.abspath('..')
     IGNORE_DIR = {".git"}
 
@@ -40,12 +40,15 @@ class GenMenu:
     def deduplicate(self, filepath):
         sep = os.path.sep
         uri_list = filepath.strip(sep).split(sep)
+        if len(uri_list) == 1:
+            return
+
         for idx, value in enumerate(uri_list):
             uri = self.DIRECTORY_INDENTATION * idx + value
-            is_file = idx + 1 == len(uri_list)
             if uri not in self.prefix:
                 self.prefix.add(uri)
                 uri = uri.replace(' ', '&nbsp;')
+                is_file = idx + 1 == len(uri_list)
                 if not is_file:
                     div_html = '<li>{}</li>'.format(uri)
                     self.write_obj.write(div_html + '\n')
