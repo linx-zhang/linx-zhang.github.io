@@ -1,2 +1,2 @@
 # linx-zhang.github.io
-notebook
+Notebook
