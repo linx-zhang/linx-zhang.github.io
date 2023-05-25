@@ -1,0 +1,53 @@
+
+import os
+
+
+class GenMenu:
+    DIR_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io"
+    # DIR_PATH = os.path.abspath('..')
+    IGNORE_DIR = {".git"}
+
+    GITHUB_URL = "https://linx-zhang.github.io/"
+    DIRECTORY_INDENTATION = "  "
+
+    def __init__(self) -> None:
+        self.prefix = set()
+        self.pass_dirs = self.pass_dirs()
+
+    def pass_dirs(self):
+        dir_set = set()
+
+        for dir_item in self.IGNORE_DIR:
+            root_dir = os.path.join(self.DIR_PATH, *filter(None, dir_item.split("/")))
+            dir_set.add(root_dir)
+            dir_set |= {
+                os.path.join(r, d) for r, dir_s, _ in os.walk(root_dir) for d in dir_s
+            }
+        return dir_set
+
+    def walk(self):
+        len_dir_path = len(self.DIR_PATH)
+        for r, d, f in os.walk(self.DIR_PATH):
+            if (r in self.pass_dirs) or not f:
+                continue
+            for file in f:
+                filepath = os.path.join(r[len_dir_path:], file)
+                self.deduplicate(filepath)
+
+    def deduplicate(self, filepath):
+        sep = os.path.sep
+        uri_list = filepath.strip(sep).split(sep)
+        for i, v in enumerate(uri_list):
+            dir_str = self.DIRECTORY_INDENTATION * i + v
+            if dir_str not in self.prefix:
+                self.prefix.add(dir_str)
+                print(dir_str)
+            # File
+            if i + 1 == len(uri_list):
+                href = self.GITHUB_URL + "/".join(uri_list)
+                href = href.rsplit(".", 1)[0]
+                print(href)
+
+
+GenMenu().walk()
+
