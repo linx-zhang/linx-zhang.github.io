@@ -4,15 +4,15 @@ import os
 
 class GenMenu:
     DIR_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io"
-    # DIR_PATH = os.path.abspath('..')
-    IGNORE_DIR = {".git"}
+    # DIR_PATH = os.path.abspath('..')  noqa
+    IGNORE_DIR = [".git"]
 
     GITHUB_URL = "https://linx-zhang.github.io/"
     DIRECTORY_INDENTATION = " " * 6
 
     def __init__(self) -> None:
         self.prefix = set()
-        self.write_obj = open('menu.html', 'w')
+        self.write_obj = open("menu.html", "w")
         self.pass_dirs = self.pass_dirs()
 
     def pass_dirs(self):
@@ -44,18 +44,18 @@ class GenMenu:
 
         for idx, value in enumerate(uri_list):
             uri = self.DIRECTORY_INDENTATION * idx + value
-            if uri not in self.prefix:
-                self.prefix.add(uri)
-                uri = uri.replace(' ', '&nbsp;')
-                is_file = idx + 1 == len(uri_list)
-                if not is_file:
-                    div_html = '<li>{}</li>'.format(uri)
-                    self.write_obj.write(div_html + '\n')
-                else:
-                    href = self.GITHUB_URL + "/".join(uri_list)
-                    href = href.rsplit(".", 1)[0]
-                    a_html = '<li><a href="{}">{}</a></li>'.format(href, uri)
-                    self.write_obj.write(a_html + '\n')
+            if uri in self.prefix:
+                continue
+            self.prefix.add(uri)
+            uri = uri.replace(" ", "&nbsp;")
+            is_file = idx + 1 == len(uri_list)
+            if is_file:
+                href = self.GITHUB_URL + "/".join(uri_list)
+                href = href.rsplit(".", 1)[0]
+                a_html = '<li><a href="{}">{}</a></li>'.format(href, uri)
+            else:
+                a_html = "<li>{}</li>".format(uri)
+            self.write_obj.write(a_html + "\n")
 
 
 GenMenu().walk()
