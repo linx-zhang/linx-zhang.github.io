@@ -12,7 +12,7 @@ class GenMenu:
     ]
 
     GITHUB_URL = "https://linx-zhang.github.io/"
-    DIRECTORY_INDENT = " " * 6
+    DIRECTORY_INDENT = "&nbsp;" * 6
     LINE_INDENT = " " * 4
 
     def __init__(self) -> None:
@@ -31,7 +31,8 @@ class GenMenu:
 
     def overwrite(self):
         self.walk()
-        index_content = open(self.INDEX_PATH, "r", encoding="utf8").read()
+        with open(self.INDEX_PATH, "r", encoding="utf8") as fr:
+            index_content = fr.read()
         old_content = self.PATTERN.findall(index_content).pop()
         new_content = self.LINE_INDENT.join(self.write_content)
         content = index_content.replace(old_content, new_content)
@@ -47,21 +48,19 @@ class GenMenu:
                 filepath = os.path.join(r[len_dir_path:], file)
                 self.deduplicate(filepath)
 
-    def deduplicate(self, filepath):
-        sep = os.path.sep
+    def deduplicate(self, filepath: str, sep: str = os.path.sep):
         uri_list = filepath.strip(sep).split(sep)
-        len_uri_list = len(uri_list)
-        if len_uri_list == 1:
+        if (len_uri_list := len(uri_list)) == 1:
             return
 
-        for idx, value in enumerate(uri_list):
-            uri = self.DIRECTORY_INDENT * idx + value
-            if uri in self.prefix:
+        for idx, value in enumerate(uri_list, start=1):
+            full_path = "".join(uri_list[:idx])
+            if full_path in self.prefix:
                 continue
-            self.prefix.add(uri)
-            uri = uri.replace(" ", "&nbsp;")
-            is_file = idx + 1 == len_uri_list
-            if is_file:
+            self.prefix.add(full_path)
+
+            uri = self.DIRECTORY_INDENT * (idx - 1) + value
+            if idx == len_uri_list:
                 href = self.GITHUB_URL + "/".join(uri_list)
                 href = href.rsplit(".", 1)[0]
                 a_html = '<li><a href="{}">{}</a></li>'.format(href, uri)
