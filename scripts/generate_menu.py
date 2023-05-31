@@ -5,15 +5,17 @@ import re
 class GenMenu:
     DIR_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io"  # os.path.abspath('..')
     INDEX_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io\index.html"
-    PATTERN = re.compile("<ul>(.*?)</ul>", re.DOTALL)
+
+    GITHUB_URL = "https://linx-zhang.github.io/"
+    FOLDER_ICON = '<img src="https://github.com/linx-zhang/static/blob/main/icon/folder.png?raw=true" >'
 
     IGNORE_DIR = [
         ".git",
         "scripts/__pycache__/",
     ]
 
-    GITHUB_URL = "https://linx-zhang.github.io/"
-    DIRECTORY_INDENT = "&nbsp;" * 6
+    INDEX_UL_PATTERN = re.compile("<ul>(.*?)</ul>", re.DOTALL)
+    DIRECTORY_INDENT = "&nbsp;" * 8
     LINE_INDENT = " " * 4
 
     def __init__(self) -> None:
@@ -34,7 +36,7 @@ class GenMenu:
         self.walk()
         with open(self.INDEX_PATH, "r", encoding="utf8") as fr:
             index_content = fr.read()
-        old_content = self.PATTERN.findall(index_content).pop()
+        old_content = self.INDEX_UL_PATTERN.findall(index_content).pop()
         new_content = self.LINE_INDENT.join(self.write_content)
         content = index_content.replace(old_content, new_content)
         with open(self.INDEX_PATH, "w", encoding="utf8") as fw:
@@ -54,19 +56,19 @@ class GenMenu:
         if (len_uri_list := len(uri_list)) == 1:
             return
 
-        for idx, value in enumerate(uri_list, start=1):
+        for idx, uri in enumerate(uri_list, start=1):
             full_path = "".join(uri_list[:idx])
             if full_path in self.prefix:
                 continue
             self.prefix.add(full_path)
 
-            uri = self.DIRECTORY_INDENT * (idx - 1) + value
+            indent = self.DIRECTORY_INDENT * (idx - 1)
             if idx == len_uri_list:
                 href = self.GITHUB_URL + "/".join(uri_list)
                 href = href.rsplit(".", 1)[0]
-                a_html = '<li><a href="{}">{}</a></li>'.format(href, uri)
+                a_html = f'<li><a href="{href}">{indent + uri}</a></li>'
             else:
-                a_html = "<li>{}</li>".format(uri)
+                a_html = f"<li>{indent}{self.FOLDER_ICON}{uri}</li>"
             self.write_content.append(a_html + "\n")
 
 
