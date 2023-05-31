@@ -9,7 +9,7 @@ class GenMenu:
 
     IGNORE_DIR = [
         ".git",
-        'scripts/__pycache__/'
+        "scripts/__pycache__/",
     ]
 
     GITHUB_URL = "https://linx-zhang.github.io/"
@@ -70,4 +70,25 @@ class GenMenu:
             self.write_content.append(a_html + "\n")
 
 
+class SynchronizeScript:
+    SCRIPTS_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io\scripts"
+    SCRIPT_LIST = [
+        "generate_menu.py",
+    ]
+
+    @classmethod
+    def sync_to_md(cls):
+        for script in cls.SCRIPT_LIST:
+            original = os.path.join(cls.SCRIPTS_PATH, script)
+            with open(original, "r", encoding="utf8") as fr:
+                script_content = fr.read()
+
+            md = original.replace(script.rsplit(".", 1).pop(), "md")
+            with open(md, "w", encoding="utf8") as fw:
+                fw.write("\n```python\n")
+                fw.write(script_content)
+                fw.write("\n```\n")
+
+
 GenMenu().overwrite()
+SynchronizeScript.sync_to_md()
