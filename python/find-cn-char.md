@@ -1,4 +1,6 @@
+
 # Find chinese-character
+
 - `Find.open_file_check.zh_pattern` can be customized
 - output `zh.json`
 - [output.png](https://github.com/linx-zhang/static/blob/main/python/15f5f8ed-110b-48e2-b4a9-e5dca9a13e30.png?raw=true)
