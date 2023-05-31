@@ -8,6 +8,7 @@ class GenMenu:
 
     GITHUB_URL = "https://linx-zhang.github.io/"
     FOLDER_ICON = '<img src="https://github.com/linx-zhang/static/blob/main/icon/folder.png?raw=true" >'
+    FILE_ICON = '<img src="https://github.com/linx-zhang/static/blob/main/icon/file_icon.png?raw=true" >'
 
     IGNORE_DIR = [
         ".git",
@@ -66,7 +67,7 @@ class GenMenu:
             if idx == len_uri_list:
                 href = self.GITHUB_URL + "/".join(uri_list)
                 href = href.rsplit(".", 1)[0]
-                a_html = f'<li><a href="{href}">{indent + uri}</a></li>'
+                a_html = f'<li><a href="{href}">{indent}{self.FILE_ICON}{uri}</a></li>'
             else:
                 a_html = f"<li>{indent}{self.FOLDER_ICON}{uri}</li>"
             self.write_content.append(a_html + "\n")
