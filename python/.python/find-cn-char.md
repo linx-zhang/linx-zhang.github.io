@@ -5,7 +5,6 @@
 - output `zh.json`
 - [output.png](https://github.com/linx-zhang/static/blob/main/python/15f5f8ed-110b-48e2-b4a9-e5dca9a13e30.png?raw=true)
 
-
 ```python
 
 import os
@@ -18,8 +17,7 @@ from functools import lru_cache
 
 sys.path.append(os.path.abspath(__file__))
 
-
-SCAN_DIR = r"D:\this_code\test\我的笔记\linx-zhang.github.io"
+SCAN_DIR = r"/我的笔记/linx-zhang.github.io"
 RESULTS_FILE = os.path.join(SCAN_DIR, "zh.json")
 PASS_DIRS = [
     ".git",
@@ -45,12 +43,12 @@ class Find:
 
     @staticmethod
     def open_file_check(
-        file: str, results: defaultdict, zh_pattern=re.compile("[\u4e00-\u9fa5]+")
+            file: str, results: defaultdict, zh_pattern=re.compile("[\u4e00-\u9fa5]+")
     ):
         with open(file, "r", encoding="utf8") as fr:
             for index, line in enumerate(iter(fr.readline, "")):
                 if zh_pattern.search(line):
-                    results[file[len(SCAN_DIR) :]].append(index + 1)
+                    results[file[len(SCAN_DIR):]].append(index + 1)
 
     @staticmethod
     @lru_cache()
@@ -67,7 +65,6 @@ class Find:
 
 
 if __name__ == "__main__":
-
     print("Scan dir:", SCAN_DIR)
     t = time.time()
 
