@@ -10,6 +10,7 @@ class GenMenu:
 
     IGNORE_DIR = [
         ".git",
+        'scripts/__pycache__/'
     ]
 
     GITHUB_URL = "https://linx-zhang.github.io/"
