@@ -79,7 +79,12 @@ class SynchronizeScript:
     ]
 
     @classmethod
-    def sync_to_md(cls):
+    def sync(cls):
+        cls.to_md()
+        cls.to_html()
+
+    @classmethod
+    def to_md(cls):
         for script in cls.SCRIPT_LIST:
             original = os.path.join(cls.SCRIPTS_PATH, script)
             with open(original, "r", encoding="utf8") as fr:
@@ -91,8 +96,12 @@ class SynchronizeScript:
                 fw.write(script_content)
                 fw.write("\n```\n")
 
+    @classmethod
+    def to_html(cls):
+        pass
+
 
 GenMenu().overwrite()
-SynchronizeScript.sync_to_md()
+SynchronizeScript.sync()
 
 ```
