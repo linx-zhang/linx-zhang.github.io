@@ -1,3 +1,4 @@
+
 # What's Devops
 
 If you look back to the state of technology only a few decades ago, you’ll stumble upon a technological world full of silos and frustration. Two of an organization’s most vital teams—software development and IT operations—struggled to communicate effectively. Departments resided within silos, and development and testing were conducted at a snail’s pace.
@@ -60,4 +61,4 @@ While improving workflows is key to building stronger development processes, mak
 
 [For more people to see, copy and paste.](https://orangematter.solarwinds.com/2022/03/21/what-is-devops/)
 
-**If there is a copyright issue, please contact me to delete**
+**If there is a copyright issue, please contact me to delete.**
