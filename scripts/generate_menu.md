@@ -9,11 +9,12 @@ class GenMenu:
     INDEX_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io\index.html"
 
     GITHUB_URL = "https://linx-zhang.github.io/"
-    FOLDER_ICON = '<img src="https://github.com/linx-zhang/static/blob/main/icon/folder.png?raw=true" >'
-    FILE_ICON = '<img src="https://github.com/linx-zhang/static/blob/main/icon/file_icon.png?raw=true" >'
+    FOLDER_ICON = '<img src="./static/icon/folder.png" >'
+    FILE_ICON = '<img src="./static/icon/file_icon.png" >'
 
     IGNORE_DIR = [
         ".git",
+        "static",
         "scripts/__pycache__/",
     ]
 
