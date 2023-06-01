@@ -4,7 +4,7 @@ import re
 
 class GenMenu:
     DIR_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io"  # os.path.abspath('..')
-    INDEX_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io\index.html"
+    INDEX_PATH = os.path.join(DIR_PATH, "index.html")
 
     GITHUB_URL = "https://linx-zhang.github.io/"
     FOLDER_ICON = '<img src="./static/icon/folder.png" >'
@@ -75,7 +75,7 @@ class GenMenu:
 
 
 class SynchronizeScript:
-    SCRIPTS_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io\scripts"
+    SCRIPTS_PATH = os.path.join(GenMenu.DIR_PATH, "scripts")
     SCRIPT_LIST = [
         "generate_menu.py",
     ]
