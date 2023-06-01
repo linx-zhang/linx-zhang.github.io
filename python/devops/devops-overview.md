@@ -1,8 +1,3 @@
-<header>
-<meta name="referrer" content="never">
-<img name="referrer" content="never" src="http://m.qpic.cn/psc?/V52HCgKy0b7Yhv1a5Lcc2Cuwq53oINm3/ruAMsa53pVQWN7FLK88i5ig53.Smmj47X.o94KnbpZoFIMvN2QLop0IkfrG9BppnmicAPv3.5ThdT1hl8Q2bLKdPmt8vdvAvbXsj9CGSgEk!/b&bo=AARtAgAAAAADB0k!&rf=viewer_4">
-
-</header>
 
 # What's Devops
 
@@ -22,9 +17,11 @@ In this guide, I’ll explain the ins and outs of DevOps, key best practices, an
 
 Development and operations form the crux of DevOps. These two units form a tight-knit collaborative bond, and any software-related processes are equally designed around both teams. Additionally, effective implementation of DevOps is dependent on establishing an efficient pipeline. This cyclical collection of stages covers everything from planning to release and the capabilities needed within the delivery process:
 
-![devops e.g.](https://github.com/linx-zhang/static/blob/main/python/DevOps-lifecycle-capabilities-1024x621.png?raw=true)
 
-<img src="http://m.qpic.cn/psc?/V52HCgKy0b7Yhv1a5Lcc2Cuwq53oINm3/ruAMsa53pVQWN7FLK88i5ig53.Smmj47X.o94KnbpZoFIMvN2QLop0IkfrG9BppnmicAPv3.5ThdT1hl8Q2bLKdPmt8vdvAvbXsj9CGSgEk!/b&bo=AARtAgAAAAADB0k!&rf=viewer_4">
+<a target="_blank" href="http://m.qpic.cn/psc?/V52HCgKy0b7Yhv1a5Lcc2Cuwq53oINm3/ruAMsa53pVQWN7FLK88i5ig53.Smmj47X.o94KnbpZoFIMvN2QLop0IkfrG9BppnmicAPv3.5ThdT1hl8Q2bLKdPmt8vdvAvbXsj9CGSgEk!/b&bo=AARtAgAAAAADB0k!&rf=viewer_4">
+<img title="Click If No Picture" src="http://m.qpic.cn/psc?/V52HCgKy0b7Yhv1a5Lcc2Cuwq53oINm3/ruAMsa53pVQWN7FLK88i5ig53.Smmj47X.o94KnbpZoFIMvN2QLop0IkfrG9BppnmicAPv3.5ThdT1hl8Q2bLKdPmt8vdvAvbXsj9CGSgEk!/b&bo=AARtAgAAAAADB0k!&rf=viewer_4">
+</a>
+
 
 Though “deliberate” development pacing was once commonplace, DevOps instead centers on agility. By tightly integrating the roles of engineers, testers, and administrators, companies can achieve new heights of productivity. The feedback loop is enormously integral to realizing these DevOps benefits.
 
