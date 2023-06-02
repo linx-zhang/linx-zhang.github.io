@@ -92,7 +92,7 @@ class SynchronizeScript:
             with open(original, "r", encoding="utf8") as fr:
                 script_content = fr.read()
 
-            md = original.replace(script.rsplit(".", 1).pop(), "md")
+            md = original[: -len(script.rsplit(".", 1).pop())] + "md"
             with open(md, "w", encoding="utf8") as fw:
                 fw.write("\n```python\n")
                 fw.write(script_content)
