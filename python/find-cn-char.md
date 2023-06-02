@@ -3,7 +3,7 @@
 
 - `Find.open_file_check.zh_pattern` can be customized
 - output `zh.json`
-- [output.png](https://github.com/linx-zhang/static/blob/main/python/15f5f8ed-110b-48e2-b4a9-e5dca9a13e30.png?raw=true)
+- [output.png](http://m.qpic.cn/psc?/V52HCgKy0b7Yhv1a5Lcc2Cuwq53oINm3/ruAMsa53pVQWN7FLK88i5sQRKXyjssey5bD0sGgNn76ogLYakfOhyO2XOx4OqsgDnr4xYowKZhPpWgic3vp7t5cuLM3uktjk2DagtcUwP*A!/b&bo=GgSdAgAAAAADB6M!&rf=viewer_4)
 
 ```python
 
