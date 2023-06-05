@@ -6,8 +6,10 @@
 
     <style type="text/css">
         h1,h3{text-align: center;}
-        .ps1, .ps2{font-size: 15px;color: rgb(60, 34, 3);text-align: center;}
-        .ps1{margin-top: 6%;}
+        
+        .ps1{margin-top: 1%; margin-right: 1%; text-align: right; font-size: 15px; }
+        .ps1 a{background-color: rgb(213, 218, 255); color: rgb(69, 131, 255); 
+            border-radius: 50px 50px 50px 50px; padding: 5px; }
 
         a{
             text-decoration: none;
@@ -20,7 +22,7 @@
             margin-left: 30%;
             margin-bottom: 10px;
         }
-        li img{
+        li img, .ps1 a img{
             display: inline-block;
             vertical-align: middle;
             width: 20px;
@@ -37,6 +39,13 @@
     <a href="https://www.zhihu.com/people/linx.z">知乎</a>
     <a href="https://github.com/linx-zhang/linx-zhang.github.io/tree/main"> | Github</a>
 </h3>
+
+<div class="ps1">
+    <a href="https://linx-zhang.github.io/about/build-own-site">
+        <img src="./static/icon/file_icon.png" >
+        How this site is structured & Notes on access
+    </a>
+</div>
 
 <!-- 自动生成的菜单 -->
 <ul>
@@ -59,19 +68,6 @@
     <li><a href="https://linx-zhang.github.io/scripts/generate_menu">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="./static/icon/file_icon.png" >generate_menu.md</a></li>
     <li><a href="https://linx-zhang.github.io/scripts/generate_menu">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="./static/icon/file_icon.png" >generate_menu.py</a></li>
 </ul>
-
-<!-- 底注 -->
-<div class="ps1">Generate menu script
-    <a href="https://linx-zhang.github.io/scripts/generate_menu">
-        https://linx-zhang.github.io/scripts/generate_menu
-    </a>
-</div>
-<br>
-<div class="ps2">Try adding suffix if you see 404, e.g.
-    <a href="https://linx-zhang.github.io/scripts/generate_menu.py">
-        https://linx-zhang.github.io/scripts/generate_menu.py
-    </a>
-</div>
 
 </body>
 </html>
