@@ -1,6 +1,7 @@
 
 # Find chinese-character
 
+- tool-script, Requires a python environment
 - `Find.open_file_check.zh_pattern` can be customized
 - output `zh.json`
 - [output.png](http://m.qpic.cn/psc?/V52HCgKy0b7Yhv1a5Lcc2Cuwq53oINm3/ruAMsa53pVQWN7FLK88i5sQRKXyjssey5bD0sGgNn76ogLYakfOhyO2XOx4OqsgDnr4xYowKZhPpWgic3vp7t5cuLM3uktjk2DagtcUwP*A!/b&bo=GgSdAgAAAAADB6M!&rf=viewer_4)

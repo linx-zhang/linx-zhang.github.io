@@ -3,11 +3,10 @@
 
 - [LAN_Share.zip (win-x86-64)](https://github.com/linx-zhang/static/blob/main/tools/LAN_Share.zip)
 - If you have a python environment, `python -m http.server 59999`
-- Effect
+- [Effect-1](https://github.com/linx-zhang/static/blob/main/tools/LAN_Share20230602142355.png?raw=true),
+[Effect-2](http://m.qpic.cn/psc?/V52HCgKy0b7Yhv1a5Lcc2Cuwq53oINm3/ruAMsa53pVQWN7FLK88i5hVVw6aqHpkyY6ynhdUb5b4h5EbL6uCk.ugW61VZMphE8i*1Q3EDR8ZkRE6BrauNmmhEsPP987JAirUl6KEQ1Ec!/b&bo=vgECAgAAAAADB50!&rf=viewer_4)
 
-<a target="_blank" href="http://m.qpic.cn/psc?/V52HCgKy0b7Yhv1a5Lcc2Cuwq53oINm3/ruAMsa53pVQWN7FLK88i5p5G3odP31egXDVQ2Ti9gyMPUn3rQMmOWPMMeJC5WXSnXgps*0Cklsya*ETJKZMl6LbYiOrClWSG3fw1m9vbfFo!/b&bo=2wUgAwAAAAADB98!&rf=viewer_4">
-<img title="Click If No Picture" src="https://github.com/linx-zhang/static/blob/main/tools/LAN_Share20230602142355.png?raw=true">
-</a>
+[//]: # (https://github.com/linx-zhang/static/blob/main/tools/LAN_Share20230602142355.png?raw=true)
 
 - Source code
 
