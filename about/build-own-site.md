@@ -1,15 +1,14 @@
 
-# Use GitHub to host your own website
-
 ## Precautions
 
 - **If the static resources come from Github, Normal access in China may be restricted.**
 - [Generate menu script](https://linx-zhang.github.io/scripts/generate_menu)
-- Try adding suffix if you see 404, [e.g.](https://linx-zhang.github.io/scripts/generate_menu.py)
+- Try adding suffix if you see 404, [e.g. https://linx-zhang.github.io/scripts/generate_menu.py](https://linx-zhang.github.io/scripts/generate_menu.py)
 
 
 ## Build Site
 
+- Use GitHub to host your own website
 - Create **Github** account
 - Create main & static(repositories)
 - Add folder/file/image
