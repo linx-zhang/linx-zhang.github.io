@@ -2,17 +2,17 @@
 ## Precautions
 
 - **If the static resources come from Github, Normal access in China may be restricted.**
-- [Generate menu script](https://linx-zhang.github.io/scripts/generate_menu)
 - Try adding suffix if you see 404, [e.g. https://linx-zhang.github.io/scripts/generate_menu.py](https://linx-zhang.github.io/scripts/generate_menu.py)
+- If you try to copy the code, After selecting a small piece of code, ctrl+shift+end can select the whole code block
 
 
-## Build Site
+## How This Site Was Created
 
-- Use GitHub to host your own website
-- Create **Github** account
-- Create main & static(repositories)
+- Hosting with Github
+- Create Github account
+- Create main & static(repositories) in Github
 - Add folder/file/image
-- Set `index.html` -> With a script: generate_menu.py
+- Set `index.html` [use this script: generate_menu.py](https://linx-zhang.github.io/scripts/generate_menu.py)
 
 ---
 ---
@@ -26,7 +26,7 @@
 ---
 ---
 
-## markdown
+## markdown test
 
 > - license
 > - about
