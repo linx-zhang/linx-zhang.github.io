@@ -5,7 +5,14 @@ import re
 
 
 class GenMenu:
-    DIR_PATH = r"D:\this_code\test\我的笔记\linx-zhang.github.io"  # os.path.abspath('..')
+    @staticmethod
+    def scan_repositories(name="linx-zhang.github.io"):
+        for r, d, _ in os.walk(os.path.abspath(".")):
+            for folder_name in d:
+                if folder_name == name:
+                    return os.path.join(r, folder_name)
+
+    DIR_PATH = scan_repositories()  # os.path.abspath('..')
     INDEX_PATH = os.path.join(DIR_PATH, "index.html")
 
     GITHUB_URL = "https://linx-zhang.github.io/"
@@ -53,6 +60,8 @@ class GenMenu:
                 continue
             for file in f:
                 filepath = os.path.join(r[len_dir_path:], file)
+                if "__pycache__" in filepath:
+                    break
                 self.deduplicate(filepath)
 
     def deduplicate(self, filepath: str, sep: str = os.path.sep):
