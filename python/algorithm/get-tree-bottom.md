@@ -28,7 +28,7 @@ flat_dict(data)
 
 ```
 
-## TestCase & OutPut
+## TestCase & Output
 
 ```python
 
