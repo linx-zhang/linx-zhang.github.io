@@ -4,19 +4,24 @@
 - Import python files anywhere
 
 ```python
+
 import importlib.util
 
-path = r'/我的笔记/linx-zhang.github.io/scripts/generate_menu.py'
 
-spec = importlib.util.spec_from_file_location(
-    name="give_me_module_name",
-    location=path,
-)
-menu_module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(menu_module)
+def get_module(py_path):
+    spec = importlib.util.spec_from_file_location(
+        name="give_me_module_name",
+        location=py_path,
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
-# Now, import ...generate_menu, menu_module == generate_menu
-GenMenu = menu_module.GenMenu
-GenMenu().overwrite()
+
+path = r"F:\project\py_test\linx-zhang.github.io\scripts\generate_menu.py"
+menu_module = get_module(path)
+
+path = r"F:\project\py_test\linx-zhang.github.io\python\algorithm\get-tree-bottom.py"
+tree_module = get_module(path)
 
 ```
