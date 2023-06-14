@@ -1,0 +1,90 @@
+
+<head>
+<link rel="stylesheet" href="static/css/github-markdown.css">
+<style>
+
+	@import url(".../static/css/github-markdown.css")
+
+</style>
+	</head>
+<article class="markdown-body">
+	<h1>import importlib</h1>
+<ul>
+<li>Import python files anywhere</li>
+<li>Import python files anywhere</li>
+<li>Import python files anywhere</li>
+</ul>
+	<code>
+<p>```python</p>
+<p>import importlib.util</p>
+<code class="code">def get_module(py_path):
+    spec = importlib.util.spec_from_file_location(
+        name="give_me_module_name",
+        location=py_path,
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module</code>
+<p>path = r"F:\project\py_test\linx-zhang.github.io\scripts\generate_menu.py"
+menu_module = get_module(path)</p>
+<p>path = r"F:\project\py_test\linx-zhang.github.io\python\algorithm\get-tree-bottom.py"
+tree_module = get_module(path)</p>
+<p>```</p>
+	</code>
+
+
+<ol>
+<li>First ordered list item</li>
+<li>Another item
+
+<ul>
+<li>Unordered sub-list.</li>
+</ul></li>
+<li>Actual numbers don't matter, just that it's a number
+
+<ol>
+<li>Ordered sub-list</li>
+</ol></li>
+<li><p>And another item.</p>
+
+<p>You can have properly indented paragraphs within list items. Notice the blank line above, and the leading spaces (at least one, but we'll use three here to also align the raw Markdown).</p>
+
+<p>To have a line break without a paragraph, you will need to use two trailing spaces.
+ Note that this line is separate, but within the same paragraph.
+ (This is contrary to the typical GFM line break behaviour, where trailing spaces are not required.)</p></li>
+</ol>
+
+<ul>
+<li>Unordered list can use asterisks</li>
+<li>Or minuses</li>
+<li><p>Or pluses</p></li>
+</ul>
+
+<ol>
+<li>foo
+
+<ol>
+<li>bar
+
+<ol>
+<li>baz
+
+<ol>
+<li>faz</li>
+</ol></li>
+</ol></li>
+</ol></li>
+<li><p>foo2</p></li>
+</ol>
+
+<ul>
+<li>foo
+
+<ul>
+<li>bar
+
+<ul>
+<li>baz
+
+<ul>
+</article>
