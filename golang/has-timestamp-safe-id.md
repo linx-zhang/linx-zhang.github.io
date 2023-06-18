@@ -1,5 +1,5 @@
 
-# Generate has timestamp id
+# Generate Has Timestamp Id
 
 - The timestamp can be restored by id
 - Does not expose timestamp

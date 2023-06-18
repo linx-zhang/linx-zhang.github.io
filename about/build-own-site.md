@@ -1,5 +1,5 @@
 
-## Instructions before use
+## Instructions Before Use
 
 - **If the static resources come from Github, Normal access in China may be restricted.**
 - Try adding suffix if you see 404, [e.g. https://linx-zhang.github.io/scripts/generate_menu.py](https://linx-zhang.github.io/scripts/generate_menu.py)

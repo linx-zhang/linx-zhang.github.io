@@ -1,5 +1,5 @@
 
-# Get memory sizeof | python
+# Get Memory Sizeof | Python
 
 - Pympler
   - [Pympler pypi](https://pypi.org/project/Pympler/#description)
