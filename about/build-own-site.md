@@ -1,9 +1,9 @@
 
 ## Instructions Before Use
 
-- **If the static resources come from Github, Normal access in China may be restricted.**
+- **If the static resources come from Github, Normal access in China may be restricted**
 - Try adding suffix if you see 404, [e.g. https://linx-zhang.github.io/scripts/generate_menu.py](https://linx-zhang.github.io/scripts/generate_menu.py)
-- If you try to copy the code, After selecting a small piece of code, ctrl+shift+end can select the whole code block
+- If you try to copy the code, After selecting a small piece of code, `ctrl+shift+end` can select the whole code block
 
 
 ## How This Site Was Created
@@ -12,7 +12,7 @@
 - Create Github account
 - Create main & static(repositories) in Github
 - Add folder/file/image
-- Set `index.html` [use this script: generate_menu.py](https://linx-zhang.github.io/scripts/generate_menu.py)
+- Set `index.html` [use this script](https://linx-zhang.github.io/scripts/generate_menu), [source code](https://linx-zhang.github.io/scripts/generate_menu.py)
 
 ---
 ---
