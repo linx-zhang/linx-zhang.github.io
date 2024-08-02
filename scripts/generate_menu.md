@@ -4,15 +4,17 @@ import os
 import re
 
 
-class GenMenu:
-    @staticmethod
-    def scan_repositories(name="linx-zhang.github.io"):
-        for r, d, _ in os.walk(os.path.abspath(".")):
-            for folder_name in d:
-                if folder_name == name:
-                    return os.path.join(r, folder_name)
+def scan_repositories(name="linx-zhang.github.io"):
+    for r, d, _ in os.walk(os.path.abspath(".")):
+        for folder_name in d:
+            if folder_name == name:
+                return os.path.join(r, folder_name)
 
-    DIR_PATH = scan_repositories()  # os.path.abspath('..')
+
+DIR_PATH = scan_repositories() or os.path.abspath("..")
+
+
+class MenuGenerator:
     INDEX_PATH = os.path.join(DIR_PATH, "index.html")
 
     GITHUB_URL = "https://linx-zhang.github.io/"
@@ -21,6 +23,7 @@ class GenMenu:
 
     IGNORE_DIR = [
         ".git",
+        ".idea",
         "static",
         "scripts/__pycache__/",
     ]
@@ -37,7 +40,7 @@ class GenMenu:
 
     def _pass_dirs(self):
         for dir_item in self.IGNORE_DIR:
-            root_dir = os.path.join(self.DIR_PATH, *filter(None, dir_item.split("/")))
+            root_dir = os.path.join(DIR_PATH, *filter(None, dir_item.split("/")))
             self.pass_dirs.add(root_dir)
             self.pass_dirs |= {
                 os.path.join(r, d) for r, dir_s, _ in os.walk(root_dir) for d in dir_s
@@ -54,11 +57,13 @@ class GenMenu:
             fw.write(content)
 
     def walk(self):
-        len_dir_path = len(self.DIR_PATH)
-        for r, d, f in os.walk(self.DIR_PATH):
+        len_dir_path = len(DIR_PATH)
+        for r, d, f in os.walk(DIR_PATH):
             if (r in self.pass_dirs) or not f:
                 continue
             for file in f:
+                if re.match(r'.*\.(?:go|py)$', file):
+                    continue
                 filepath = os.path.join(r[len_dir_path:], file)
                 if "__pycache__" in filepath:
                     break
@@ -85,21 +90,22 @@ class GenMenu:
             self.write_content.append(a_html + "\n")
 
 
-class SynchronizeScript:
-    SCRIPTS_PATH = os.path.join(GenMenu.DIR_PATH, "scripts")
+class ScriptTranslator:
     SCRIPT_LIST = [
-        "generate_menu.py",
+        "scripts/generate_menu.py",
+        "python/concat_multiple_img.py",
+        "python/sign.py",
     ]
 
     @classmethod
-    def sync(cls):
+    def run(cls):
         cls.to_md()
         cls.to_html()
 
     @classmethod
     def to_md(cls):
         for script in cls.SCRIPT_LIST:
-            original = os.path.join(cls.SCRIPTS_PATH, script)
+            original = os.path.join(DIR_PATH, script)
             with open(original, "r", encoding="utf8") as fr:
                 script_content = fr.read()
 
@@ -114,7 +120,9 @@ class SynchronizeScript:
         pass
 
 
-GenMenu().overwrite()
-SynchronizeScript.sync()
+# 生成菜单，覆盖旧菜单
+MenuGenerator().overwrite()
+# 把脚本转为 markdown
+ScriptTranslator.run()
 
 ```
