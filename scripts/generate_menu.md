@@ -62,7 +62,7 @@ class MenuGenerator:
             if (r in self.pass_dirs) or not f:
                 continue
             for file in f:
-                if re.match(r'.*\.(?:go|py)$', file):
+                if re.match(r".*\.(?:go|py)$", file):
                     continue
                 filepath = os.path.join(r[len_dir_path:], file)
                 if "__pycache__" in filepath:
