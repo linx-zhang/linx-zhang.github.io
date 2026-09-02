@@ -10,7 +10,7 @@ class GenMenu:
                 if folder_name == name:
                     return os.path.join(r, folder_name)
 
-    DIR_PATH = scan_repositories()  # os.path.abspath('..')
+    DIR_PATH = os.path.abspath('..')
     INDEX_PATH = os.path.join(DIR_PATH, "index.html")
 
     GITHUB_URL = "https://linx-zhang.github.io/"
