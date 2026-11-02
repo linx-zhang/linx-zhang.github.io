@@ -1,5 +1,7 @@
 import os
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set
 
@@ -16,6 +18,45 @@ def find_repository_root(target_name: str = "linx-zhang.github.io") -> Path:
 PROJECT_ROOT: Path = find_repository_root()
 
 
+class ReactAboutBuilder:
+    """
+    编译 about-me-src 的React项目，npm run build，然后把dist覆盖到 about-me
+    目录约定：
+        PROJECT_ROOT / "about-me-src"  # vite源码目录
+        PROJECT_ROOT / "about-me"      # 对外静态产物目录
+    """
+
+    SRC_DIR = PROJECT_ROOT / "about-me-src"
+    DIST_DIR = SRC_DIR / "dist"
+    TARGET_DIR = PROJECT_ROOT / "about-me"
+
+    def build_and_sync(self):
+        if not self.SRC_DIR.exists():
+            print(f"[React] skip, source dir not found: {self.SRC_DIR}")
+            return
+
+        print(f"[React] Enter {self.SRC_DIR}, run npm run build ...")
+        ret = subprocess.run(
+            ["npm", "run", "build"], cwd=self.SRC_DIR, capture_output=False, shell=True
+        )
+        if ret.returncode != 0:
+            raise RuntimeError("[React] npm run build failed")
+
+        if not self.DIST_DIR.exists():
+            raise RuntimeError("[React] dist folder not generated after build")
+
+        # 先清空目标目录，防止残留旧assets、旧html
+        if self.TARGET_DIR.exists():
+            shutil.rmtree(self.TARGET_DIR)
+        self.TARGET_DIR.mkdir(exist_ok=True)
+
+        for item in self.DIST_DIR.iterdir():
+            dest = self.TARGET_DIR / item.name
+            shutil.move(item, dest)
+
+        print(f"[React] Sync dist -> {self.TARGET_DIR} success!")
+
+
 class SiteIndexBuilder:
     """扫描项目结构并生成/更新 index.html 中的站点导航目录列表。"""
 
@@ -23,7 +64,16 @@ class SiteIndexBuilder:
     FOLDER_ICON: str = '<img src="./static/icon/folder.png" >'
     FILE_ICON: str = '<img src="./static/icon/file_icon.png" >'
 
-    IGNORE_DIR_NAMES: Set[str] = {".git", ".idea", "static", "__pycache__"}
+    IGNORE_DIR_NAMES: Set[str] = {
+        ".git",
+        ".idea",
+        "__pycache__",
+        "dist",
+        "node_modules",
+        "static",
+        "about-me",
+        "about-me-src",
+    }
     EXCLUDED_FILE_SUFFIXES: Set[str] = {".go", ".py"}
 
     DIRECTORY_INDENT: str = "&nbsp;" * 8
@@ -173,8 +223,11 @@ class ScriptMarkdownExporter:
 
 
 if __name__ == "__main__":
-    # 1. 生成并覆盖导航菜单
+    # 编译React简历页面，同步产物
+    ReactAboutBuilder().build_and_sync()
+
+    # 生成并覆盖导航菜单（自动带上About Me链接）
     SiteIndexBuilder().build_and_overwrite()
 
-    # 2. 智能导出脚本为 Markdown（自动识别 scripts/ 与 python/ 目录下的脚本与代码高亮）
+    # 智能导出脚本为 Markdown
     ScriptMarkdownExporter().export()

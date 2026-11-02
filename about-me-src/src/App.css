@@ -1,0 +1,9 @@
+@media print {
+  a {
+    color: #222;
+    text-decoration: none;
+  }
+  @page {
+    margin: 1.2cm;
+  }
+}
