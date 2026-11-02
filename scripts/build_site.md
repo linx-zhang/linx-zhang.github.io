@@ -1,3 +1,5 @@
+
+```python
 import os
 import re
 
@@ -90,7 +92,7 @@ class MenuGenerator:
 
 class ScriptTranslator:
     SCRIPT_LIST = [
-        "scripts/generate_menu.py",
+        "scripts/build_site.py",
         "python/concat_multiple_img.py",
         "python/sign.py",
     ]
@@ -122,3 +124,5 @@ class ScriptTranslator:
 MenuGenerator().overwrite()
 # 把脚本转为 markdown
 ScriptTranslator.run()
+
+```
