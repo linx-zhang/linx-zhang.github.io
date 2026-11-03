@@ -1,6 +1,9 @@
 import './App.css'
 
 function App() {
+  const handlePrint = () => {
+    window.print()
+  }
   return (
     <div style={{
       maxWidth: '920px',
@@ -18,6 +21,22 @@ function App() {
           <a href="mailto:xxx@shturl.com" style={{ margin: '0 8px' }}>邮箱</a>
           <a href="https://github.com/linx-zhang" style={{ margin: '0 8px' }}>GitHub</a>
           <a href="/" style={{ margin: '0 8px' }}>← 返回知识库</a>
+          <button 
+            onClick={handlePrint}
+            className="no-print"
+            style={{ 
+              margin: '0 8px',
+              border: 'none',
+              background: '#1f2937',
+              color: '#fff',
+              padding: '4px 12px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '0.9rem'
+            }}
+          >
+            导出 PDF
+          </button>
         </div>
       </header>
 
