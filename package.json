@@ -10,10 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "github-markdown-css": "^5.9.0",
+    "prism-themes": "^1.9.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.18.5",
-    "react-to-print": "^3.3.0"
+    "react-to-print": "^3.3.0",
+    "rehype-prism-plus": "^2.0.2",
+    "rehype-raw": "^7.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
@@ -21,6 +26,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.89.0",
+    "remark-frontmatter": "^5.0.0",
     "typescript": "~7.0.2",
     "vite": "^8.3.5"
   }

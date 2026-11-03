@@ -17,7 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<Home />} />
           <Route path="/wiki" element={<WikiLayout />}>
             <Route index element={<DocsHome />} />
-            <Route path=":slug" element={<Docs />} />
+            <Route path="*" element={<Docs />} />
           </Route>
         </Route>
         <Route path="/profile" element={<Profile />} />

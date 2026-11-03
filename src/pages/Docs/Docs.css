@@ -1,0 +1,144 @@
+.docs-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  color: #2d3748;
+  line-height: 1.75;
+  font-size: 16px;
+}
+
+.docs-loading {
+  text-align: center;
+  padding: 4rem 0;
+  color: #718096;
+}
+
+.docs-not-found {
+  text-align: center;
+  padding: 4rem 0;
+  color: #e53e3e;
+}
+
+/* Markdown 基础元素 */
+.docs-container h1 {
+  font-size: 2.2rem;
+  margin: 1.2rem 0 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.docs-container h2 {
+  font-size: 1.6rem;
+  margin: 2rem 0 0.8rem;
+  border-bottom: 1px solid #edf2f7;
+  padding-bottom: 0.3rem;
+}
+
+.docs-container h3 {
+  font-size: 1.3rem;
+  margin: 1.6rem 0 0.6rem;
+}
+
+.docs-container h4,
+.docs-container h5,
+.docs-container h6 {
+  margin: 1.4rem 0 0.5rem;
+}
+
+.docs-container p {
+  margin: 1rem 0;
+}
+
+.docs-container ul,
+.docs-container ol {
+  padding-left: 1.8rem;
+  margin: 1rem 0;
+}
+
+.docs-container li {
+  margin: 0.4rem 0;
+}
+
+.docs-container blockquote {
+  border-left: 4px solid #cbd5e0;
+  padding: 0.6rem 1rem;
+  margin: 1.2rem 0;
+  background-color: #f7fafc;
+  color: #4a5568;
+}
+
+.docs-container a {
+  color: #3182ce;
+  text-decoration: none;
+}
+
+.docs-container a:hover {
+  text-decoration: underline;
+}
+
+/* 行内代码 */
+.docs-container :not(pre) > code {
+  background: #f7fafc;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+  color: #c53030;
+}
+
+/* 代码块（配合 rehype-prism-plus） */
+.docs-container pre[class*="language-"] {
+  border-radius: 8px;
+  margin: 1.2rem 0;
+}
+
+.docs-container img {
+  max-width: 100%;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.docs-container hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 2rem 0;
+}
+
+/* 表格 */
+.docs-container table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2rem 0;
+}
+
+.docs-container th,
+.docs-container td {
+  border: 1px solid #e2e8f0;
+  padding: 0.6rem 0.8rem;
+}
+
+.docs-container th {
+  background-color: #f7fafc;
+}
+
+/* 暗色偏好可选，你后面再加切换 */
+@media (prefers-color-scheme: dark) {
+  .docs-container {
+    color: #e2e8f0;
+  }
+  .docs-container blockquote {
+    background-color: #2d3748;
+    color: #cbd5e0;
+  }
+  .docs-container :not(pre) > code {
+    background: #2d3748;
+    color: #f687b3;
+  }
+  .docs-container th,
+  .docs-container td {
+    border-color: #4a5568;
+  }
+  .docs-container th {
+    background-color: #2d3748;
+  }
+}
