@@ -8,6 +8,7 @@
   padding: 16px;
   transition: width 0.2s ease;
   overflow: hidden;
+  flex-shrink: 0; /* ✅ 关键：禁止flex挤压侧边栏 */
 }
 .wiki-sidebar.closed {
   width: 48px;
@@ -19,8 +20,23 @@
   align-items: center;
   margin-bottom: 16px;
   font-weight: 600;
+  gap: 6px; /* ✅ 给标题和按钮之间固定间隙，防止挤压重叠 */
 }
-.wiki-sidebar.closed .sidebar-head span,
+/* ✅ 知识库目录标题：单行截断，不会溢出去漏字 */
+.sidebar-title {
+  font-size: 0.95rem;
+  color: #1f2937;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0; /* ✅ flex子元素必须加，ellipsis才能生效 */
+}
+.sidebar-title.active {
+  border-bottom: 2px solid #1f2937;
+}
+/* ✅ closed状态下隐藏标题 + 列表，你原来只隐藏span，漏掉了sidebar-title */
+.wiki-sidebar.closed .sidebar-title,
 .wiki-sidebar.closed .sidebar-list {
   display: none;
 }
@@ -33,24 +49,51 @@
   margin: 6px 0;
 }
 .sidebar-list a {
-  color: #1f2937;
+  display: block;
+  padding: 4px 6px;
+  color: #4b5563;
   text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .sidebar-list a:hover {
   color: #0969da;
-  text-decoration: underline;
+  background: #f6f8fa;
+  text-decoration: none;
+}
+.sidebar-list a.active {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  font-weight: 500;
 }
 .toggle-btn {
   border: 1px solid #d0d7de;
   background: #f6f8fa;
-  padding: 2px 6px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   cursor: pointer;
   border-radius: 4px;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  color: #4b5563;
+  transition: all 0.15s;
+  flex-shrink: 0; /* ✅ 按钮禁止被压缩 */
+}
+.toggle-btn:hover {
+  background: #efefef;
+  border-color: #b8c0cc;
+  color: #1f2937;
 }
 .wiki-main {
   flex: 1;
   padding: 24px 32px;
   overflow: auto;
+  min-width: 0; /* ✅ 主内容区 flex 防挤压溢出 */
 }
 .wiki-toolbar {
   margin-bottom: 16px;

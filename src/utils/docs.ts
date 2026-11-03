@@ -12,11 +12,11 @@ export interface DocItem {
   filePath: string;
   title: string;
   rawContent: string;
-  type: 'md' | 'html'; // 新增：标记文件类型
+  type: 'md' | 'html';
 }
 
 export function getDocList(): DocItem[] {
-  return Object.entries(rawModules).map(([filePath, rawContent]) => {
+  const list = Object.entries(rawModules).map(([filePath, rawContent]) => {
     // 判断扩展名
     const isHtml = filePath.endsWith('.html');
     
@@ -41,9 +41,12 @@ export function getDocList(): DocItem[] {
       filePath,
       title,
       rawContent,
-      type: isHtml ? 'html' : 'md', // 标记类型
+      type: (isHtml ? 'html' : 'md') as 'md' | 'html',
     };
   });
+
+  // 全局统一排序：按标题中文升序
+  return list.sort((a, b) => a.title.localeCompare(b.title, 'en-US'));
 }
 
 export function getDocBySlug(slug: string): DocItem | undefined {

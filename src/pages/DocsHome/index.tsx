@@ -18,7 +18,8 @@ export default function DocsHome() {
         cats.add('综合'); // 没有子目录的放在综合里
       }
     });
-    return ['全部', ...Array.from(cats)];
+    const sortedCats = Array.from(cats).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+    return ['全部', ...sortedCats];
   }, [docList]);
 
   // 根据当前选中分类过滤文档

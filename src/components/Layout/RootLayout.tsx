@@ -1,4 +1,4 @@
-import { Outlet, Link } from 'react-router-dom'
+import { Outlet, NavLink } from 'react-router-dom'
 import './RootLayout.css'
 
 export default function RootLayout() {
@@ -6,9 +6,9 @@ export default function RootLayout() {
     <div className="root-container">
       <header className="global-header no-print">
         <nav className="nav">
-          <Link to="/">首页</Link>
-          <Link to="/wiki">知识库</Link>
-          <Link to="/profile">简历</Link>
+          <NavLink to="/" end className="nav-item">首页</NavLink>
+          <NavLink to="/wiki" className="nav-item">知识库</NavLink>
+          <NavLink to="/profile" className="nav-item">简历</NavLink>
         </nav>
       </header>
 
