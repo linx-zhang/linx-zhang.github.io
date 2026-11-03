@@ -1,0 +1,14 @@
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  a[href^="https"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85rem;
+    color: #666;
+  }
+}

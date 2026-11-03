@@ -1,0 +1,39 @@
+.wiki-container {
+  display: flex;
+  min-height: calc(100vh - 64px);
+}
+.wiki-sidebar {
+  width: 240px;
+  border-right: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+  padding: 1.2rem;
+}
+.sidebar-inner {
+  position: sticky;
+  top: 1rem;
+}
+.print-btn {
+  margin-top: 1rem;
+  border: none;
+  background: #1f2937;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.wiki-body {
+  flex: 1;
+  padding: 2rem;
+  overflow: auto;
+}
+@media (max-width: 768px) {
+  .wiki-sidebar {
+    display: none;
+  }
+}
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
