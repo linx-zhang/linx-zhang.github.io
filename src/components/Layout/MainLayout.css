@@ -1,0 +1,45 @@
+.app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.top-nav {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+  align-items: center;
+}
+.body-wrap {
+  display: flex;
+  flex: 1;
+}
+.drawer-sidebar {
+  width: 260px;
+  border-right: 1px solid #eee;
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+  height: calc(100vh - 56px);
+  position: sticky;
+  top: 56px;
+}
+.drawer-sidebar.closed {
+  transform: translateX(-100%);
+  position: absolute;
+}
+.content-area {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* ========= PDF打印核心：打印时自动隐藏导航、侧边栏 ========= */
+@media print {
+  .top-nav,
+  .drawer-sidebar {
+    display: none !important;
+  }
+  .content-area {
+    padding: 0;
+  }
+}
