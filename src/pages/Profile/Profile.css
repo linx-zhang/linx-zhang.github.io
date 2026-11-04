@@ -1,6 +1,152 @@
+/* 网页预览外层容器 */
+.profile-preview-wrap {
+  max-width: 920px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #1f2937;
+  line-height: 1.65;
+}
+
+/* 头部区域 */
+.profile-header-bar {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.profile-header-bar h1 {
+  margin: 0;
+  font-size: 2.2rem;
+}
+.subtitle {
+  font-size: 1.15rem;
+  color: #4b5563;
+  margin-top: 4px;
+}
+.action-group {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.action-group a {
+  color: #2563eb;
+  text-decoration: none;
+}
+.action-group a:hover {
+  text-decoration: underline;
+}
+.print-btn {
+  border: none;
+  background: #1f2937;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+.print-btn:hover {
+  background: #111827;
+}
+
+/* 打印内容本体 */
+.profile-print-root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #1f2937;
+  line-height: 1.65;
+}
+.resume-section {
+  margin-bottom: 1.8rem;
+}
+.resume-section h2 {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 6px;
+  font-size: 1.3rem;
+  margin: 0 0 0.6rem;
+  line-height: 1.3;
+}
+.tag-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+.tag {
+  background: #f3f4f6;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.exp-item, .proj-item {
+  margin-top: 1.4rem;
+  break-inside: avoid; /* 仅单条经历不被腰斩，大 section 允许分页 */
+}
+.exp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.exp-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+.exp-date {
+  color: #6b7280;
+  white-space: nowrap;
+}
+.exp-item ul, .proj-item ul {
+  padding-left: 1.2rem;
+  margin: 0.6rem 0 0;
+  color: #374151;
+  line-height: 1.65;
+}
+.profile-print-root p {
+  margin: 0;
+  line-height: 1.65;
+}
+
+/* 打印媒体样式 */
 @media print {
+  * {
+    box-sizing: border-box;
+  }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff;
+  }
   .no-print {
     display: none !important;
+  }
+  @page {
+    size: A4;
+    margin: 15mm 16mm; /* 上下边距收窄，释放纵向空间 */
+  }
+  .profile-preview-wrap {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: unset;
+  }
+  .profile-print-root {
+    width: 100%;
+    font-family: inherit;
+  }
+  .profile-header-bar {
+    margin-bottom: 0.8rem !important;
+  }
+  /* 首个区块顶部清零，避免和 header 留白叠加 */
+  .resume-section:first-of-type {
+    margin-top: 0 !important;
+  }
+  .profile-print-root p,
+  .profile-print-root ul,
+  .profile-print-root li {
+    margin-block-start: 0;
+    margin-block-end: 0;
   }
   body {
     -webkit-print-color-adjust: exact;
@@ -10,5 +156,23 @@
     content: " (" attr(href) ")";
     font-size: 0.85rem;
     color: #666;
+  }
+}
+/* 联系方式行 */
+.contact-line {
+  margin-top: 0.6rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+.contact-line .dot {
+  margin: 0 0.8rem;
+  color: #9ca3af;
+}
+.print-only {
+  display: none;
+}
+@media print {
+  .print-only {
+    display: block !important;
   }
 }

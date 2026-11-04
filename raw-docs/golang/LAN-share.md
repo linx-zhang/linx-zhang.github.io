@@ -7,7 +7,7 @@
 
 - Source code
 
-```golang
+```go
 import (
 	"flag"
 	"fmt"

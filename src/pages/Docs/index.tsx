@@ -8,7 +8,7 @@ import rehypeRaw from 'rehype-raw';
 import rehypePrismPlus from 'rehype-prism-plus';
 
 import 'github-markdown-css/github-markdown.css';
-import 'prism-themes/themes/prism-ghcolors.css';
+import 'prism-themes/themes/prism-one-light.css';
 
 export default function Docs() {
   const params = useParams();

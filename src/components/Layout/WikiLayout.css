@@ -35,6 +35,9 @@
 .sidebar-title.active {
   border-bottom: 2px solid #1f2937;
 }
+.sidebar-title:hover {
+  text-decoration: underline;
+}
 /* ✅ closed状态下隐藏标题 + 列表，你原来只隐藏span，漏掉了sidebar-title */
 .wiki-sidebar.closed .sidebar-title,
 .wiki-sidebar.closed .sidebar-list {

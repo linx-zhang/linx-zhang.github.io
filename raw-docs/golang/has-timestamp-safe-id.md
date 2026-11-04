@@ -5,7 +5,7 @@
 - Does not expose timestamp
 - The probability of duplicate id generated per second is `1 / (1<<rand_bit_num)` 
 
-```golang
+```go
 import (
 	"crypto/rand"
 	"fmt"
