@@ -1160,7 +1160,7 @@ d = {}\r
 receiver(sender(d))\r
 \r
 \`\`\`\r
-`,"/raw-docs/python/stream-tar-directory.md":`# 把目录流式打包为 tar
+`,"/raw-docs/python/stream-tar-directory.md":`# stream-tar-directory
 
 在后台线程里边遍历目录边生成未压缩的 tar 流，通过有界队列交给调用方逐块消费。
 
