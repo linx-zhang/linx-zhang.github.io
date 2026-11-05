@@ -2,228 +2,135 @@
 [LLM SYSTEM INSTRUCTION & CONTEXT]
 You are a senior full-stack/frontend engineer maintaining this repository.
 - Repo: linx-zhang.github.io
-- Stack: Vite 8（Rolldown 打包）+ React 19 + TypeScript + React Router 7（仍使用 BrowserRouter / Routes / Route 的 v6 风格 API）
-- Deployment: GitHub Pages from branch 'main', folder '/docs'（vite config: build.outDir = 'docs'、emptyOutDir = true、base = '/'）。SPA 深链刷新由 public/404.html 兜底：暂存原始路径到 sessionStorage 后回到根路径，入口 src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复；.nojekyll 不需要。
+- Stack: Vite + React + TypeScript + React Router v6
+- Deployment: GitHub Pages from branch 'main', folder '/docs' (vite config: build.outDir = 'docs', emptyOutDir = true). public/.nojekyll + 404.html required for SPA compatibility.
 - Core Routes:
   - / : Home (wrapped by RootLayout)
   - /wiki : DocsHome (nested in RootLayout -> WikiLayout)
   - /wiki/* : Docs viewer (nested in RootLayout -> WikiLayout, multi-level slug support)
   - /profile : Standalone resume page (NO layout wrapper, clean layout optimized for PDF export)
-- Split strategy: build.rolldownOptions.output.codeSplitting.groups 按 react-core / router / prism / markdown / print / vendor 分组；/wiki、/wiki/*、/profile 在 src/Router.tsx 中通过 React.lazy + Suspense 按需加载。
 - Styling & UX: Minimalist engineer aesthetic, low saturation palette (#1f2937 body text, #4b5563 muted text, #e5e7eb border). PC-first responsive.
-  - Docs rendering: github-markdown-css for typography, prism-themes 的 prism-one-light 主题做语法高亮。
-- Print Rule: All non-printable UI elements MUST have className="no-print", hidden via @media print. Profile page uses react-to-print with A4 print container optimization.
-- Markdown/HTML Loading: Vite compile-time static glob: import.meta.glob('/raw-docs/**/*.{md,markdown,html}', { query: '?raw', import: 'default', eager: true }). 仅 md/markdown/html 会被加载，raw-docs 下的 .py 等其它文件不参与构建。DocsHome 分类由 slug 的第一段自动生成，WikiLayout 侧边栏为全量文档平铺列表。
+  - Docs rendering: github-markdown-css for typography, prism-github theme for syntax highlighting (aligned with GitHub native style).
+- Print Rule: All non-printable UI elements MUST have className="no-print", hidden via @media print. Profile page has dedicated print container with A4 layout optimization.
+- Markdown/HTML Loading: Vite compile-time static glob: import.meta.glob('/raw-docs/**/*.{md,markdown,html}', { query: '?raw', import: 'default', eager: true }). Auto-generate categories from top-level directories.
 -->
 
 # linx-zhang.github.io
 
-基于 **Vite 8 + React 19 + TypeScript + React Router 7** 构建的个人综合站点，集成门户首页、Wiki 技术知识库与可导出 PDF 的简历页。构建产物直接输出至 `/docs` 目录，用于 GitHub Pages 部署。
+基于 **Vite + React + TypeScript** 构建的个人综合站点，集成门户首页、Wiki 技术知识库与可导出 PDF 的简历页。构建产物直接输出至 `/docs` 目录，原生适配 GitHub Pages 一键部署。
 
 ---
 
 ## ✨ 核心特性
 
-- **分层路由架构**：`RootLayout` 提供全站导航与页脚，`WikiLayout` 提供知识库侧边栏；`/profile` 是脱离布局的独立页面
-- **静态文档知识库**：构建期通过 `import.meta.glob` 读取 `raw-docs` 下的 Markdown/HTML，按 slug 一级目录生成分类
-- **GitHub 风格排版**：`github-markdown-css` 排版 + `prism-themes` 的 `prism-one-light` 主题做代码高亮
-- **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
-- **按需加载与分包**：路由级 `React.lazy` + Rolldown `codeSplitting.groups`，首屏 JS 约 263 kB（详见「构建与分包」）
-- **GitHub Pages 部署**：产物固定输出到 `/docs`，`public/404.html` 兜底 SPA 深链刷新
+- **分层路由架构**：嵌套式布局设计，主壳统一全站导航，子模块独立布局，预留 `/tools` `/lab` 等扩展位
+- **静态文档知识库**：编译期自动扫描 `raw-docs` 目录下的 Markdown/HTML 文件，按一级目录自动生成分类导航
+- **GitHub 原生渲染**：采用 `github-markdown-css` 排版 + `prism-github` 代码高亮，与 GitHub 阅读体验完全对齐
+- **专业简历导出**：独立纯净简历页，针对 A4 纸张优化排版，支持一键导出高清 PDF
+- **极简工程审美**：低饱和度配色方案，PC 优先响应式设计，专注内容可读性
+- **开箱即用部署**：内置 SPA 路由刷新兼容方案，无缝适配 GitHub Pages 静态托管
 
 ---
 
 ## 🚀 快速开始
 
 ### 环境依赖
-
-- Node.js `^20.19.0` 或 `>=22.12.0`（Vite 8 的要求）
-- npm
+- Node.js >= 16
+- npm / pnpm
 
 ### 本地开发
-
 ```bash
 # 安装依赖
 npm install
 
-# 启动开发服务器（默认 http://localhost:5173）
+# 启动开发服务器
 npm run dev
+# 访问 [http://localhost:5173](http://localhost:5173)
 ```
 
-### 构建与预览
+### 生产构建
 
-```bash
-# 类型检查 + 生产构建，产物输出到 docs/
+```
+# 构建静态产物至 /docs 目录
 npm run build
-
-# 本地预览 docs/ 构建产物
-npm run preview
-
-# 运行 oxlint
-npm run lint
 ```
 
-> `npm run build` 实际执行 `tsc -b && vite build`。
->
-> **注意**：新增或删除 `raw-docs/` 下的 Markdown / HTML 文件后，需重启 Vite 开发服务器以触发 glob 重新扫描。
+> 
+> **注意**：新增或删除 `raw-docs/` 目录下的 Markdown / HTML 文件后，需重启 Vite 开发服务器以触发 glob 重新扫描。
 
 ---
 
 ## 🏗️ 架构与路由设计
 
-项目采用**嵌套路由分层**设计：
+项目采用**嵌套路由分层**设计，兼顾统一性与扩展性：
 
-1. **RootLayout（全站主壳）**：顶部导航与 Footer，`/`、`/wiki` 都挂载在它的 `Outlet` 下
-2. **WikiLayout（知识库子壳）**：左侧文档侧边栏 + 右侧内容区，侧边栏可折叠
-3. **Profile 独立裸页**：不套任何 Layout，专门用于渲染纯净简历并优化 PDF 导出
+1. **RootLayout（全站主壳）**
+提供全站顶部导航栏与底部 Footer，门户首页与所有业务模块默认继承此布局。
+2. **WikiLayout（知识库子壳）**
+嵌套于主壳内部，为 `/wiki` 知识库提供左侧分类侧边栏与右侧内容区，支持多级目录路由。
+3. **Profile 独立裸页**
+完全脱离全站布局，无导航与侧边栏，专门用于渲染纯净简历并优化 PDF 导出效果。
 
-### 路由结构
+### 路由结构示意
 
-```tsx
-<BrowserRouter>
-  <Routes>
-    <Route element={<RootLayout />}>
-      <Route path="/" element={<Home />} />
-      <Route path="/wiki" element={<RouteBoundary><WikiLayout /></RouteBoundary>}>
-        <Route index element={<RouteBoundary><DocsHome /></RouteBoundary>} />
-        <Route path="*" element={<RouteBoundary><Docs /></RouteBoundary>} />
-      </Route>
-    </Route>
-    <Route path="/profile" element={<RouteBoundary><Profile /></RouteBoundary>} />
-  </Routes>
-</BrowserRouter>
 ```
+// 全站主壳路由
+<Route element={<RootLayout />}>
+  <Route path="/" element={<Home />} />
+  <Route path="/wiki" element={<WikiLayout />}>
+    <Route index element={<DocsHome />} />
+    <Route path="*" element={<Docs />} /> {/* 匹配多级目录 slug */}
+  </Route>
+  {/* 预留扩展模块 */}
+  <Route path="/tools" element={<ToolsHome />} />
+</Route>
 
-- 路由表位于 `src/Router.tsx`，`RouteBoundary` 是对 `Suspense` 的轻封装
-- `Home` 与 `RootLayout` 为静态引入，作为首屏基础；`WikiLayout`、`DocsHome`、`Docs`、`Profile` 均为懒加载
-- 懒加载组件下载期间只在内容区显示「加载中…」占位，不会替换整个页面布局
+// 独立简历页（无布局包裹）
+<Route path="/profile" element={<Profile />} />
+```
 
 ---
 
 ## 📁 目录结构
 
-```text
+```
 linx-zhang.github.io/
-├─ index.html               # Vite 入口，挂载 /src/main.tsx
-├─ vite.config.ts           # base/outDir 配置与 codeSplitting 分组
-├─ package.json             # dev / build / preview / lint 脚本
 ├─ src/
-│  ├─ main.tsx              # ReactDOM 挂载 + StrictMode
-│  ├─ Router.tsx            # 路由表、懒加载组件与 Suspense 边界
-│  ├─ App.tsx               # Vite 模板遗留组件，当前未被任何入口引用
-│  ├─ App.css               # 仅被 App.tsx 引用（模板遗留）
-│  ├─ index.css             # 模板遗留全局样式，当前未被引用
-│  ├─ assets/               # hero.png / react.svg / vite.svg（仅 App.tsx 使用）
 │  ├─ components/Layout/
-│  │  ├─ RootLayout.tsx/.css   # 全站主壳
-│  │  └─ WikiLayout.tsx/.css   # 知识库侧边栏子壳
+│  │  ├─ RootLayout.tsx     # 全站主壳布局
+│  │  └─ WikiLayout.tsx     # 知识库侧边栏子布局
 │  ├─ pages/
 │  │  ├─ Home/              # 门户首页
-│  │  ├─ DocsHome/          # 知识库分类总览
-│  │  ├─ Docs/              # 单篇文档详情（Markdown 渲染 / HTML iframe）
-│  │  └─ Profile/           # 独立简历页（PDF 导出）
+│  │  ├─ DocsHome/          # 知识库分类总览页
+│  │  ├─ Docs/              # 单篇文档详情页（MD 渲染 / HTML 隔离嵌入）
+│  │  └─ Profile/           # 独立简历页（PDF 导出专用）
 │  └─ utils/
-│     └─ docs.ts            # 编译期扫描 raw-docs，生成文档清单
-├─ raw-docs/                # 笔记源文件；仅 .md / .markdown / .html 参与构建
-├─ public/                  # 静态资源：favicon.svg、icons.svg、404.html（SPA 深链兜底）
-├─ docs/                    # 构建产物，GitHub Pages 部署源
-└─ old/                     # 旧版站点源码，不参与当前构建
+│     └─ docs.ts            # 静态扫描 raw-docs，生成文档目录数据
+├─ raw-docs/                # 📝 笔记源文件，支持 .md / .html / 多级子目录
+├─ public/                  # 静态资源，包含 .nojekyll、404.html 等部署必备文件
+└─ docs/                    # 📦 构建产物目录，GitHub Pages 部署源
 ```
 
 ---
 
 ## 📝 文档渲染机制
 
-### 1. 编译期扫描
+### 1. 静态读取与解析
 
-`src/utils/docs.ts` 使用：
-
-```ts
-import.meta.glob('/raw-docs/**/*.{md,markdown,html}', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-})
-```
-
-- 只有 `.md`、`.markdown`、`.html` 会被打包；`raw-docs` 下的 `.py` 等文件仅作为笔记附件存在，不会被读取
-- `slug` 由文件路径去掉 `/raw-docs/` 前缀与扩展名得到（如 `python/sign.md` → `python/sign`）
-- 标题优先取 HTML 的 `<title>` 或 Markdown 第一行 `# 标题`，取不到则回退为 slug
-- 列表统一按 `title.localeCompare` 排序
-- `DocsHome` 的分类由 slug 第一段生成（无子目录归入「综合」）；`WikiLayout` 侧边栏直接平铺全部文档
+使用 Vite 原生 `import.meta.glob` 在编译期静态扫描 `raw-docs/` 全目录，根据一级目录自动生成文档分类与侧边栏导航。
 
 ### 2. Markdown 渲染
 
-- 排版基础：`github-markdown-css`
-- 渲染引擎：`react-markdown`
-  - `remark-frontmatter`：解析并忽略文档头部的 YAML 元信息
+- 排版基础：`github-markdown-css`，完美复刻 GitHub 原生排版
+- 渲染引擎：`react-markdown` 配套插件体系
+  - `remark-frontmatter`：自动忽略文档头部 YAML 元数据
   - `rehype-raw`：支持 Markdown 内混写原生 HTML
-  - `rehype-prism-plus`：代码块结构化与语法高亮（`ignoreMissing: true`）
-- 高亮主题：`prism-themes/themes/prism-one-light.css`（浅色 GitHub 风格）
+  - `rehype-prism-plus`：代码块结构化与语法高亮
+- 高亮主题：`prism-github`，与 GitHub 网页代码配色完全对齐
 
 ### 3. HTML 渲染
 
-`.html` 文档不经过 Markdown 渲染，而是通过无边框 `<iframe srcDoc={...}>` 隔离嵌入（高度 `75vh`），避免外部 CSS 污染原文样式。
-
----
-
-## 📦 构建与分包
-
-构建使用 Vite 8，底层打包器为 **Rolldown**，因此旧 API `build.rollupOptions.output.manualChunks` 已被标记废弃（实测还会把 react 并入 markdown 分组）。项目改用等价的新 API：
-
-```ts
-build: {
-  outDir: 'docs',
-  emptyOutDir: true,
-  chunkSizeWarningLimit: 700, // prism 单块约 626 kB，仅按需加载
-  rolldownOptions: {
-    output: {
-      codeSplitting: {
-        groups: [/* 见 vite.config.ts，按 priority 匹配 node_modules */],
-      },
-    },
-  },
-}
-```
-
-### 分组策略
-
-| 分组 | 包内容 | 加载时机 |
-|---|---|---|
-| `react-core` | react、react-dom、scheduler | 首屏 |
-| `router` | react-router、react-router-dom | 首屏 |
-| `markdown` | react-markdown 及 remark/rehype/unified/micromark/mdast/hast/unist/vfile/parse5 依赖链 | 文档页 |
-| `prism` | refractor、rehype-prism-plus、parse-numeric-range | 文档页 |
-| `print` | react-to-print | 简历页 |
-| `vendor` | 上述分组之外的其余 node_modules（如 parse-entities） | 按需 |
-
-路由页面 `WikiLayout`、`DocsHome`、`Docs`、`Profile` 各自形成独立 chunk；`raw-docs` 内容因被 wiki 侧边栏使用，单独落在 `docs-*.js`。
-
-### 体积对比（构建快照，hash 会随构建变化）
-
-| 指标 | 分包前 | 分包后 |
-|---|---|---|
-| 首屏 JS | 1,223.24 kB（gzip 416.78 kB） | 约 262.90 kB（gzip 84.70 kB） |
-| 首屏 CSS | 42.55 kB（gzip 8.47 kB） | 1.64 kB（gzip 0.73 kB） |
-| 全部 JS | 1,223.24 kB | 约 1,226.81 kB |
-| 全部 CSS | 42.55 kB | 约 42.49 kB |
-
-按阶段的大致体积：
-
-| 页面/阶段 | 额外加载内容 | 体积 |
-|---|---|---|
-| 首屏 `/` | index + react-core + router + runtime + 入口 CSS（Home/RootLayout） | ≈ 262.9 kB JS + 1.6 kB CSS |
-| `/wiki` | WikiLayout + DocsHome + docs 数据 + 对应 CSS | ≈ 53.2 kB JS + 3.1 kB CSS |
-| 打开一篇文档 | Docs + markdown + prism + vendor + 主题 CSS | ≈ 896.0 kB JS + 35.5 kB CSS |
-| `/profile` | Profile + print + 对应 CSS | ≈ 14.7 kB JS + 2.3 kB CSS |
-
-> 分包不会显著改变总体积（chunk 封装带来约 +3.5 kB），收益来自**首屏只加载 react/router**。打开文档时仍会一次性加载完整的 markdown + 语法高亮链路。
-
-### 路径与部署约束
-
-- `base: '/'` 保持不变，适配 `https://linx-zhang.github.io/` 根域名部署
-- 懒加载 chunk 由运行时按 `import.meta.url` 相对解析，没有硬编码绝对路径
-- 若改到子路径部署，需要同步调整 `base`（如 `'/repo-name/'`）
+完整独立的 HTML 文件通过无边框 `<iframe srcDoc={...}>` 隔离嵌入，避免外部 CSS 污染文档原有样式。
 
 ---
 
@@ -231,36 +138,32 @@ build: {
 
 ### 样式与配色
 
+遵循极简工程师审美，统一色板：
+
 - 正文文字：`#1f2937`
 - 次要文字：`#4b5563`
 - 边框分割线：`#e5e7eb`
-- 页面样式按目录就近维护在各自的 `*.css` 中，通过组件内 `import './xxx.css'` 引入
 
 ### 打印与 PDF 导出
 
-- 所有不应出现在 PDF 中的 UI（导航栏、侧边栏、操作按钮）统一添加 `className="no-print"`
-- 打印样式通过 `@media print` 控制，`Profile.css` 中使用 `@page { size: A4; margin: 15mm 16mm; }`
-- 简历页通过 `useReactToPrint` 导出，`documentTitle` 为 `Linx_Zhang_Resume`
-- `.print-only` 元素仅在打印时显示（如联系方式行）；`https` 链接打印时会附带 URL
+- 所有不应出现在 PDF 中的 UI 元素（导航栏、侧边栏、操作按钮），必须统一添加 `className="no-print"`
+- 打印样式通过 `@media print` 媒体查询全局控制
+- 简历页针对 A4 纸张做了分页、边距与行高专项优化
+
+### SPA 静态部署兼容
+
+由于 GitHub Pages 为静态托管，直接访问带路径的 URL 会触发 404。项目通过以下方案解决：
+
+- `public/.nojekyll`：禁用 Jekyll 处理，确保下划线开头的静态资源正常加载
+- `public/404.html`：与 `index.html` 内容一致，配合 React Router 实现路由重定向
 
 ---
 
-## 🌐 部署到 GitHub Pages
+## 📦 部署到 GitHub Pages
 
 1. 执行 `npm run build` 生成 `/docs` 目录产物
-2. 提交并推送至仓库 `main` 分支
+2. 将代码推送至仓库 `main` 分支
 3. 在仓库 Settings → Pages 中配置：
    - Source：Deploy from a branch
    - Branch：`main` / `/docs`
-4. 等待部署完成后访问对应域名
-
-### SPA 深链兜底（404.html）
-
-GitHub Pages 为纯静态托管，直接访问或刷新 `/wiki/xxx`、`/profile` 会命中 404 页面。项目通过 `public/404.html` 自动恢复：
-
-1. `404.html` 仅在路径属于 `/wiki`、`/wiki/*`、`/profile` 时，把 `pathname + search + hash` 写入 `sessionStorage`，随后 `location.replace('/')`
-2. 入口 `src/main.tsx` 在 `BrowserRouter` 初始化之前读取并清除该值，用 `history.replaceState` 把地址栏恢复为原始路径
-3. React Router 随后正常命中目标路由，用户不会停在 404 或白屏
-
-- 通过站内链接正常跳转时不会触发 404.html
-- `.nojekyll` 不需要提供：当前构建产物中没有以下划线开头的资源
+4. 等待部署完成后访问对应域名即可
