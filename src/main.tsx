@@ -8,6 +8,8 @@ import Home from '@/pages/Home'
 import DocsHome from '@/pages/DocsHome'
 import Docs from '@/pages/Docs'
 import Profile from '@/pages/Profile'
+import Lab from '@/pages/Lab'
+import { APP_ROUTES, isKnownDeepLink } from '@/routes'
 
 // GitHub Pages 深链兜底：public/404.html 会把原始路径写入 sessionStorage 并重定向到根路径。
 // 必须在 BrowserRouter 初始化前恢复 URL，路由才能直接命中目标页面。
@@ -16,11 +18,7 @@ try {
   const fallbackPath = sessionStorage.getItem(FALLBACK_KEY)
   if (fallbackPath) {
     sessionStorage.removeItem(FALLBACK_KEY)
-    const isAppPath =
-      fallbackPath === '/wiki' ||
-      fallbackPath.startsWith('/wiki/') ||
-      fallbackPath === '/profile'
-    if (isAppPath) {
+    if (isKnownDeepLink(fallbackPath)) {
       window.history.replaceState(null, '', fallbackPath)
     }
   }
@@ -33,13 +31,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <Routes>
         <Route element={<RootLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/wiki" element={<WikiLayout />}>
+          <Route path={APP_ROUTES.home} element={<Home />} />
+          <Route path={APP_ROUTES.wiki} element={<WikiLayout />}>
             <Route index element={<DocsHome />} />
             <Route path="*" element={<Docs />} />
           </Route>
+          <Route path={APP_ROUTES.lab} element={<Lab />} />
         </Route>
-        <Route path="/profile" element={<Profile />} />
+        <Route path={APP_ROUTES.profile} element={<Profile />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

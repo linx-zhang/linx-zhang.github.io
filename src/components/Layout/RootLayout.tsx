@@ -8,6 +8,7 @@ export default function RootLayout() {
         <nav className="nav">
           <NavLink to="/" end className="nav-item">首页</NavLink>
           <NavLink to="/wiki" className="nav-item">知识库</NavLink>
+          <NavLink to="/lab" className="nav-item">实验台</NavLink>
           <NavLink to="/profile" className="nav-item">简历</NavLink>
         </nav>
       </header>
