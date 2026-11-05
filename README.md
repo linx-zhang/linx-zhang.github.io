@@ -141,7 +141,7 @@ import.meta.glob('/raw-docs/**/*.{md,markdown,html}', {
 ```
 
 - 只有 `.md`、`.markdown`、`.html` 会被打包；`raw-docs` 下的 `.py` 等文件仅作为笔记附件存在，不会被读取
-- `slug` 由文件路径去掉 `/raw-docs/` 前缀与扩展名得到（如 `python/sign.md` → `python/sign`）
+- `slug` 由文件路径去掉 `/raw-docs/` 前缀与扩展名得到（如 `python/request-signing.md` → `python/request-signing`）
 - 标题优先取 HTML 的 `<title>` 或 Markdown 第一行 `# 标题`，取不到则回退为 slug
 - 列表统一按 `title.localeCompare` 排序
 - `DocsHome` 的分类由 slug 第一段生成（无子目录归入「综合」）；`WikiLayout` 侧边栏直接平铺全部文档

@@ -21,7 +21,7 @@ def get_module(py_path):
 path = r"F:\project\py_test\linx-zhang.github.io\scripts\generate_menu.py"
 menu_module = get_module(path)
 
-path = r"F:\project\py_test\linx-zhang.github.io\python\algorithm\get-tree-bottom.py"
+path = r"F:\project\py_test\linx-zhang.github.io\python\algorithm\flatten-dict-paths.py"
 tree_module = get_module(path)
 
 ```

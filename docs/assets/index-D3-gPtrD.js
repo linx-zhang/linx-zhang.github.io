@@ -18,7 +18,7 @@ Please change the parent <Route path="${e}"> to <Route path="${e===`/`?`*`:`${e}
 > [!WARNING]\r
 > **Network Notice:** Because static assets are hosted on GitHub, access from mainland China may be slow or restricted.\r
 \r
-- **404 Troubleshooting:** If a page or script returns a 404 error, try appending the file extension (e.g., [\`build_site.py\`](https://linx-zhang.github.io/scripts/build_site.py)).\r
+- **404 Troubleshooting:** If a page or script returns a 404 error, try appending the file extension (e.g., [\`build-site.py\`](https://github.com/linx-zhang/linx-zhang.github.io/blob/main/raw-docs/scripts/build-site.py)).\r
 - **Code Copying Tip:** When copying code blocks, select the first line and press \`Ctrl + Shift + End\` to quickly select to the end of the block.\r
 \r
 ---\r
@@ -30,8 +30,8 @@ This personal knowledge base is hosted for free via GitHub Pages. Here is the ge
 1. **GitHub Setup:** Register a GitHub account and configure public repositories (\`linx-zhang.github.io\` for main content, plus an optional asset repo for static files).\r
 2. **Directory Structure:** Organize content folders by topics (e.g., \`python\`, \`golang\`, \`cpp\`) and manage static assets under \`static/\`.\r
 3. **Automated Menu Generation:** Generate and update the file tree navigation in \`index.html\` using the custom build script:\r
-   - [Live Documentation](https://linx-zhang.github.io/scripts/build_site)\r
-   - [Python Source Code](https://linx-zhang.github.io/scripts/build_site.py)\r
+   - [Live Documentation](https://linx-zhang.github.io/wiki/scripts/build-site)\r
+   - [Python Source Code](https://github.com/linx-zhang/linx-zhang.github.io/blob/main/raw-docs/scripts/build-site.py)\r
 \r
 ---\r
 \r
@@ -53,7 +53,49 @@ This personal knowledge base is hosted for free via GitHub Pages. Here is the ge
 ### 3. Media & Links\r
 ![Avatar](https://github.com/linx-zhang/static/blob/main/icon/logo.jpg?raw=true)\r
 \r
-- Return to [Home / README](../README.md)`,"/raw-docs/golang/LAN-share.md":`\r
+- Return to [Home / README](../README.md)`,"/raw-docs/golang/has-timestamp-safe-id.md":`\r
+# Generate Has Timestamp Id\r
+\r
+- The timestamp can be restored by id\r
+- Does not expose timestamp\r
+- The probability of duplicate id generated per second is \`1 / (1<<rand_bit_num)\` \r
+\r
+\`\`\`go\r
+import (\r
+	"crypto/rand"\r
+	"fmt"\r
+	"math/big"\r
+	"time"\r
+)\r
+\r
+const (\r
+	// Set any milliseconds timestamp \r
+	time_const   = 1657009310393\r
+	// Random number bits\r
+	rand_bit_num = 23\r
+)\r
+\r
+var bigMath big.Int\r
+\r
+func MakeId() *big.Int {\r
+	randInt, _ := rand.Int(rand.Reader, big.NewInt(1<<rand_bit_num))\r
+\r
+	bigT := big.NewInt(time.Now().UnixMilli() - time_const)\r
+\r
+	return bigMath.Or(bigMath.Lsh(bigT, rand_bit_num), randInt)\r
+}\r
+\r
+func main() {\r
+	id := MakeId()\r
+	fmt.Println("Database saved ID:", id)\r
+\r
+	// Reset id to timestamp\r
+	rsh_id := bigMath.Rsh(id, rand_bit_num)\r
+	fmt.Println(bigMath.Add(rsh_id, big.NewInt(time_const)))\r
+\r
+}\r
+\`\`\`\r
+`,"/raw-docs/golang/lan-share.md":`\r
 # Local Area Net Share local-file Tool\r
 \r
 - [LAN_Share.zip (win-x86-64.exe)](https://github.com/linx-zhang/static/blob/main/tools/LAN_Share.zip)\r
@@ -122,49 +164,7 @@ func main() {\r
 	Server()\r
 }\r
 \r
-\`\`\``,"/raw-docs/golang/has-timestamp-safe-id.md":`\r
-# Generate Has Timestamp Id\r
-\r
-- The timestamp can be restored by id\r
-- Does not expose timestamp\r
-- The probability of duplicate id generated per second is \`1 / (1<<rand_bit_num)\` \r
-\r
-\`\`\`go\r
-import (\r
-	"crypto/rand"\r
-	"fmt"\r
-	"math/big"\r
-	"time"\r
-)\r
-\r
-const (\r
-	// Set any milliseconds timestamp \r
-	time_const   = 1657009310393\r
-	// Random number bits\r
-	rand_bit_num = 23\r
-)\r
-\r
-var bigMath big.Int\r
-\r
-func MakeId() *big.Int {\r
-	randInt, _ := rand.Int(rand.Reader, big.NewInt(1<<rand_bit_num))\r
-\r
-	bigT := big.NewInt(time.Now().UnixMilli() - time_const)\r
-\r
-	return bigMath.Or(bigMath.Lsh(bigT, rand_bit_num), randInt)\r
-}\r
-\r
-func main() {\r
-	id := MakeId()\r
-	fmt.Println("Database saved ID:", id)\r
-\r
-	// Reset id to timestamp\r
-	rsh_id := bigMath.Rsh(id, rand_bit_num)\r
-	fmt.Println(bigMath.Add(rsh_id, big.NewInt(time_const)))\r
-\r
-}\r
-\`\`\`\r
-`,"/raw-docs/js/finance_simulator.html":`<!DOCTYPE html>
+\`\`\``,"/raw-docs/js/finance-simulator.html":`<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -550,7 +550,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 <\/script>
 </body>
-</html>`,"/raw-docs/python/algorithm/get-tree-bottom.md":`\r
+</html>`,"/raw-docs/python/algorithm/flatten-dict-paths.md":`\r
 # Get the keys of all levels above the base type\r
 \r
 \`\`\`python\r
@@ -638,120 +638,7 @@ f("k4")\r
 {'k4--k1': 8, 'k4--k2': 9}\r
 """\r
 \r
-\`\`\``,"/raw-docs/python/concat_images.md":`\r
-\`\`\`python\r
-import os\r
-from PIL import Image\r
-\r
-def merge_images_vertical(target_dir: str, output_path: str = "merged.png"):\r
-    """\r
-    多张图片从上到下合并，左对齐，宽度不够补白色背景\r
-    :param target_dir: 图片文件夹路径\r
-    :param output_path: 输出图片路径\r
-    """\r
-    # 1. 获取文件夹图片，按文件名排序\r
-    img_ext = (".jpg", ".jpeg", ".png", ".bmp")\r
-    file_list = [f for f in os.listdir(target_dir) if f.lower().endswith(img_ext)]\r
-    file_list.sort()  # 按文件名排序\r
-\r
-    if not file_list:\r
-        raise FileNotFoundError("target文件夹没有找到图片")\r
-\r
-    images = []\r
-    max_width = 0\r
-    total_height = 0\r
-\r
-    # 遍历读取图片，计算最大宽度、总高度\r
-    for filename in file_list:\r
-        fp = os.path.join(target_dir, filename)\r
-        im = Image.open(fp).convert("RGBA")\r
-        images.append(im)\r
-        w, h = im.size\r
-        if w > max_width:\r
-            max_width = w\r
-        total_height += h\r
-\r
-    # 创建画布：最大宽度，全部图片高度之和，白色背景\r
-    result = Image.new("RGBA", (max_width, total_height), color=(255, 255, 255, 255))\r
-\r
-    current_y = 0\r
-    for im in images:\r
-        w, h = im.size\r
-        # 左对齐粘贴，x=0；宽度不足max_width，右侧自动留白\r
-        result.paste(im, box=(0, current_y))\r
-        current_y += h\r
-\r
-    # 如果想要输出jpg，转RGB去掉alpha通道\r
-    if output_path.lower().endswith(".jpg") or output_path.lower().endswith(".jpeg"):\r
-        result = result.convert("RGB")\r
-    result.save(output_path)\r
-    print(f"合并完成，输出：{output_path}")\r
-\r
-\r
-if __name__ == "__main__":\r
-    merge_images_vertical(target_dir="./target", output_path="./out.png")\r
-\r
-\`\`\`\r
-`,"/raw-docs/python/concat_multiple_img.md":`\`\`\`python\r
-import os\r
-import time\r
-from PIL import Image\r
-import numpy as np\r
-\r
-t = time.time()\r
-\r
-# 设置图片路径\r
-image_dir = r'C:\\Users\\Linx\\Pictures\\Screenshots'\r
-\r
-# 获取目录下的所有图片文件\r
-image_files = [f for f in os.listdir(image_dir) if f.endswith('.jpg') or f.endswith('.png')]\r
-\r
-# 将每个图片转换为 NumPy 数组并存储在列表中\r
-image_arrays = []\r
-for image_file in sorted(image_files):\r
-    image = Image.open(os.path.join(image_dir, image_file))\r
-    image_array = np.array(image)\r
-    image_arrays.append(image_array)\r
-\r
-# 获取最大的宽度，填充白色\r
-max_width = max(image_array.shape[1] for image_array in image_arrays)\r
-pixel_len = max(image_array.shape[2] for image_array in image_arrays)\r
-for i, image_array in enumerate(image_arrays):\r
-    # 宽度统一\r
-    if image_array.shape[1] < max_width:\r
-        # TODO color\r
-        color = [255, 255, 255]\r
-        if image_array.shape[2] == 4:\r
-            color.append(255)\r
-        length = image_array.shape[0]\r
-        width = max_width - image_array.shape[1]\r
-\r
-        padding = np.array([color] * length * width, dtype=np.uint8).reshape(\r
-            (length, width, len(color))\r
-        )\r
-        image_array = np.concatenate((image_array, padding), axis=1)\r
-\r
-    # 补充rgb -> rgba\r
-    if image_array.shape[2] < pixel_len:\r
-        image_array = np.pad(image_array,\r
-                             ((0, 0), (0, 0), (0, pixel_len - image_array.shape[2])),\r
-                             'constant', constant_values=255)\r
-    image_arrays[i] = image_array\r
-\r
-# 纵向合并所有 NumPy 数组\r
-merged_array = np.concatenate(image_arrays, axis=0)\r
-\r
-# 从合并后的 NumPy 数组创建 PIL 图像\r
-merged_image = Image.fromarray(merged_array)\r
-\r
-# 保存长图\r
-merged_image.save(image_dir + r'\\long_image.png')\r
-\r
-print('Time:', time.time() - t)\r
-print('Done!')\r
-\r
-\`\`\`\r
-`,"/raw-docs/python/cprofile-example.md":`\`\`\`python\r
+\`\`\``,"/raw-docs/python/cprofile-middleware.md":`\`\`\`python\r
 import cProfile\r
 import pstats\r
 import io\r
@@ -783,7 +670,7 @@ class ProfileMiddleware:\r
             return response\r
         else:\r
             return self.get_response(request)\r
-\`\`\``,"/raw-docs/python/devops/devops-overview.md":`\r
+\`\`\``,"/raw-docs/python/devops/overview.md":`\r
 # What's Devops\r
 \r
 If you look back to the state of technology only a few decades ago, you’ll stumble upon a technological world full of silos and frustration. Two of an organization’s most vital teams—software development and IT operations—struggled to communicate effectively. Departments resided within silos, and development and testing were conducted at a snail’s pace.\r
@@ -850,7 +737,7 @@ While improving workflows is key to building stronger development processes, mak
 \r
 [For more people to see, copy and paste.](https://orangematter.solarwinds.com/2022/03/21/what-is-devops/)\r
 \r
-**If there is a copyright issue, please contact me to delete.**`,"/raw-docs/python/find-cn-char.md":`\r
+**If there is a copyright issue, please contact me to delete.**`,"/raw-docs/python/find-chinese-characters.md":`\r
 # Find chinese-character Tool\r
 \r
 - [Find-chinese-character.zip (win-x86-64.exe)](https://github.com/linx-zhang/static/blob/main/tools/find_cn_character.zip)\r
@@ -990,7 +877,7 @@ def sizeof(obj):\r
     if isinstance(obj, dict): return size + sum(map(sizeof, obj.keys())) + sum(map(sizeof, obj.values()))\r
     if isinstance(obj, (list, tuple, set, frozenset)): return size + sum(map(sizeof, obj))\r
     return size\r
-\`\`\``,"/raw-docs/python/import.md":`\r
+\`\`\``,"/raw-docs/python/importlib.md":`\r
 # importlib\r
 \r
 - Import python files anywhere\r
@@ -1013,7 +900,7 @@ def get_module(py_path):\r
 path = r"F:\\project\\py_test\\linx-zhang.github.io\\scripts\\generate_menu.py"\r
 menu_module = get_module(path)\r
 \r
-path = r"F:\\project\\py_test\\linx-zhang.github.io\\python\\algorithm\\get-tree-bottom.py"\r
+path = r"F:\\project\\py_test\\linx-zhang.github.io\\python\\algorithm\\flatten-dict-paths.py"\r
 tree_module = get_module(path)\r
 \r
 \`\`\``,"/raw-docs/python/io-cpu-intensive-task.md":`\r
@@ -1075,7 +962,120 @@ a：可以，写入数据库有io等待，数据库可以并行写入，直到�
 \r
 \r
 **[io-cpu密集型任务来源](https://superfastpython.com/thread-vs-process/#When_to_Use_Threads)**\r
-`,"/raw-docs/python/pyqt/guide.html":`\r
+`,"/raw-docs/python/merge-images-with-numpy.md":`\`\`\`python\r
+import os\r
+import time\r
+from PIL import Image\r
+import numpy as np\r
+\r
+t = time.time()\r
+\r
+# 设置图片路径\r
+image_dir = r'C:\\Users\\Linx\\Pictures\\Screenshots'\r
+\r
+# 获取目录下的所有图片文件\r
+image_files = [f for f in os.listdir(image_dir) if f.endswith('.jpg') or f.endswith('.png')]\r
+\r
+# 将每个图片转换为 NumPy 数组并存储在列表中\r
+image_arrays = []\r
+for image_file in sorted(image_files):\r
+    image = Image.open(os.path.join(image_dir, image_file))\r
+    image_array = np.array(image)\r
+    image_arrays.append(image_array)\r
+\r
+# 获取最大的宽度，填充白色\r
+max_width = max(image_array.shape[1] for image_array in image_arrays)\r
+pixel_len = max(image_array.shape[2] for image_array in image_arrays)\r
+for i, image_array in enumerate(image_arrays):\r
+    # 宽度统一\r
+    if image_array.shape[1] < max_width:\r
+        # TODO color\r
+        color = [255, 255, 255]\r
+        if image_array.shape[2] == 4:\r
+            color.append(255)\r
+        length = image_array.shape[0]\r
+        width = max_width - image_array.shape[1]\r
+\r
+        padding = np.array([color] * length * width, dtype=np.uint8).reshape(\r
+            (length, width, len(color))\r
+        )\r
+        image_array = np.concatenate((image_array, padding), axis=1)\r
+\r
+    # 补充rgb -> rgba\r
+    if image_array.shape[2] < pixel_len:\r
+        image_array = np.pad(image_array,\r
+                             ((0, 0), (0, 0), (0, pixel_len - image_array.shape[2])),\r
+                             'constant', constant_values=255)\r
+    image_arrays[i] = image_array\r
+\r
+# 纵向合并所有 NumPy 数组\r
+merged_array = np.concatenate(image_arrays, axis=0)\r
+\r
+# 从合并后的 NumPy 数组创建 PIL 图像\r
+merged_image = Image.fromarray(merged_array)\r
+\r
+# 保存长图\r
+merged_image.save(image_dir + r'\\long_image.png')\r
+\r
+print('Time:', time.time() - t)\r
+print('Done!')\r
+\r
+\`\`\`\r
+`,"/raw-docs/python/merge-images-with-pil.md":`\r
+\`\`\`python\r
+import os\r
+from PIL import Image\r
+\r
+def merge_images_vertical(target_dir: str, output_path: str = "merged.png"):\r
+    """\r
+    多张图片从上到下合并，左对齐，宽度不够补白色背景\r
+    :param target_dir: 图片文件夹路径\r
+    :param output_path: 输出图片路径\r
+    """\r
+    # 1. 获取文件夹图片，按文件名排序\r
+    img_ext = (".jpg", ".jpeg", ".png", ".bmp")\r
+    file_list = [f for f in os.listdir(target_dir) if f.lower().endswith(img_ext)]\r
+    file_list.sort()  # 按文件名排序\r
+\r
+    if not file_list:\r
+        raise FileNotFoundError("target文件夹没有找到图片")\r
+\r
+    images = []\r
+    max_width = 0\r
+    total_height = 0\r
+\r
+    # 遍历读取图片，计算最大宽度、总高度\r
+    for filename in file_list:\r
+        fp = os.path.join(target_dir, filename)\r
+        im = Image.open(fp).convert("RGBA")\r
+        images.append(im)\r
+        w, h = im.size\r
+        if w > max_width:\r
+            max_width = w\r
+        total_height += h\r
+\r
+    # 创建画布：最大宽度，全部图片高度之和，白色背景\r
+    result = Image.new("RGBA", (max_width, total_height), color=(255, 255, 255, 255))\r
+\r
+    current_y = 0\r
+    for im in images:\r
+        w, h = im.size\r
+        # 左对齐粘贴，x=0；宽度不足max_width，右侧自动留白\r
+        result.paste(im, box=(0, current_y))\r
+        current_y += h\r
+\r
+    # 如果想要输出jpg，转RGB去掉alpha通道\r
+    if output_path.lower().endswith(".jpg") or output_path.lower().endswith(".jpeg"):\r
+        result = result.convert("RGB")\r
+    result.save(output_path)\r
+    print(f"合并完成，输出：{output_path}")\r
+\r
+\r
+if __name__ == "__main__":\r
+    merge_images_vertical(target_dir="./target", output_path="./out.png")\r
+\r
+\`\`\`\r
+`,"/raw-docs/python/pyqt/windows-toolchain.html":`\r
 <head>\r
     <link rel="stylesheet" href="https://linx-zhang.github.io/static/css/github-markdown.css">\r
 \r
@@ -1100,7 +1100,7 @@ a：可以，写入数据库有io等待，数据库可以并行写入，直到�
 \r
 </article>\r
 </body>\r
-`,"/raw-docs/python/sign.md":`\`\`\`python\r
+`,"/raw-docs/python/request-signing.md":`\`\`\`python\r
 import hashlib\r
 import json\r
 import time\r
@@ -1160,7 +1160,7 @@ d = {}\r
 receiver(sender(d))\r
 \r
 \`\`\`\r
-`,"/raw-docs/scripts/build_site.md":`\`\`\`python\r
+`,"/raw-docs/python/stream-tar-directory.md":'# transfer.py：把目录流式打包为 tar\n\n`transfer.py` 是一个只依赖 Python 标准库的小工具：在后台线程里边遍历目录边生成未压缩的 tar 字节流，通过有界队列交给调用方逐块消费，适合把目录内容边打包边下发的场景。\n\n## 概览\n\n| 名称 | 作用 | 关键参数 |\n| --- | --- | --- |\n| `TarQueueWriter` | 极简 `fileobj` 适配器，只实现 `write` / `flush`，把 tarfile 写入的字节按固定块大小塞进队列 | `q: Queue`、`chunk_size: int` |\n| `TarQueueWriter.write(b)` | 累积字节，攒满 `chunk_size` 就切块入队，剩余不足一块的留在 `buffer` | `b: bytes` |\n| `TarQueueWriter.flush()` | 把 `buffer` 里的残留字节作为最后一块入队并清空 | 无 |\n| `stream_tar_directory(dir_path, chunk_size=1024*1024, q_maxsize=16)` | 生成器：后台线程打包目录，主线程从队列取块并 `yield` | `dir_path` 源目录；`chunk_size` 单块字节数；`q_maxsize` 队列容量（背压上限） |\n\n## 依赖与上下文\n\n- **依赖**：仅标准库 `threading`、`tarfile`、`os`、`pathlib.Path`、`typing.Generator`、`queue.Queue`；不依赖 Django、models、serializers 或本项目其它模块。\n- **位置**：`aap/apps/analytics/services/transfer.py`，但文件首行注释写的是 `# tar_gen.py`，文件名与内部注释不一致，推测是从独立脚本演进而来（待确认）。\n- **调用方**：在 `aap4-backend` 全仓库搜索 `stream_tar_directory`、`services.transfer` 等引用，除了本文件自身没有任何命中，说明当前没有被任何视图、任务或服务 import。\n- **可能的接入方式（推断）**：作为 `StreamingHttpResponse` 的数据源逐块输出。仓库中确实存在同类“生成器 + 流式响应”的写法（如 `apps/api/rest_views/stats.py` 的 `sp` action 用 `StreamingHttpResponse(generate())` 输出二进制块），但那段代码并没有使用本模块，不能视为真实调用链。\n\n## 核心逻辑\n\n按执行顺序：\n\n1. **路径校验**：`Path(dir_path).resolve()` 后检查 `is_dir()`；不是目录就抛 `FileNotFoundError`（即使路径存在但类型不是目录，也用同一个异常）。\n2. **准备通道**：创建 `Queue(maxsize=q_maxsize)`、错误收集列表 `error`，以及结束标记 `SENTINEL = None`。\n3. **启动后台线程**（`daemon=True`），核心步骤：\n   - 构造 `TarQueueWriter(q, chunk_size)`；\n   - 以 `tarfile.open(mode="w|", fileobj=tw)` 打开流式、不压缩的 tar（`w|` 表示顺序写、不可回退，不需要 `seek` / `tell`）；\n   - `os.walk(dir_path)` 只遍历文件（不单独处理目录条目）；\n   - 对每个文件：`arcname = 相对路径 + 反斜杠转正斜杠`，`tar.gettarinfo(fpath, arcname=arcname)` 生成元信息，再用 `stat().st_mtime` 覆盖 `tarinfo.mtime`，最后 `tar.addfile(tarinfo, 文件对象)` 写入数据；\n   - 正常结束后 `tar.close()` 并 `tw.flush()`；\n   - 捕获 `BaseException` 存入 `error`，`finally` 里再兜底 `close()` / `flush()`（各自 try/except 忽略异常），最后 `q.put(SENTINEL)` 通知消费者结束。\n4. **主线程消费**：循环 `q.get(block=True)`，遇到 `SENTINEL` 退出，否则 `yield` 数据块。\n5. **收尾**：生成器 `finally` 中 `t.join(timeout=10)`；若 `error` 非空，取第一个异常，`BrokenPipeError` / `ConnectionResetError` 视为客户端断开而忽略，其它异常重新抛出。\n\n关键分支与边界：\n\n- 目录为空时会产出一个只有 tar 结束块的合法空归档。\n- 打包中途读文件失败：已经 `yield` 过的块无法撤回，消费者会先收到部分数据，等 `SENTINEL` 后收到异常。\n- 队列满时后台线程会阻塞在 `q.put`，形成背压，避免无限占用内存。\n- 消费端提前停止迭代时，生成器 `finally` 只等待线程 10 秒；若线程仍阻塞在入队，会作为 daemon 线程滞留。\n\n## 要点 / 坑\n\n- **不压缩**：`mode="w|"` 产出纯 tar，压缩需由上层另行处理（代码里没有 gzip 逻辑）。\n- **归档没有顶层目录**：`arcname` 相对 `dir_path` 计算，解包后文件直接铺在目标目录，不会多出一层源目录名。\n- **不保留空目录**：只遍历 `files`，目录本身不会写入 tar。\n- **元信息不完全可控**：`mtime` 被显式覆盖，但 `uid/gid/uname/gname` 等由 `gettarinfo` 填充；条目顺序依赖 `os.walk`，因此同一目录多次打包的字节不保证完全一致。\n- **符号链接与特殊文件**：代码没有显式处理软链接、设备文件等，行为取决于 `tarfile.gettarinfo` 与 `open` 的默认语义，边界情况待确认。\n- **内存上限**：大致是 `chunk_size × (q_maxsize + 1)` 加上 tarfile 内部缓冲（默认 1 MiB × 16 队列块，约 16 MB 级别），由队列容量控制。\n- **错误传播时机**：异常在消费者收到 `SENTINEL` 之后才抛出，可能已经写出部分字节，HTTP 响应无法再改状态码。\n- **客户端断开**：`BrokenPipeError` / `ConnectionResetError` 被有意吞掉，避免断开连接时刷错误日志。\n- **线程收尾**：`join(timeout=10)` 不是无限等待；消费端提前关闭生成器时，后台线程可能仍卡在 `q.put`，靠 daemon 属性随进程退出。\n- **重复收尾是幂等的**：`tar.close()` 与 `tw.flush()` 在 `try` 和 `finally` 中都调用了一次，第二次为空操作，用来兜底异常路径。\n- **`write` 无返回值**：`TarQueueWriter.write` 只入队不返回字节数，依赖 `tarfile` 流式写入时不检查返回值。\n- **不做任何过滤**：隐藏文件、临时文件、缓存文件都会被原样打包，调用方需要自己保证目录内容干净。\n\n## 完整源码\n\n```python\n# tar_gen.py\nimport threading\nimport tarfile\nimport os\nfrom pathlib import Path\nfrom typing import Generator\nfrom queue import Queue\n\n\nclass TarQueueWriter:\n    """极简自定义writer，只实现write，供tarfile使用，不需要seek/tell"""\n    def __init__(self, q: Queue, chunk_size: int):\n        self.q = q\n        self.chunk_size = chunk_size\n        self.buffer = b""\n\n    def write(self, b: bytes):\n        self.buffer += b\n        # 攒够块大小丢入队列\n        while len(self.buffer) >= self.chunk_size:\n            send_chunk = self.buffer[:self.chunk_size]\n            self.buffer = self.buffer[self.chunk_size:]\n            self.q.put(send_chunk)\n\n    def flush(self):\n        # 把剩余残留buffer推到队列\n        if self.buffer:\n            self.q.put(self.buffer)\n            self.buffer = b""\n\n\ndef stream_tar_directory(dir_path: str, chunk_size=1024*1024, q_maxsize=16) -> Generator[bytes, None, None]:\n    """\n    流式打包目录为 tar（不压缩）\n    :param dir_path: 源目录\n    :param chunk_size: 输出块大小\n    :param q_maxsize: 队列最大缓存块数，背压，限制内存上限\n    """\n    dir_path = Path(dir_path).resolve()\n    if not dir_path.is_dir():\n        raise FileNotFoundError(f"目录不存在: {dir_path}")\n\n    q: Queue[bytes | None] = Queue(maxsize=q_maxsize)\n    error: list[BaseException] = []\n    SENTINEL = None\n\n    def _tar_worker():\n        tw = None\n        tar = None\n        try:\n            tw = TarQueueWriter(q, chunk_size)\n            # w| 代表：流式写，不压缩（|=stream模式）\n            tar = tarfile.open(mode="w|", fileobj=tw)\n\n            for root, _, files in os.walk(dir_path):\n                for fname in files:\n                    fpath = Path(root) / fname\n                    # tar内路径，统一正斜杠\n                    arcname = str(fpath.relative_to(dir_path)).replace("\\\\", "/")\n                    stat = fpath.stat()\n\n                    # 创建tarinfo，填充元信息\n                    tarinfo = tar.gettarinfo(fpath, arcname=arcname)\n                    tarinfo.mtime = stat.st_mtime\n                    # 读文件写入tar流\n                    with open(fpath, "rb") as f:\n                        tar.addfile(tarinfo, f)\n\n            tar.close()\n            tw.flush()\n        except BaseException as e:\n            error.append(e)\n        finally:\n            if tar is not None:\n                try:\n                    tar.close()\n                except Exception:\n                    pass\n            if tw is not None:\n                try:\n                    tw.flush()\n                except Exception:\n                    pass\n            # 发送结束标记\n            q.put(SENTINEL)\n\n    t = threading.Thread(target=_tar_worker, daemon=True)\n    t.start()\n\n    try:\n        while True:\n            item = q.get(block=True)\n            if item is SENTINEL:\n                break\n            yield item\n    finally:\n        t.join(timeout=10)\n        if error:\n            exc = error[0]\n            # 客户端断开连接属于正常\n            if not isinstance(exc, (BrokenPipeError, ConnectionResetError)):\n                raise exc\n```\n',"/raw-docs/scripts/build-site.md":`\`\`\`python\r
 import os\r
 import re\r
 import shutil\r
