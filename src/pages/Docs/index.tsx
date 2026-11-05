@@ -4,6 +4,7 @@ import { getDocBySlug, getDocList } from '@/utils/docs';
 // --- Markdown 渲染核心依赖 ---
 import ReactMarkdown from 'react-markdown';
 import remarkFrontmatter from 'remark-frontmatter';
+import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypePrismPlus from 'rehype-prism-plus';
 
@@ -54,8 +55,8 @@ export default function Docs() {
       ) : (
         <div className="markdown-body" style={{ flexGrow: 1, color: '#1f2937', lineHeight: 1.6 }}>
           <ReactMarkdown
-            // 过滤掉头部的 yaml 元信息
-            remarkPlugins={[remarkFrontmatter]} 
+            // 过滤掉头部的 yaml 元信息，并启用 GFM 表格
+            remarkPlugins={[remarkFrontmatter, remarkGfm]} 
             // 允许渲染 md 文件里手写的 <div> 等 HTML 标签，加入 Prism 语法高亮
             rehypePlugins={[rehypeRaw, [rehypePrismPlus, { ignoreMissing: true }]]} 
           >
