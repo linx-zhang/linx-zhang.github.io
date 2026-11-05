@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Tool-generated artifacts
+.trae-html-share-packages/
+.screenshots/
+.idea/

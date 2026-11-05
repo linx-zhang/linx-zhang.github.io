@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>正在跳转…</title>
+    <script>
+      // GitHub Pages 对任意未知路径都会返回本页。
+      // 把应用内的原始路径暂存到 sessionStorage，再回到根路径，
+      // 由 src/main.tsx 在路由初始化前恢复，从而落到正确页面。
+      (function () {
+        var path = window.location.pathname
+        var target = path + window.location.search + window.location.hash
+        var isAppPath =
+          path === '/wiki' || path.indexOf('/wiki/') === 0 || path === '/profile'
+
+        if (isAppPath) {
+          try {
+            window.sessionStorage.setItem('spa-fallback-path', target)
+          } catch (e) {
+            // 隐私模式下 sessionStorage 不可用时直接回首页
+          }
+        }
+
+        window.location.replace('/')
+      })()
+    </script>
+  </head>
+  <body>
+    <noscript>页面不存在，请返回 <a href="/">首页</a>。</noscript>
+  </body>
+</html>
