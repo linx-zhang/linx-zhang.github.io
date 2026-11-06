@@ -18,6 +18,13 @@ body {
   padding: 1rem 1.5rem;
   background: #fff;
 }
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 .nav {
   display: flex;
   gap: 1.5rem;
@@ -44,6 +51,14 @@ body {
   color: #6b7280;
   font-size: 0.9rem;
   border-top: 1px solid #e5e7eb;
+}
+@media (max-width: 480px) {
+  .global-header {
+    padding: 0.75rem 1rem;
+  }
+  .nav {
+    gap: 1rem;
+  }
 }
 @media print {
   .no-print {

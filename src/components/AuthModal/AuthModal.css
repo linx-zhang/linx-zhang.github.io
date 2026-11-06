@@ -1,0 +1,123 @@
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(31, 41, 55, 0.45);
+}
+.auth-modal {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  padding: 1.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+.auth-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  color: #4b5563;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+.auth-tabs {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.auth-tab {
+  padding: 0 0 0.35rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #4b5563;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.auth-tab.active {
+  border-bottom-color: #1f2937;
+  color: #1f2937;
+  font-weight: 600;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+.auth-field input {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 0.95rem;
+  outline: none;
+}
+.auth-field input:focus {
+  border-color: #1f2937;
+}
+.auth-error {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.auth-submit {
+  margin-top: 0.25rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.auth-submit:hover:not(:disabled) {
+  opacity: 0.85;
+}
+.auth-submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.auth-switch {
+  margin: 1rem 0 0;
+  color: #4b5563;
+  font-size: 0.85rem;
+  text-align: center;
+}
+.auth-switch button {
+  margin-left: 0.25rem;
+  border: none;
+  background: transparent;
+  color: #1f2937;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+@media (max-width: 480px) {
+  .auth-modal {
+    padding: 1.25rem;
+  }
+}
