@@ -8,7 +8,9 @@ import Home from '@/pages/Home'
 import DocsHome from '@/pages/DocsHome'
 import Docs from '@/pages/Docs'
 import Profile from '@/pages/Profile'
-import Lab from '@/pages/Lab'
+import Blog from '@/pages/Blog'
+import PostDetail from '@/pages/Blog/PostDetail'
+import Admin from '@/pages/Admin'
 import { APP_ROUTES, isKnownDeepLink } from '@/routes'
 
 // GitHub Pages 深链兜底：public/404.html 会把原始路径写入 sessionStorage 并重定向到根路径。
@@ -36,7 +38,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route index element={<DocsHome />} />
             <Route path="*" element={<Docs />} />
           </Route>
-          <Route path={APP_ROUTES.lab} element={<Lab />} />
+          <Route path={APP_ROUTES.blog} element={<Blog />} />
+          <Route path={`${APP_ROUTES.blog}/:id`} element={<PostDetail />} />
+          <Route path={APP_ROUTES.admin} element={<Admin />} />
         </Route>
         <Route path={APP_ROUTES.profile} element={<Profile />} />
       </Routes>

@@ -1,0 +1,300 @@
+import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { ApiError } from '@/api/auth'
+import { blogApi } from '@/api/blog'
+import type { Comment, Post } from '@/api/blog'
+import { useAuth } from '@/auth/AuthProvider'
+import MarkdownView from '@/components/MarkdownView'
+import './Blog.css'
+
+function formatDate(value: string): string {
+  return value.replace('T', ' ').slice(0, 16)
+}
+
+function errorText(err: unknown): string {
+  if (err instanceof ApiError) {
+    return err.status >= 500 ? '服务暂时不可用，请稍后重试。' : err.detail
+  }
+  return '网络请求失败，请检查连接后重试。'
+}
+
+function commentOrder(a: Comment, b: Comment): number {
+  if (a.created_at === b.created_at) return a.id - b.id
+  return a.created_at < b.created_at ? -1 : 1
+}
+
+export default function PostDetail() {
+  const { id } = useParams()
+  const postId = Number(id)
+  const validId = Number.isInteger(postId) && postId > 0
+
+  const { user, openLogin } = useAuth()
+
+  const [post, setPost] = useState<Post | null>(null)
+  const [postStatus, setPostStatus] = useState<'loading' | 'ready' | 'missing' | 'error'>(
+    validId ? 'loading' : 'missing',
+  )
+  const [postError, setPostError] = useState('')
+  const [postReloadKey, setPostReloadKey] = useState(0)
+
+  const [comments, setComments] = useState<Comment[]>([])
+  const [commentStatus, setCommentStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [commentError, setCommentError] = useState('')
+
+  const [body, setBody] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [deleteError, setDeleteError] = useState('')
+
+  useEffect(() => {
+    if (!validId) return
+    let cancelled = false
+    setPostStatus('loading')
+    setPostError('')
+    blogApi
+      .getPost(postId)
+      .then((value) => {
+        if (cancelled) return
+        setPost(value)
+        setPostStatus('ready')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        if (err instanceof ApiError && err.status === 404) {
+          setPostStatus('missing')
+          return
+        }
+        setPostError(errorText(err))
+        setPostStatus('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [postId, validId, postReloadKey])
+
+  useEffect(() => {
+    if (!validId) return
+    let cancelled = false
+    setCommentStatus('loading')
+    setCommentError('')
+    blogApi
+      .listComments(postId)
+      .then((list) => {
+        if (cancelled) return
+        setComments([...list].sort(commentOrder))
+        setCommentStatus('ready')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setCommentError(errorText(err))
+        setCommentStatus('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [postId, validId])
+
+  const refreshComments = () => {
+    setCommentStatus('loading')
+    setCommentError('')
+    blogApi
+      .listComments(postId)
+      .then((list) => {
+        setComments([...list].sort(commentOrder))
+        setCommentStatus('ready')
+      })
+      .catch((err) => {
+        setCommentError(errorText(err))
+        setCommentStatus('error')
+      })
+  }
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    setSubmitError('')
+    const trimmed = body.trim()
+    if (trimmed.length === 0) {
+      setSubmitError('评论内容不能为空')
+      return
+    }
+    if (trimmed.length > 5000) {
+      setSubmitError('评论内容不能超过 5000 个字符')
+      return
+    }
+    setSubmitting(true)
+    try {
+      await blogApi.createComment(postId, trimmed)
+      setBody('')
+      refreshComments()
+    } catch (err) {
+      setSubmitError(errorText(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (commentId: number) => {
+    setDeleteError('')
+    setDeletingId(commentId)
+    try {
+      await blogApi.deleteComment(commentId)
+      refreshComments()
+    } catch (err) {
+      setDeleteError(errorText(err))
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  if (postStatus === 'missing') {
+    return (
+      <div className="blog-page">
+        <div className="blog-state">
+          <p>文章不存在或已被删除。</p>
+          <Link className="blog-button" to="/blog">
+            返回博客列表
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (postStatus === 'loading') {
+    return (
+      <div className="blog-page">
+        <div className="blog-state">加载中…</div>
+      </div>
+    )
+  }
+
+  if (postStatus === 'error' || !post) {
+    return (
+      <div className="blog-page">
+        <div className="blog-state blog-state-error">
+          <p>{postError}</p>
+          <div className="blog-state-actions">
+            <button
+              type="button"
+              className="blog-button"
+              onClick={() => setPostReloadKey((key) => key + 1)}
+            >
+              重试
+            </button>
+            <Link className="blog-button" to="/blog">
+              返回列表
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="blog-page">
+      <article className="post-detail">
+        <Link className="post-back" to="/blog">
+          ← 返回博客列表
+        </Link>
+        <h1 className="post-title">{post.title}</h1>
+        <div className="blog-meta post-meta">
+          {formatDate(post.created_at)}
+          {post.author_email ? ` · ${post.author_email}` : ''}
+        </div>
+        <MarkdownView className="post-body" content={post.body_md} />
+      </article>
+
+      <section className="comment-section">
+        <h2 className="comment-heading">评论</h2>
+
+        {commentStatus === 'loading' && <div className="blog-state">评论加载中…</div>}
+
+        {commentStatus === 'error' && (
+          <div className="blog-state blog-state-error">
+            <p>{commentError}</p>
+            <button type="button" className="blog-button" onClick={refreshComments}>
+              重试
+            </button>
+          </div>
+        )}
+
+        {commentStatus === 'ready' && comments.length === 0 && (
+          <div className="blog-state">还没有评论，来说两句吧。</div>
+        )}
+
+        {commentStatus === 'ready' && comments.length > 0 && (
+          <ul className="comment-list">
+            {comments.map((comment) => (
+              <li
+                key={comment.id}
+                className={
+                  comment.parent_id === null ? 'comment-item' : 'comment-item comment-reply'
+                }
+              >
+                <div className="comment-head">
+                  <span className="comment-avatar" aria-hidden="true">
+                    {(comment.author_email ?? '?').charAt(0).toUpperCase()}
+                  </span>
+                  <span className="comment-author">{comment.author_email ?? '匿名'}</span>
+                  <span className="comment-time">{formatDate(comment.created_at)}</span>
+                  {user?.role === 'admin' && (
+                    <button
+                      type="button"
+                      className="comment-delete"
+                      disabled={deletingId === comment.id}
+                      onClick={() => handleDelete(comment.id)}
+                    >
+                      {deletingId === comment.id ? '删除中…' : '删除'}
+                    </button>
+                  )}
+                </div>
+                <p className="comment-body">{comment.body}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {deleteError && <p className="comment-error">{deleteError}</p>}
+
+        <div className="comment-form">
+          {user ? (
+            <form onSubmit={handleSubmit}>
+              <label className="comment-field">
+                <span>发表评论</span>
+                <textarea
+                  value={body}
+                  onChange={(event) => {
+                    setBody(event.target.value)
+                    setSubmitError('')
+                  }}
+                  rows={4}
+                  maxLength={5000}
+                  placeholder="写下你的想法…"
+                />
+              </label>
+              {submitError && <p className="comment-error">{submitError}</p>}
+              <div className="comment-form-footer">
+                <span className="comment-count">{body.length} / 5000</span>
+                <button
+                  type="submit"
+                  className="blog-button comment-submit"
+                  disabled={submitting || body.trim().length === 0}
+                >
+                  {submitting ? '提交中…' : '发表评论'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="comment-login">
+              <p>登录后评论。</p>
+              <button type="button" className="blog-button" onClick={openLogin}>
+                登录
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  )
+}
