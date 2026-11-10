@@ -6,14 +6,15 @@ export const APP_ROUTES = {
   admin: '/admin',
 } as const
 
-/** 判断路径是否属于需要从 404 兜底中恢复的应用内深链 */
+/** 判断路径是否属于需要从 404 兜底中恢复的应用内深链（忽略 query / hash） */
 export function isKnownDeepLink(path: string): boolean {
+  const pathname = path.split(/[?#]/)[0]
   return (
-    path === APP_ROUTES.wiki ||
-    path.startsWith(`${APP_ROUTES.wiki}/`) ||
-    path === APP_ROUTES.blog ||
-    path.startsWith(`${APP_ROUTES.blog}/`) ||
-    path === APP_ROUTES.admin ||
-    path === APP_ROUTES.profile
+    pathname === APP_ROUTES.wiki ||
+    pathname.startsWith(`${APP_ROUTES.wiki}/`) ||
+    pathname === APP_ROUTES.blog ||
+    pathname.startsWith(`${APP_ROUTES.blog}/`) ||
+    pathname === APP_ROUTES.admin ||
+    pathname === APP_ROUTES.profile
   )
 }

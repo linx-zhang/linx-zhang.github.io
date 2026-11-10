@@ -7,6 +7,8 @@ export interface AuthUser {
   email: string
   role: string
   created_at: string
+  /** 服务端下发的权限码列表；/auth/me 返回，登录/注册响应可能暂未带 */
+  permissions?: string[]
 }
 
 export interface TokenPayload {
@@ -71,10 +73,16 @@ function errorFrom(status: number, body: unknown): ApiError {
   return new ApiError(status, 'http_error', `请求失败（HTTP ${status}）`)
 }
 
+export interface RequestOptions {
+  /** 管理接口的 403 应展示后端 detail，而不是直接清空登录态 */
+  skipForbiddenLogout?: boolean
+}
+
 export async function request<T>(
   path: string,
   init: RequestInit = {},
   withAuth = false,
+  options: RequestOptions = {},
 ): Promise<T> {
   const headers = new Headers(init.headers)
   if (init.body) headers.set('Content-Type', 'application/json')
@@ -85,7 +93,7 @@ export async function request<T>(
 
   const response = await fetch(`${AUTH_API_BASE}${path}`, { ...init, headers })
 
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === 401 || (response.status === 403 && !options.skipForbiddenLogout)) {
     clearToken()
     window.dispatchEvent(new Event('auth:unauthorized'))
   }

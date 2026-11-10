@@ -1,126 +1,45 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ApiError } from '@/api/auth'
-import { blogApi } from '@/api/blog'
-import { useAuth } from '@/auth/AuthProvider'
+import { useSearchParams } from 'react-router-dom'
+import PostsTab from './PostsTab'
+import InvitesTab from './InvitesTab'
 import './Admin.css'
 
-function errorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    return err.status >= 500 ? '服务暂时不可用，请稍后重试。' : err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
-}
-
 export default function Admin() {
-  const { user, ready, openLogin } = useAuth()
-  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') === 'invites' ? 'invites' : 'posts'
 
-  const [title, setTitle] = useState('')
-  const [bodyMd, setBodyMd] = useState('')
-  const [error, setError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-
-  if (!ready) {
-    return (
-      <div className="admin-page">
-        <div className="admin-card">加载中…</div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="admin-page">
-        <div className="admin-card admin-login-guide">
-          <h1>写文章</h1>
-          <p>登录后即可发布文章。</p>
-          <button type="button" className="blog-button" onClick={openLogin}>
-            登录
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
-    setError('')
-
-    const trimmedTitle = title.trim()
-    if (trimmedTitle.length === 0) {
-      setError('标题不能为空')
-      return
-    }
-    if (trimmedTitle.length > 200) {
-      setError('标题不能超过 200 个字符')
-      return
-    }
-    const trimmedBody = bodyMd.trim()
-    if (trimmedBody.length === 0) {
-      setError('正文不能为空')
-      return
-    }
-
-    setSubmitting(true)
-    try {
-      const post = await blogApi.createPost({ title: trimmedTitle, body_md: bodyMd })
-      navigate(`/blog/${post.id}`)
-    } catch (err) {
-      setError(errorText(err))
-    } finally {
-      setSubmitting(false)
-    }
+  const switchTab = (next: 'posts' | 'invites') => {
+    setSearchParams(next === 'invites' ? { tab: 'invites' } : {})
   }
 
   return (
     <div className="admin-page">
       <header className="admin-header">
-        <h1>写文章</h1>
-        <p>当前仅支持新建文章，暂不支持编辑或删除（后端未提供修改接口）。</p>
+        <h1>管理后台</h1>
+        <p>发布文章、生成和管理邀请码。</p>
       </header>
 
-      <form className="admin-card admin-form" onSubmit={handleSubmit}>
-        <label className="admin-field">
-          <span>标题</span>
-          <input
-            type="text"
-            value={title}
-            onChange={(event) => {
-              setTitle(event.target.value)
-              setError('')
-            }}
-            maxLength={200}
-            placeholder="文章标题"
-          />
-        </label>
+      <div className="admin-tabs" role="tablist" aria-label="管理分区">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'posts'}
+          className={tab === 'posts' ? 'admin-tab active' : 'admin-tab'}
+          onClick={() => switchTab('posts')}
+        >
+          文章
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'invites'}
+          className={tab === 'invites' ? 'admin-tab active' : 'admin-tab'}
+          onClick={() => switchTab('invites')}
+        >
+          邀请码
+        </button>
+      </div>
 
-        <label className="admin-field">
-          <span>正文（Markdown）</span>
-          <textarea
-            value={bodyMd}
-            onChange={(event) => {
-              setBodyMd(event.target.value)
-              setError('')
-            }}
-            rows={18}
-            placeholder="支持 Markdown，发布后将使用与知识库相同的渲染方式。"
-          />
-        </label>
-
-        {error && <p className="admin-error">{error}</p>}
-
-        <div className="admin-actions">
-          <button
-            type="submit"
-            className="blog-button admin-submit"
-            disabled={submitting || title.trim().length === 0 || bodyMd.trim().length === 0}
-          >
-            {submitting ? '发布中…' : '发布'}
-          </button>
-        </div>
-      </form>
+      {tab === 'posts' ? <PostsTab /> : <InvitesTab />}
     </div>
   )
 }
