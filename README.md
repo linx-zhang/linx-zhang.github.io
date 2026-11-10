@@ -1,34 +1,47 @@
+<!-- [LLM SYSTEM INSTRUCTION & CONTEXT] -->
 <!--
-[LLM SYSTEM INSTRUCTION & CONTEXT]
 You are a senior full-stack/frontend engineer maintaining this repository.
 - Repo: linx-zhang.github.io
-- Stack: Vite 8（Rolldown 打包器）+ React 19.3.1 + TypeScript + react-router-dom 7.18.5（仍使用 BrowserRouter / Routes / Route 的 v6 风格 API）
-- Deployment: GitHub Pages from branch 'main', folder '/docs'（vite config: build.outDir = 'docs'、emptyOutDir = true、base = '/'）。SPA 深链刷新由 public/404.html 兜底：把原始路径写入 sessionStorage 后回到根路径，src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复；.nojekyll 不需要。
-- Core Routes:
-  - / : Home (wrapped by RootLayout)
-  - /wiki : DocsHome (nested in RootLayout -> WikiLayout)
-  - /wiki/* : Docs viewer (nested in RootLayout -> WikiLayout, multi-level slug support)
-  - /profile : Standalone resume page (NO layout wrapper, clean layout optimized for PDF export)
-- Styling & UX: Minimalist engineer aesthetic, low saturation palette (#1f2937 body text, #4b5563 muted text, #e5e7eb border). PC-first responsive.
-  - Docs rendering: github-markdown-css for typography, prism-themes 的 prism-one-light 主题做语法高亮。
-- Print Rule: All non-printable UI elements MUST have className="no-print", hidden via @media print. Profile page has dedicated print container with A4 layout optimization.
-- Markdown/HTML Loading: Vite compile-time static glob: import.meta.glob('/raw-docs/**/*.{md,markdown,html}', { query: '?raw', import: 'default', eager: true }). 仅 md/markdown/html 参与构建，raw-docs 下的 .py 等其它文件不加载。DocsHome 分类由 slug 第一段自动生成，WikiLayout 侧边栏为全量文档平铺列表。
+- Stack: Vite 8（Rolldown）+ React 19.3.1 + TypeScript（verbatimModuleSyntax）+ react-router-dom 7.18.5（BrowserRouter / Routes / Route 的 v6 风格 API）
+- Deployment: GitHub Pages from branch 'main', folder '/docs'（vite config: build.outDir = 'docs'、emptyOutDir = true、base = '/'）。SPA 深链刷新由 public/404.html 兜底：把原始路径写入 sessionStorage.spa-fallback-path 后回到根路径，src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复；.nojekyll 不需要。
+- Backend: Cloudflare Python Worker + FastAPI + D1，base 常量在 src/api/auth.ts 的 AUTH_API_BASE。响应统一为 { code, detail, data }，前端 request<T>() 解包 data；错误抛 ApiError(status, code, detail)。
+- Core Routes（定义在 src/routes.ts 与 src/main.tsx）:
+  - / : Home（RootLayout 内）
+  - /wiki : DocsHome（RootLayout -> WikiLayout）
+  - /wiki/* : Docs 文档详情（多级 slug）
+  - /blog : Blog 列表 + 页内写作面板
+  - /blog/:id : PostDetail 文章详情与评论
+  - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；分区通过 ?tab=posts|invites|users|activity 深链（默认 posts）
+  - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
+- Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 对 401（以及未跳过时的 403）清 token 并广播该事件；管理接口传 skipForbiddenLogout 以展示后端 detail。
+- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any、activity:read:any|write:self。
+- User profile: users 有 nickname / first_name / last_name / avatar_url；展示名优先级 昵称 → 「名 姓」→ 邮箱前缀，已删除用户为「已注销」。GET /auth/me 与登录/注册响应带这四字段（无值为 null）；PATCH /auth/me 走 account:update:self，只接受这四字段（传 email/role 会 422），返回完整用户对象（含 permissions）；PATCH /admin/users/{id} 同时接受四字段与 email/role。
+- Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；src/components/ConfirmDialog + useConfirm；src/components/Modal 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
+- Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
+- Bundle: 仍然没有代码分割 / 懒加载，所有页面静态 import，单包输出（docs/assets/index-*.js）。
+- Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
+- Print Rule: 所有非打印 UI 加 className="no-print"，@media print 隐藏；简历页使用 A4 版式。
+- Markdown/HTML Loading: Vite 编译期 import.meta.glob('/raw-docs/**/*.{md,markdown,html}', { query: '?raw', import: 'default', eager: true })，仅 md/markdown/html 参与构建；DocsHome 分类由 slug 第一段生成，WikiLayout 侧边栏为全量文档平铺列表。
 -->
 
 # linx-zhang.github.io
 
-基于 **Vite 8 + React 19 + TypeScript + React Router 7** 构建的个人综合站点，集成门户首页、Wiki 技术知识库与可导出 PDF 的简历页。构建产物直接输出至 `/docs` 目录，用于 GitHub Pages 部署。
+基于 **Vite 8 + React 19 + TypeScript + React Router 7** 的个人综合站点：门户首页、Wiki 知识库、博客（含评论与管理）、管理后台、可导出 PDF 的简历页。构建产物输出至 `/docs`，用于 GitHub Pages 部署。
 
 ---
 
 ## ✨ 核心特性
 
-- **分层路由架构**：`RootLayout` 提供全站导航与页脚，`WikiLayout` 提供知识库侧边栏；`/profile` 是脱离布局的独立页面
-- **静态文档知识库**：构建期通过 `import.meta.glob` 读取 `raw-docs` 下的 Markdown/HTML，按 slug 一级目录生成分类
-- **GitHub 风格排版**：`github-markdown-css` 排版 + `prism-themes` 的 `prism-one-light` 主题做代码高亮
+- **分层路由**：`RootLayout` 提供全站导航、账号菜单与页脚；`WikiLayout` 提供知识库侧边栏；`/profile` 是脱离布局的独立页面
+- **账号体系**：登录 / 注册（邀请码）、权限码驱动的菜单与操作按钮、个人资料弹窗（昵称 / 名 / 姓 / 头像，保存后顶栏即时更新）
+- **博客**：文章列表、详情、Markdown 渲染、评论与回复、页内写作面板
+- **管理后台**：文章列表与批量删除、邀请码、用户管理（资料与账号分段的编辑弹窗）、活跃日志
+- **自定义基础组件**：Select、DateRangePicker、ConfirmDialog、Modal、Avatar 均为自研，未引入第三方 UI 库
+- **活跃采集**：登录后 60 秒心跳、路由级 `page_view`、离开时 `page_leave`（带停留时长，`fetch` + `keepalive` 携带 Bearer）
+- **静态文档知识库**：构建期通过 `import.meta.glob` 读取 `raw-docs` 下的 Markdown / HTML，按 slug 一级目录生成分类
+- **GitHub 风格排版**：`github-markdown-css` + `react-markdown` + `prism-one-light`
 - **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
 - **GitHub Pages 部署**：产物固定输出到 `/docs`，`public/404.html` 兜底 SPA 深链刷新
-- **极简工程审美**：低饱和度配色方案，PC 优先响应式设计，专注内容可读性
 
 ---
 
@@ -64,15 +77,7 @@ npm run lint
 
 ---
 
-## 🏗️ 架构与路由设计
-
-项目采用**嵌套路由分层**设计：
-
-1. **RootLayout（全站主壳）**：顶部导航与 Footer，`/`、`/wiki` 都挂载在它的 `Outlet` 下
-2. **WikiLayout（知识库子壳）**：左侧文档侧边栏 + 右侧内容区，侧边栏可折叠
-3. **Profile 独立裸页**：不套任何 Layout，专门用于渲染纯净简历并优化 PDF 导出
-
-### 路由结构
+## 🏗️ 架构与路由
 
 ```tsx
 <BrowserRouter>
@@ -83,15 +88,54 @@ npm run lint
         <Route index element={<DocsHome />} />
         <Route path="*" element={<Docs />} />
       </Route>
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:id" element={<PostDetail />} />
+      <Route path="/admin" element={<RequirePermission permission="invite_code:read:any"><Admin /></RequirePermission>} />
     </Route>
     <Route path="/profile" element={<Profile />} />
   </Routes>
 </BrowserRouter>
 ```
 
-- 路由表直接写在 `src/main.tsx`，所有页面均为静态引入
+- 路由表直接写在 `src/main.tsx`，路径常量集中在 `src/routes.ts`；所有页面静态引入，**未做代码分割 / 懒加载**
 - `/wiki/*` 由 `Docs` 组件通过 `useParams()['*']` 解析多级 slug
+- `/admin` 的分区用查询参数深链：`?tab=posts`（默认）、`?tab=invites`、`?tab=users`、`?tab=activity`
 - `/profile` 不包裹 `RootLayout`，因此没有全站导航与页脚
+
+---
+
+## 🔐 账号与权限
+
+- 登录态：`AuthProvider` 把 token 存 `localStorage` 的 `blog_access_token`，启动时请求 `GET /auth/me`；`usePermission().has(code)` 读取后端下发的权限码
+- 路由守卫：`RequirePermission` 负责未登录引导与无权限提示
+- 401（以及未跳过时的 403）由 `request()` 统一清 token 并广播 `auth:unauthorized`；管理接口传 `skipForbiddenLogout` 以展示后端错误详情
+- 后端权限码：`account:*`、`post:*`、`comment:*`、`invite_code:*`、`user:*`、`activity:*`（细分为 `*:own` / `*:any` / `*:self`）
+- 个人资料：`PATCH /auth/me`（权限 `account:update:self`）只接受 `nickname` / `first_name` / `last_name` / `avatar_url`，不能修改邮箱与角色；管理端 `PATCH /admin/users/{id}` 额外接受 `email` / `role`
+- 展示名优先级：昵称 → 「名 姓」→ 邮箱前缀；已删除用户显示「已注销」。头像统一使用 `Avatar`：有 `avatar_url` 显示图片，加载失败回退首字母
+
+---
+
+## 🧩 管理后台
+
+`/admin` 提供四个分区：
+
+| tab | 内容 |
+| --- | --- |
+| `posts` | 文章纯列表、全选与单次 `POST /posts/batch-delete` 批量删除 |
+| `invites` | 邀请码创建、列表与删除 |
+| `users` | 用户搜索 / 角色筛选 / 分页；行内「编辑」打开弹窗，分「资料」「账号」两段，保存只提交改动字段，删除按钮独立在弹窗底部 |
+| `activity` | 按用户、类型、日期范围筛选活跃日志；日期范围使用自定义 `DateRangePicker`，按本地日界转 ISO |
+
+---
+
+## 📈 活跃采集
+
+`src/activity/useActivityTracker.ts` 仅在登录后上报：
+
+- `page_view`：路由变化时入队
+- `heartbeat`：页面可见时每 60 秒一次
+- `page_leave`：`visibilitychange` 进入 hidden 或 `pagehide` 时发送，带 `duration_ms`；同一隐藏周期只发一次（两个事件可能先后触发）
+- 事件先进内存队列、批量提交（单批最多 50 条）；离开时用 `fetch(url, { keepalive: true, headers: { Authorization: Bearer … } })`，不用 `sendBeacon`（无法附加认证头）
 
 ---
 
@@ -101,23 +145,33 @@ npm run lint
 linx-zhang.github.io/
 ├─ index.html               # Vite 入口，挂载 /src/main.tsx
 ├─ vite.config.ts           # base / outDir 构建配置
-├─ package.json             # dev / build / preview / lint 脚本
 ├─ src/
 │  ├─ main.tsx              # 路由表、ReactDOM 挂载、404 路径恢复
-│  ├─ App.tsx               # Vite 模板遗留组件，当前未被任何入口引用
-│  ├─ App.css               # 仅被 App.tsx 引用（模板遗留）
-│  ├─ index.css             # 模板遗留全局样式，当前未被引用
-│  ├─ assets/               # hero.png / react.svg / vite.svg（仅 App.tsx 使用）
-│  ├─ components/Layout/
-│  │  ├─ RootLayout.tsx/.css   # 全站主壳
-│  │  └─ WikiLayout.tsx/.css   # 知识库侧边栏子壳
+│  ├─ routes.ts             # 路由常量与深链判定
+│  ├─ activity/             # ActivityTracker + useActivityTracker（page_view / heartbeat / page_leave）
+│  ├─ api/                  # auth.ts（用户与 token）、blog.ts（文章/评论）、admin.ts（管理接口）
+│  ├─ auth/                 # AuthProvider、usePermission
+│  ├─ components/
+│  │  ├─ Layout/            # RootLayout 全站主壳、WikiLayout 知识库子壳
+│  │  ├─ Select/            # 自定义下拉（浮层逻辑见 FloatingPanel）
+│  │  ├─ DateRangePicker/   # 自定义日期范围（单月日历 + 快捷项 + 键盘）
+│  │  ├─ FloatingPanel/     # useFloatingPanel：定位 / 翻转 / 点击外部与 resize+scroll 关闭
+│  │  ├─ Modal/             # 通用弹窗（Escape / 遮罩关闭）
+│  │  ├─ ConfirmDialog/     # useConfirm() 返回 { confirm, dialog }
+│  │  ├─ Avatar/            # 头像与 displayName / initialOf
+│  │  ├─ AuthMenu/          # 顶栏账号下拉（个人资料、退出登录）
+│  │  ├─ ProfileDialog/     # 个人资料弹窗
+│  │  ├─ AuthModal/         # 登录 / 注册弹窗
+│  │  ├─ RequirePermission/ # 权限守卫
+│  │  └─ MarkdownView/      # Markdown 渲染
 │  ├─ pages/
 │  │  ├─ Home/              # 门户首页
 │  │  ├─ DocsHome/          # 知识库分类总览
-│  │  ├─ Docs/              # 单篇文档详情（Markdown 渲染 / HTML iframe）
+│  │  ├─ Docs/              # 单篇文档（Markdown 渲染 / HTML iframe）
+│  │  ├─ Blog/              # 列表 + 写作面板、详情 + 评论
+│  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ActivityTab）
 │  │  └─ Profile/           # 独立简历页（PDF 导出）
-│  └─ utils/
-│     └─ docs.ts            # 编译期扫描 raw-docs，生成文档清单
+│  └─ utils/docs.ts         # 编译期扫描 raw-docs，生成文档清单
 ├─ raw-docs/                # 笔记源文件；仅 .md / .markdown / .html 参与构建
 ├─ public/                  # favicon.svg、icons.svg、404.html（SPA 深链兜底）
 ├─ docs/                    # 构建产物，GitHub Pages 部署源
@@ -153,7 +207,7 @@ import.meta.glob('/raw-docs/**/*.{md,markdown,html}', {
   - `remark-frontmatter`：解析并忽略文档头部的 YAML 元信息
   - `rehype-raw`：支持 Markdown 内混写原生 HTML
   - `rehype-prism-plus`：代码块结构化与语法高亮（`ignoreMissing: true`）
-- 高亮主题：`prism-themes/themes/prism-one-light.css`（浅色 GitHub 风格）
+- 高亮主题：`prism-themes/themes/prism-one-light.css`
 
 ### 3. HTML 渲染
 
@@ -161,21 +215,12 @@ import.meta.glob('/raw-docs/**/*.{md,markdown,html}', {
 
 ---
 
-## 🎨 开发约定与规范
+## 🎨 开发约定
 
-### 样式与配色
-
-- 正文文字：`#1f2937`
-- 次要文字：`#4b5563`
-- 边框分割线：`#e5e7eb`
-- 页面样式按目录就近维护在各自的 `*.css` 中，通过组件内 `import './xxx.css'` 引入
-
-### 打印与 PDF 导出
-
-- 所有不应出现在 PDF 中的 UI（导航栏、侧边栏、操作按钮）统一添加 `className="no-print"`
-- 打印样式通过 `@media print` 控制，`Profile.css` 中使用 `@page { size: A4; margin: 15mm 16mm; }`
-- 简历页通过 `useReactToPrint` 导出，`documentTitle` 为 `Linx_Zhang_Resume`
-- `.print-only` 元素仅在打印时显示（如联系方式行）；`https` 链接打印时会附带 URL
+- 正文文字：`#1f2937`；次要文字：`#4b5563`；边框分割线：`#e5e7eb`
+- 页面与组件样式就近维护在各自的 `*.css`，通过组件内 `import './xxx.css'` 引入
+- 不引入第三方 UI 库；下拉、日期范围、弹窗、确认框均使用 `src/components/` 下的自研组件
+- 打印：所有不应出现在 PDF 中的 UI 统一加 `className="no-print"`，`Profile.css` 中使用 `@page { size: A4; margin: 15mm 16mm; }`；`.print-only` 元素仅在打印时显示
 
 ---
 
@@ -183,16 +228,14 @@ import.meta.glob('/raw-docs/**/*.{md,markdown,html}', {
 
 1. 执行 `npm run build` 生成 `/docs` 目录产物
 2. 提交并推送至仓库 `main` 分支
-3. 在仓库 Settings → Pages 中配置：
-   - Source：Deploy from a branch
-   - Branch：`main` / `/docs`
+3. 在仓库 Settings → Pages 中配置：Source 选 Deploy from a branch，Branch 选 `main` / `/docs`
 4. 等待部署完成后访问对应域名
 
 ### SPA 深链兜底（404.html）
 
-GitHub Pages 为纯静态托管，直接访问或刷新 `/wiki/xxx`、`/profile` 会命中 404 页面。项目通过 `public/404.html` 自动恢复：
+GitHub Pages 为纯静态托管，直接访问或刷新 `/wiki/xxx`、`/blog/xxx`、`/admin`、`/profile` 会命中 404 页面。项目通过 `public/404.html` 自动恢复：
 
-1. `404.html` 仅在路径属于 `/wiki`、`/wiki/*`、`/profile` 时，把 `pathname + search + hash` 写入 `sessionStorage`，随后 `location.replace('/')`
+1. `404.html` 仅在路径属于已知深链时，把 `pathname + search + hash` 写入 `sessionStorage`，随后 `location.replace('/')`
 2. 入口 `src/main.tsx` 在 `BrowserRouter` 初始化之前读取并清除该值，用 `history.replaceState` 把地址栏恢复为原始路径
 3. React Router 随后正常命中目标路由，用户不会停在 404 或白屏
 
