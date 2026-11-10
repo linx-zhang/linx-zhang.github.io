@@ -11,6 +11,7 @@ import Profile from '@/pages/Profile'
 import Blog from '@/pages/Blog'
 import PostDetail from '@/pages/Blog/PostDetail'
 import Admin from '@/pages/Admin'
+import RequirePermission from '@/components/RequirePermission'
 import { APP_ROUTES, isKnownDeepLink } from '@/routes'
 
 // GitHub Pages 深链兜底：public/404.html 会把原始路径写入 sessionStorage 并重定向到根路径。
@@ -40,7 +41,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           </Route>
           <Route path={APP_ROUTES.blog} element={<Blog />} />
           <Route path={`${APP_ROUTES.blog}/:id`} element={<PostDetail />} />
-          <Route path={APP_ROUTES.admin} element={<Admin />} />
+          <Route
+            path={APP_ROUTES.admin}
+            element={
+              <RequirePermission permission="invite_code:read:any">
+                <Admin />
+              </RequirePermission>
+            }
+          />
         </Route>
         <Route path={APP_ROUTES.profile} element={<Profile />} />
       </Routes>

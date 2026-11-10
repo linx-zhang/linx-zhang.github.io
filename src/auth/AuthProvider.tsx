@@ -6,6 +6,8 @@ import type { AuthUser } from '@/api/auth'
 
 interface AuthContextValue {
   user: AuthUser | null
+  /** 当前账号的权限码；未登录或后端未下发时为空数组 */
+  permissions: string[]
   ready: boolean
   openLogin: () => void
   logout: () => void
@@ -57,12 +59,20 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser)
     setReady(true)
     setLoginOpen(false)
+    // 登录/注册响应里的 user 不含 permissions，补拉 /auth/me 以拿到权限码
+    authApi
+      .me()
+      .then((current) => setUser(current))
+      .catch(() => {
+        // 权限拉取失败不影响已登录状态，页面按无权限处理
+      })
   }
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        permissions: user?.permissions ?? [],
         ready,
         openLogin: () => setLoginOpen(true),
         logout: () => {
