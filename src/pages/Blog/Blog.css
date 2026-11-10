@@ -30,15 +30,78 @@
   border-radius: 6px;
   background: #1f2937;
   color: #fff;
+  font-family: inherit;
   font-size: 0.85rem;
   font-weight: 500;
   line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
 }
 .blog-write:hover {
   background: #111827;
   border-color: #111827;
+}
+.blog-write-active {
+  background: #fff;
+  border-color: #d1d5db;
+  color: #1f2937;
+}
+.blog-write-active:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+.blog-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+.blog-composer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.blog-composer-field span {
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.blog-composer-field input,
+.blog-composer-field textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.blog-composer-field input:focus,
+.blog-composer-field textarea:focus {
+  outline: none;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.08);
+}
+.blog-composer-field input:disabled,
+.blog-composer-field textarea:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+}
+.blog-composer-field textarea {
+  resize: vertical;
+  min-height: 200px;
+}
+.blog-composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
 }
 .blog-list {
   display: flex;
@@ -380,6 +443,19 @@ a.blog-button {
 @media (max-width: 480px) {
   .blog-page {
     padding: 1.25rem 1rem 2rem;
+  }
+  .blog-header {
+    flex-wrap: wrap;
+  }
+  .blog-write {
+    width: 100%;
+    text-align: center;
+  }
+  .blog-composer {
+    padding: 1rem;
+  }
+  .blog-composer-field textarea {
+    min-height: 180px;
   }
   .blog-card {
     padding: 1rem;

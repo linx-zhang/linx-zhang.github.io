@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import type { FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '@/api/auth'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
@@ -33,12 +34,19 @@ function errorText(err: unknown): string {
 
 export default function Blog() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [pageIndex, setPageIndex] = useState(0)
   const [items, setItems] = useState<Post[]>([])
   const [hasNext, setHasNext] = useState(false)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [title, setTitle] = useState('')
+  const [bodyMd, setBodyMd] = useState('')
+  const [publishing, setPublishing] = useState(false)
+  const [composeError, setComposeError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -72,6 +80,33 @@ export default function Blog() {
     setReloadKey((key) => key + 1)
   }
 
+  const handlePublish = async (event: FormEvent) => {
+    event.preventDefault()
+    setComposeError('')
+    const trimmedTitle = title.trim()
+    if (trimmedTitle.length === 0) {
+      setComposeError('标题不能为空')
+      return
+    }
+    if (trimmedTitle.length > 200) {
+      setComposeError('标题不能超过 200 个字符')
+      return
+    }
+    if (bodyMd.trim().length === 0) {
+      setComposeError('正文不能为空')
+      return
+    }
+    setPublishing(true)
+    try {
+      const post = await blogApi.createPost({ title: trimmedTitle, body_md: bodyMd })
+      navigate(`/blog/${post.id}`)
+    } catch (err) {
+      setComposeError(errorText(err))
+    } finally {
+      setPublishing(false)
+    }
+  }
+
   return (
     <div className="blog-page">
       <header className="blog-header">
@@ -80,11 +115,69 @@ export default function Blog() {
           <p>记录技术实践与日常思考。</p>
         </div>
         {user && (
-          <Link className="blog-write" to="/admin">
-            写文章
-          </Link>
+          <button
+            type="button"
+            className={composerOpen ? 'blog-write blog-write-active' : 'blog-write'}
+            aria-expanded={composerOpen}
+            onClick={() => {
+              setComposerOpen((open) => !open)
+              setComposeError('')
+            }}
+          >
+            {composerOpen ? '收起' : '写文章'}
+          </button>
         )}
       </header>
+
+      {user && composerOpen && (
+        <form className="blog-composer" onSubmit={handlePublish} noValidate>
+          <label className="blog-composer-field">
+            <span>标题</span>
+            <input
+              type="text"
+              value={title}
+              maxLength={200}
+              placeholder="文章标题"
+              disabled={publishing}
+              onChange={(event) => {
+                setTitle(event.target.value)
+                setComposeError('')
+              }}
+            />
+          </label>
+          <label className="blog-composer-field">
+            <span>正文（Markdown）</span>
+            <textarea
+              value={bodyMd}
+              rows={12}
+              placeholder="支持 Markdown，发布后使用与知识库相同的渲染方式。"
+              disabled={publishing}
+              onChange={(event) => {
+                setBodyMd(event.target.value)
+                setComposeError('')
+              }}
+            />
+          </label>
+          {composeError && <p className="comment-error">{composeError}</p>}
+          <div className="blog-composer-actions">
+            <button
+              type="button"
+              className="blog-button"
+              disabled={publishing}
+              onClick={() => setComposerOpen(false)}
+            >
+              收起
+            </button>
+            <button
+              type="submit"
+              className="blog-button comment-submit"
+              disabled={publishing || title.trim().length === 0 || bodyMd.trim().length === 0}
+            >
+              {publishing ? '发布中…' : '发布'}
+            </button>
+          </div>
+        </form>
+      )}
 
       {status === 'loading' && <div className="blog-state">加载中…</div>}
 
