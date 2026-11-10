@@ -4,6 +4,7 @@ import { ApiError } from '@/api/auth'
 import { adminApi } from '@/api/admin'
 import type { InviteCode, InviteRole } from '@/api/admin'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
+import Select from '@/components/Select'
 
 const PAGE_SIZE = 20
 const ROLE_LABEL: Record<string, string> = {
@@ -182,13 +183,18 @@ export default function InvitesTab() {
       <div className="admin-card">
         <h2 className="admin-section-title">生成邀请码</h2>
         <form className="invite-form" onSubmit={handleCreate} noValidate>
-          <label className="admin-field invite-field">
+          <div className="admin-field invite-field">
             <span>角色</span>
-            <select value={role} onChange={(event) => setRole(event.target.value as InviteRole)}>
-              <option value="internal">普通用户（internal）</option>
-              <option value="admin">管理员（admin）</option>
-            </select>
-          </label>
+            <Select
+              value={role}
+              onChange={(next) => setRole(next as InviteRole)}
+              ariaLabel="邀请码角色"
+              options={[
+                { value: 'internal', label: '普通用户（internal）' },
+                { value: 'admin', label: '管理员（admin）' },
+              ]}
+            />
+          </div>
           <label className="admin-field invite-field">
             <span>数量（1–50）</span>
             <input
