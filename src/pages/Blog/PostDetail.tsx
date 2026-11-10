@@ -7,6 +7,7 @@ import type { Comment, Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
 import { usePermission } from '@/auth/usePermission'
 import MarkdownView from '@/components/MarkdownView'
+import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import './Blog.css'
 
 function formatDate(value: string): string {
@@ -35,6 +36,7 @@ export default function PostDetail() {
 
   const { user, openLogin } = useAuth()
   const { has } = usePermission()
+  const { confirm, dialog } = useConfirm()
 
   const [post, setPost] = useState<Post | null>(null)
   const [postStatus, setPostStatus] = useState<'loading' | 'ready' | 'missing' | 'error'>(
@@ -148,17 +150,26 @@ export default function PostDetail() {
     }
   }
 
-  const handleDeleteComment = async (commentId: number) => {
-    setDeleteError('')
-    setDeletingId(commentId)
-    try {
-      await blogApi.deleteComment(commentId)
-      refreshComments()
-    } catch (err) {
-      setDeleteError(errorText(err))
-    } finally {
-      setDeletingId(null)
-    }
+  const handleDeleteComment = (commentId: number) => {
+    confirm({
+      title: '删除评论',
+      description: '确认删除这条评论？该评论下的回复也会一并删除，且不可恢复。',
+      confirmText: '删除',
+      pendingText: '删除中…',
+      tone: 'danger',
+      onConfirm: async () => {
+        setDeleteError('')
+        setDeletingId(commentId)
+        try {
+          await blogApi.deleteComment(commentId)
+          refreshComments()
+        } catch (err) {
+          setDeleteError(errorText(err))
+        } finally {
+          setDeletingId(null)
+        }
+      },
+    })
   }
 
   const startEdit = () => {
@@ -207,17 +218,26 @@ export default function PostDetail() {
     }
   }
 
-  const handleDeletePost = async () => {
-    if (!window.confirm('确认删除这篇文章？删除后不可恢复。')) return
-    setPostActionError('')
-    setDeletingPost(true)
-    try {
-      await blogApi.deletePost(postId)
-      navigate('/blog')
-    } catch (err) {
-      setPostActionError(errorText(err))
-      setDeletingPost(false)
-    }
+  const handleDeletePost = () => {
+    confirm({
+      title: '删除文章',
+      description: '确认删除这篇文章？文章下的评论也会一并删除，且不可恢复。',
+      confirmText: '删除',
+      pendingText: '删除中…',
+      tone: 'danger',
+      onConfirm: async () => {
+        setPostActionError('')
+        setDeletingPost(true)
+        try {
+          await blogApi.deletePost(postId)
+          navigate('/blog')
+        } catch (err) {
+          setPostActionError(errorText(err))
+        } finally {
+          setDeletingPost(false)
+        }
+      },
+    })
   }
 
   if (postStatus === 'missing') {
@@ -445,6 +465,7 @@ export default function PostDetail() {
           )}
         </div>
       </section>
+      {dialog}
     </div>
   )
 }

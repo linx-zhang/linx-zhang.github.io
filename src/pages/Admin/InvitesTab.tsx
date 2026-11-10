@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { ApiError } from '@/api/auth'
 import { adminApi } from '@/api/admin'
 import type { InviteCode, InviteRole } from '@/api/admin'
+import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 
 const PAGE_SIZE = 20
 const ROLE_LABEL: Record<string, string> = {
@@ -61,6 +62,7 @@ export default function InvitesTab() {
 
   const [deletingCode, setDeletingCode] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState('')
+  const { confirm, dialog } = useConfirm()
 
   useEffect(() => {
     let cancelled = false
@@ -82,28 +84,7 @@ export default function InvitesTab() {
     }
   }, [pageIndex, reloadKey])
 
-  const handleCreate = async (event: FormEvent) => {
-    event.preventDefault()
-    setCreateError('')
-    setNotice('')
-
-    const countValue = Number(count)
-    if (!Number.isInteger(countValue) || countValue < 1 || countValue > 50) {
-      setCreateError('数量需为 1–50 的整数')
-      return
-    }
-    const daysValue = Number(days)
-    if (!Number.isInteger(daysValue) || daysValue < 1 || daysValue > 365) {
-      setCreateError('有效天数需为 1–365 的整数')
-      return
-    }
-    if (
-      role === 'admin' &&
-      !window.confirm('该邀请码可创建管理员，确认生成？')
-    ) {
-      return
-    }
-
+  const submitCreate = async (countValue: number, daysValue: number) => {
     setCreating(true)
     try {
       const created = await adminApi.createInviteCodes({
@@ -124,6 +105,37 @@ export default function InvitesTab() {
     }
   }
 
+  const handleCreate = (event: FormEvent) => {
+    event.preventDefault()
+    setCreateError('')
+    setNotice('')
+
+    const countValue = Number(count)
+    if (!Number.isInteger(countValue) || countValue < 1 || countValue > 50) {
+      setCreateError('数量需为 1–50 的整数')
+      return
+    }
+    const daysValue = Number(days)
+    if (!Number.isInteger(daysValue) || daysValue < 1 || daysValue > 365) {
+      setCreateError('有效天数需为 1–365 的整数')
+      return
+    }
+
+    if (role === 'admin') {
+      confirm({
+        title: '生成管理员邀请码',
+        description: '该邀请码可创建管理员，确认生成？',
+        confirmText: '生成',
+        pendingText: '生成中…',
+        tone: 'danger',
+        onConfirm: () => submitCreate(countValue, daysValue),
+      })
+      return
+    }
+
+    void submitCreate(countValue, daysValue)
+  }
+
   const handleCopy = async (code: string) => {
     setCopyError('')
     try {
@@ -134,21 +146,29 @@ export default function InvitesTab() {
     }
   }
 
-  const handleDelete = async (code: string) => {
-    if (!window.confirm('确认撤销该邀请码？撤销后不可恢复。')) return
-    setDeleteError('')
-    setDeletingCode(code)
-    try {
-      await adminApi.deleteInviteCode(code)
-      setNotice('邀请码已撤销。')
-    } catch (err) {
-      setDeleteError(errorText(err))
-    } finally {
-      setDeletingCode(null)
-      setListStatus('loading')
-      setListError('')
-      setReloadKey((key) => key + 1)
-    }
+  const handleDelete = (code: string) => {
+    confirm({
+      title: '撤销邀请码',
+      description: `确认撤销邀请码 ${code}？撤销后不可恢复。`,
+      confirmText: '撤销',
+      pendingText: '撤销中…',
+      tone: 'danger',
+      onConfirm: async () => {
+        setDeleteError('')
+        setDeletingCode(code)
+        try {
+          await adminApi.deleteInviteCode(code)
+          setNotice('邀请码已撤销。')
+        } catch (err) {
+          setDeleteError(errorText(err))
+        } finally {
+          setDeletingCode(null)
+          setListStatus('loading')
+          setListError('')
+          setReloadKey((key) => key + 1)
+        }
+      },
+    })
   }
 
   const changePage = (next: number) => {
@@ -305,6 +325,7 @@ export default function InvitesTab() {
           </button>
         </div>
       )}
+      {dialog}
     </section>
   )
 }
