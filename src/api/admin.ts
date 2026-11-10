@@ -38,6 +38,7 @@ export interface AdminUser {
   email: string
   role: string
   created_at: string
+  last_active_at: string | null
 }
 
 export interface AdminUserPage {
@@ -48,6 +49,40 @@ export interface AdminUserPage {
 export interface UserListParams {
   q?: string
   role?: UserRole
+  limit?: number
+  offset?: number
+}
+
+export interface UpdateUserPayload {
+  email?: string
+  role?: UserRole
+}
+
+export type ActivityType = 'page_view' | 'heartbeat' | 'page_leave'
+
+export interface ActivityItem {
+  id: number
+  user_id: number
+  user_email: string
+  type: string
+  path: string
+  ts: number
+  duration_ms: number | null
+  created_at: string
+}
+
+export interface ActivityPage {
+  items: ActivityItem[]
+  total: number
+}
+
+export interface ActivityListParams {
+  /** 后端只支持按用户 ID 过滤，邮箱需先解析为 ID */
+  user_id?: number
+  type?: ActivityType
+  /** epoch 毫秒或 ISO 8601 字符串 */
+  from?: string
+  to?: string
   limit?: number
   offset?: number
 }
@@ -87,12 +122,29 @@ export const adminApi = {
       skipForbiddenLogout: true,
     })
   },
-  updateUserRole(id: number, role: UserRole): Promise<AdminUser> {
+  updateUser(id: number, payload: UpdateUserPayload): Promise<AdminUser> {
     return request<AdminUser>(
-      `/admin/users/${id}/role`,
-      { method: 'PATCH', body: JSON.stringify({ role }) },
+      `/admin/users/${id}`,
+      { method: 'PATCH', body: JSON.stringify(payload) },
       true,
       { skipForbiddenLogout: true },
     )
+  },
+  deleteUser(id: number): Promise<unknown> {
+    return request<unknown>(`/admin/users/${id}`, { method: 'DELETE' }, true, {
+      skipForbiddenLogout: true,
+    })
+  },
+  listActivity(params: ActivityListParams = {}): Promise<ActivityPage> {
+    const search = new URLSearchParams()
+    if (params.user_id !== undefined) search.set('user_id', String(params.user_id))
+    if (params.type) search.set('type', params.type)
+    if (params.from) search.set('from', params.from)
+    if (params.to) search.set('to', params.to)
+    search.set('limit', String(params.limit ?? 20))
+    search.set('offset', String(params.offset ?? 0))
+    return request<ActivityPage>(`/admin/activity?${search.toString()}`, {}, true, {
+      skipForbiddenLogout: true,
+    })
   },
 }
