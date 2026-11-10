@@ -1,21 +1,29 @@
 import { useSearchParams } from 'react-router-dom'
 import { usePermission } from '@/auth/usePermission'
 import RequirePermission from '@/components/RequirePermission'
+import ActivityTab from './ActivityTab'
 import PostsTab from './PostsTab'
 import InvitesTab from './InvitesTab'
 import UsersTab from './UsersTab'
 import './Admin.css'
 
-type AdminTab = 'posts' | 'invites' | 'users'
+type AdminTab = 'posts' | 'invites' | 'users' | 'activity'
 
 export default function Admin() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { has } = usePermission()
   const canReadUsers = has('user:read:any')
+  const canReadActivity = has('activity:read:any')
 
   const rawTab = searchParams.get('tab')
   const tab: AdminTab =
-    rawTab === 'invites' ? 'invites' : rawTab === 'users' ? 'users' : 'posts'
+    rawTab === 'invites'
+      ? 'invites'
+      : rawTab === 'users'
+        ? 'users'
+        : rawTab === 'activity'
+          ? 'activity'
+          : 'posts'
 
   const switchTab = (next: AdminTab) => {
     setSearchParams(next === 'posts' ? {} : { tab: next })
@@ -25,7 +33,7 @@ export default function Admin() {
     <div className="admin-page">
       <header className="admin-header">
         <h1>管理后台</h1>
-        <p>发布文章、管理邀请码与用户。</p>
+        <p>管理文章、邀请码、用户与活跃日志。</p>
       </header>
 
       <div className="admin-tabs" role="tablist" aria-label="管理分区">
@@ -58,6 +66,17 @@ export default function Admin() {
             用户
           </button>
         )}
+        {canReadActivity && (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'activity'}
+            className={tab === 'activity' ? 'admin-tab active' : 'admin-tab'}
+            onClick={() => switchTab('activity')}
+          >
+            日志
+          </button>
+        )}
       </div>
 
       {tab === 'posts' && <PostsTab />}
@@ -65,6 +84,11 @@ export default function Admin() {
       {tab === 'users' && (
         <RequirePermission permission="user:read:any">
           <UsersTab />
+        </RequirePermission>
+      )}
+      {tab === 'activity' && (
+        <RequirePermission permission="activity:read:any">
+          <ActivityTab />
         </RequirePermission>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom'
+import { ActivityTracker } from '@/activity'
 import AuthProvider from '@/auth/AuthProvider'
 import { usePermission } from '@/auth/usePermission'
 import AuthMenu from '@/components/AuthMenu'
@@ -23,6 +24,7 @@ function GlobalNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
+      <ActivityTracker />
       <div className="root-container">
         <header className="global-header no-print">
           <div className="header-inner">
