@@ -30,6 +30,17 @@ export interface UpdatePostPayload {
   body_md?: string
 }
 
+export interface BatchDeleteFailure {
+  id: number
+  code: string
+  detail: string
+}
+
+export interface BatchDeleteResult {
+  deleted: number[]
+  failed: BatchDeleteFailure[]
+}
+
 export const blogApi = {
   listPosts(limit: number, offset: number): Promise<Post[]> {
     return request<Post[]>(`/posts?limit=${limit}&offset=${offset}`)
@@ -57,6 +68,15 @@ export const blogApi = {
     return request<unknown>(
       `/posts/${id}`,
       { method: 'DELETE' },
+      true,
+      { skipForbiddenLogout: true },
+    )
+  },
+  /** 批量删除：单次请求，后端逐条返回成败，不做整体回滚 */
+  deletePostsBatch(ids: number[]): Promise<BatchDeleteResult> {
+    return request<BatchDeleteResult>(
+      '/posts/batch-delete',
+      { method: 'POST', body: JSON.stringify({ ids }) },
       true,
       { skipForbiddenLogout: true },
     )
