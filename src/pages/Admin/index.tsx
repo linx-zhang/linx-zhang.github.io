@@ -1,21 +1,31 @@
 import { useSearchParams } from 'react-router-dom'
+import { usePermission } from '@/auth/usePermission'
+import RequirePermission from '@/components/RequirePermission'
 import PostsTab from './PostsTab'
 import InvitesTab from './InvitesTab'
+import UsersTab from './UsersTab'
 import './Admin.css'
+
+type AdminTab = 'posts' | 'invites' | 'users'
 
 export default function Admin() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab = searchParams.get('tab') === 'invites' ? 'invites' : 'posts'
+  const { has } = usePermission()
+  const canReadUsers = has('user:read:any')
 
-  const switchTab = (next: 'posts' | 'invites') => {
-    setSearchParams(next === 'invites' ? { tab: 'invites' } : {})
+  const rawTab = searchParams.get('tab')
+  const tab: AdminTab =
+    rawTab === 'invites' ? 'invites' : rawTab === 'users' ? 'users' : 'posts'
+
+  const switchTab = (next: AdminTab) => {
+    setSearchParams(next === 'posts' ? {} : { tab: next })
   }
 
   return (
     <div className="admin-page">
       <header className="admin-header">
         <h1>管理后台</h1>
-        <p>发布文章、生成和管理邀请码。</p>
+        <p>发布文章、管理邀请码与用户。</p>
       </header>
 
       <div className="admin-tabs" role="tablist" aria-label="管理分区">
@@ -37,9 +47,26 @@ export default function Admin() {
         >
           邀请码
         </button>
+        {canReadUsers && (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'users'}
+            className={tab === 'users' ? 'admin-tab active' : 'admin-tab'}
+            onClick={() => switchTab('users')}
+          >
+            用户
+          </button>
+        )}
       </div>
 
-      {tab === 'posts' ? <PostsTab /> : <InvitesTab />}
+      {tab === 'posts' && <PostsTab />}
+      {tab === 'invites' && <InvitesTab />}
+      {tab === 'users' && (
+        <RequirePermission permission="user:read:any">
+          <UsersTab />
+        </RequirePermission>
+      )}
     </div>
   )
 }

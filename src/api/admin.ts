@@ -30,6 +30,28 @@ export interface InviteListParams {
   offset?: number
 }
 
+/** 用户管理：角色取值范围 user / internal / admin */
+export type UserRole = 'user' | 'internal' | 'admin'
+
+export interface AdminUser {
+  id: number
+  email: string
+  role: string
+  created_at: string
+}
+
+export interface AdminUserPage {
+  items: AdminUser[]
+  total: number
+}
+
+export interface UserListParams {
+  q?: string
+  role?: UserRole
+  limit?: number
+  offset?: number
+}
+
 export const adminApi = {
   listInviteCodes(params: InviteListParams = {}): Promise<InviteCodePage> {
     const search = new URLSearchParams()
@@ -51,6 +73,24 @@ export const adminApi = {
     return request<{ code: string }>(
       `/admin/invite-codes/${encodeURIComponent(code)}`,
       { method: 'DELETE' },
+      true,
+      { skipForbiddenLogout: true },
+    )
+  },
+  listUsers(params: UserListParams = {}): Promise<AdminUserPage> {
+    const search = new URLSearchParams()
+    if (params.q) search.set('q', params.q)
+    if (params.role) search.set('role', params.role)
+    search.set('limit', String(params.limit ?? 20))
+    search.set('offset', String(params.offset ?? 0))
+    return request<AdminUserPage>(`/admin/users?${search.toString()}`, {}, true, {
+      skipForbiddenLogout: true,
+    })
+  },
+  updateUserRole(id: number, role: UserRole): Promise<AdminUser> {
+    return request<AdminUser>(
+      `/admin/users/${id}/role`,
+      { method: 'PATCH', body: JSON.stringify({ role }) },
       true,
       { skipForbiddenLogout: true },
     )
