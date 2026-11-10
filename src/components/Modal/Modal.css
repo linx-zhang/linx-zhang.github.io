@@ -1,7 +1,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: var(--z-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,6 +9,8 @@
   background: rgba(17, 24, 39, 0.42);
 }
 .modal-card {
+  position: relative;
+  z-index: var(--z-dialog);
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -116,20 +118,8 @@
   font-size: 0.75rem;
   font-weight: 400;
 }
-.modal-hint {
-  margin: 0;
-  color: #9ca3af;
-  font-size: 0.75rem;
-}
 .modal-error {
   margin: 0;
   color: #b91c1c;
   font-size: 0.82rem;
-}
-.modal-button-danger {
-  border-color: #fecaca;
-  color: #b91c1c;
-}
-.modal-button-danger:hover:not(:disabled) {
-  background: #fef2f2;
 }

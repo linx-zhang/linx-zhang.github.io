@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import './styles/layers.css'
 
 import RootLayout from '@/components/Layout/RootLayout'
 import WikiLayout from '@/components/Layout/WikiLayout'

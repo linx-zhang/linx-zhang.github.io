@@ -1,6 +1,6 @@
 .date-panel {
   position: fixed;
-  z-index: 70;
+  z-index: var(--z-dropdown);
   padding: 0.6rem;
   border: 1px solid #e5e7eb;
   border-radius: 10px;

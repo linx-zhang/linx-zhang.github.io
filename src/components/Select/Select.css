@@ -43,7 +43,7 @@
 }
 .select-panel {
   position: fixed;
-  z-index: 70;
+  z-index: var(--z-dropdown);
   display: flex;
   flex-direction: column;
   padding: 0.3rem;

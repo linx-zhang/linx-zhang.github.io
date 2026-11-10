@@ -38,7 +38,7 @@
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  z-index: 40;
+  z-index: var(--z-dropdown);
   width: 220px;
   max-width: calc(100vw - 2rem);
   padding: 0.25rem 0;
