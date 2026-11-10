@@ -391,6 +391,10 @@
 .user-item:last-child {
   border-bottom: none;
 }
+.user-list-head.has-actions,
+.user-item.has-actions {
+  grid-template-columns: minmax(0, 2fr) 190px 120px 100px 100px;
+}
 .user-cell {
   min-width: 0;
 }
@@ -446,9 +450,6 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.user-role-row .user-action {
-  flex: none;
-}
 .user-created {
   color: #4b5563;
   font-size: 0.82rem;
@@ -464,9 +465,15 @@
   line-height: 1.2;
   cursor: pointer;
 }
-.user-edit {
+.user-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+.user-actions .user-action {
   flex: none;
-  margin-left: auto;
 }
 .user-action:hover:not(:disabled) {
   background: #f9fafb;
@@ -529,6 +536,13 @@
   }
   .user-role-cell {
     order: 10;
+  }
+  .user-actions {
+    order: 20;
+    width: 100%;
+  }
+  .user-cell.user-actions::before {
+    display: none;
   }
   .user-role-row {
     flex-wrap: nowrap;

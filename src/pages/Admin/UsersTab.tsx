@@ -49,6 +49,7 @@ export default function UsersTab() {
   const { confirm, dialog } = useConfirm()
   const canUpdate = has('user:update:any')
   const canDelete = has('user:delete:any')
+  const showActions = canUpdate || canDelete
 
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -237,17 +238,18 @@ export default function UsersTab() {
 
       {listStatus === 'ready' && items.length > 0 && (
         <div className="user-list">
-          <div className="user-list-head" aria-hidden="true">
+          <div className={`user-list-head${showActions ? ' has-actions' : ''}`} aria-hidden="true">
             <span>用户</span>
             <span>角色</span>
             <span>注册时间</span>
             <span>最后活跃</span>
+            {showActions && <span>操作</span>}
           </div>
           {items.map((item) => {
             const isSelf = currentUser !== null && item.id === currentUser.id
             const name = displayName(item)
             return (
-              <div key={item.id} className="user-item">
+              <div key={item.id} className={`user-item${showActions ? ' has-actions' : ''}`}>
                 <div className="user-cell user-email" data-label="用户">
                   <Avatar user={item} size="sm" />
                   <div className="user-identity">
@@ -257,15 +259,6 @@ export default function UsersTab() {
                     )}
                   </div>
                   {isSelf && <span className="user-self-tag">你</span>}
-                  {canUpdate && (
-                    <button
-                      type="button"
-                      className="user-action user-edit"
-                      onClick={() => setEditingUser(item)}
-                    >
-                      编辑
-                    </button>
-                  )}
                 </div>
                 <div className="user-cell user-role-cell" data-label="角色">
                   <div className="user-role-row">
@@ -286,6 +279,26 @@ export default function UsersTab() {
                         {roleLabel(item.role)}
                       </span>
                     )}
+                  </div>
+                  {isSelf && <span className="user-self-hint">不能修改自己的角色</span>}
+                </div>
+                <div className="user-cell user-created" data-label="注册时间">
+                  {formatTimestamp(item.created_at)}
+                </div>
+                <div className="user-cell user-created" data-label="最后活跃">
+                  {relativeTime(item.last_active_at)}
+                </div>
+                {showActions && (
+                  <div className="user-cell user-actions" data-label="操作">
+                    {canUpdate && (
+                      <button
+                        type="button"
+                        className="user-action user-action-edit"
+                        onClick={() => setEditingUser(item)}
+                      >
+                        编辑
+                      </button>
+                    )}
                     {canDelete && (
                       <button
                         type="button"
@@ -297,14 +310,7 @@ export default function UsersTab() {
                       </button>
                     )}
                   </div>
-                  {isSelf && <span className="user-self-hint">不能修改自己的角色</span>}
-                </div>
-                <div className="user-cell user-created" data-label="注册时间">
-                  {formatTimestamp(item.created_at)}
-                </div>
-                <div className="user-cell user-created" data-label="最后活跃">
-                  {relativeTime(item.last_active_at)}
-                </div>
+                )}
               </div>
             )
           })}
