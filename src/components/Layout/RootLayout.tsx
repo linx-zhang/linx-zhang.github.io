@@ -15,7 +15,7 @@ function GlobalNav() {
       <NavLink to="/blog" className="nav-item">博客</NavLink>
       <NavLink to="/profile" className="nav-item">简历</NavLink>
       {has('invite_code:read:any') && (
-        <NavLink to="/admin" className="nav-item">管理</NavLink>
+        <NavLink to="/admin" className="nav-item">管理后台</NavLink>
       )}
     </nav>
   )
