@@ -25,16 +25,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  flex: 0 0 2rem;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  background: #1f2937;
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 600;
+  background: transparent;
   line-height: 1;
   cursor: pointer;
 }
@@ -70,7 +63,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.auth-email {
+.auth-identity {
   color: #4b5563;
 }
 .auth-menu-button {

@@ -7,6 +7,7 @@ import type { Comment, Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
 import { usePermission } from '@/auth/usePermission'
 import MarkdownView from '@/components/MarkdownView'
+import Avatar from '@/components/Avatar'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import './Blog.css'
 
@@ -403,9 +404,7 @@ export default function PostDetail() {
                 }
               >
                 <div className="comment-head">
-                  <span className="comment-avatar" aria-hidden="true">
-                    {(comment.author_name ?? '?').charAt(0).toUpperCase()}
-                  </span>
+                  <Avatar name={comment.author_name} size="sm" />
                   <span className="comment-author">{comment.author_name ?? '匿名'}</span>
                   <span className="comment-time">{formatDate(comment.created_at)}</span>
                   {canDeleteComment(comment) && (

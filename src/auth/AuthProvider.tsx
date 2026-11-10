@@ -11,6 +11,8 @@ interface AuthContextValue {
   ready: boolean
   openLogin: () => void
   logout: () => void
+  /** 资料保存后用返回值替换当前用户，顶栏立即刷新 */
+  updateUser: (next: AuthUser) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -59,7 +61,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser)
     setReady(true)
     setLoginOpen(false)
-    // 登录/注册响应里的 user 不含 permissions，补拉 /auth/me 以拿到权限码
+    // 登录/注册响应不含 permissions（资料字段已包含），补拉 /auth/me 以拿到权限码
     authApi
       .me()
       .then((current) => setUser(current))
@@ -79,6 +81,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
           clearToken()
           setUser(null)
         },
+        updateUser: (next: AuthUser) => setUser(next),
       }}
     >
       {children}

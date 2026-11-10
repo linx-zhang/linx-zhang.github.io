@@ -39,6 +39,10 @@ export interface AdminUser {
   role: string
   created_at: string
   last_active_at: string | null
+  nickname?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  avatar_url?: string | null
 }
 
 export interface AdminUserPage {
@@ -56,6 +60,10 @@ export interface UserListParams {
 export interface UpdateUserPayload {
   email?: string
   role?: UserRole
+  nickname?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  avatar_url?: string | null
 }
 
 export type ActivityType = 'page_view' | 'heartbeat' | 'page_leave'

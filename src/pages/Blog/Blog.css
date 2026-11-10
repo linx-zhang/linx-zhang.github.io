@@ -316,19 +316,6 @@ a.blog-button {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
-.comment-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  flex: 0 0 1.75rem;
-  border-radius: 50%;
-  background: #1f2937;
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
 .comment-author {
   color: #1f2937;
   font-size: 0.85rem;

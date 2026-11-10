@@ -7,8 +7,24 @@ export interface AuthUser {
   email: string
   role: string
   created_at: string
+  /** 昵称；未设置为 null */
+  nickname?: string | null
+  /** 名 */
+  first_name?: string | null
+  /** 姓 */
+  last_name?: string | null
+  /** 头像图片地址 */
+  avatar_url?: string | null
   /** 服务端下发的权限码列表；/auth/me 返回，登录/注册响应可能暂未带 */
   permissions?: string[]
+}
+
+/** PATCH /auth/me 可提交的字段（邮箱、角色不可在此修改） */
+export interface UpdateProfilePayload {
+  nickname?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  avatar_url?: string | null
 }
 
 export interface TokenPayload {
@@ -140,5 +156,14 @@ export const authApi = {
   },
   me(): Promise<AuthUser> {
     return request<AuthUser>('/auth/me', {}, true)
+  },
+  /** 更新自己的资料：返回完整用户对象（含 permissions） */
+  updateMyProfile(payload: UpdateProfilePayload): Promise<AuthUser> {
+    return request<AuthUser>(
+      '/auth/me',
+      { method: 'PATCH', body: JSON.stringify(payload) },
+      true,
+      { skipForbiddenLogout: true },
+    )
   },
 }
