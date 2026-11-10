@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '@/api/auth'
 import { blogApi } from '@/api/blog'
 import type { Comment, Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
+import { usePermission } from '@/auth/usePermission'
 import MarkdownView from '@/components/MarkdownView'
 import './Blog.css'
 
@@ -14,7 +15,9 @@ function formatDate(value: string): string {
 
 function errorText(err: unknown): string {
   if (err instanceof ApiError) {
-    return err.status >= 500 ? '服务暂时不可用，请稍后重试。' : err.detail
+    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
+    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
+    return err.detail
   }
   return '网络请求失败，请检查连接后重试。'
 }
@@ -28,8 +31,10 @@ export default function PostDetail() {
   const { id } = useParams()
   const postId = Number(id)
   const validId = Number.isInteger(postId) && postId > 0
+  const navigate = useNavigate()
 
   const { user, openLogin } = useAuth()
+  const { has } = usePermission()
 
   const [post, setPost] = useState<Post | null>(null)
   const [postStatus, setPostStatus] = useState<'loading' | 'ready' | 'missing' | 'error'>(
@@ -37,6 +42,14 @@ export default function PostDetail() {
   )
   const [postError, setPostError] = useState('')
   const [postReloadKey, setPostReloadKey] = useState(0)
+
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editBody, setEditBody] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [editError, setEditError] = useState('')
+  const [deletingPost, setDeletingPost] = useState(false)
+  const [postActionError, setPostActionError] = useState('')
 
   const [comments, setComments] = useState<Comment[]>([])
   const [commentStatus, setCommentStatus] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -135,7 +148,7 @@ export default function PostDetail() {
     }
   }
 
-  const handleDelete = async (commentId: number) => {
+  const handleDeleteComment = async (commentId: number) => {
     setDeleteError('')
     setDeletingId(commentId)
     try {
@@ -145,6 +158,65 @@ export default function PostDetail() {
       setDeleteError(errorText(err))
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  const startEdit = () => {
+    if (!post) return
+    setEditTitle(post.title)
+    setEditBody(post.body_md)
+    setEditError('')
+    setPostActionError('')
+    setEditing(true)
+  }
+
+  const cancelEdit = () => {
+    setEditing(false)
+    setEditError('')
+  }
+
+  const handleSave = async (event: FormEvent) => {
+    event.preventDefault()
+    setEditError('')
+    const trimmedTitle = editTitle.trim()
+    if (trimmedTitle.length === 0) {
+      setEditError('标题不能为空')
+      return
+    }
+    if (trimmedTitle.length > 200) {
+      setEditError('标题不能超过 200 个字符')
+      return
+    }
+    if (editBody.trim().length === 0) {
+      setEditError('正文不能为空')
+      return
+    }
+
+    setSaving(true)
+    try {
+      const updated = await blogApi.updatePost(postId, {
+        title: trimmedTitle,
+        body_md: editBody,
+      })
+      setPost(updated)
+      setEditing(false)
+    } catch (err) {
+      setEditError(errorText(err))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeletePost = async () => {
+    if (!window.confirm('确认删除这篇文章？删除后不可恢复。')) return
+    setPostActionError('')
+    setDeletingPost(true)
+    try {
+      await blogApi.deletePost(postId)
+      navigate('/blog')
+    } catch (err) {
+      setPostActionError(errorText(err))
+      setDeletingPost(false)
     }
   }
 
@@ -191,18 +263,96 @@ export default function PostDetail() {
     )
   }
 
+  const isOwnPost = user !== null && post.author_id === user.id
+  const canEditPost = has('post:update:any') || (isOwnPost && has('post:update:own'))
+  const canDeletePost = has('post:delete:any') || (isOwnPost && has('post:delete:own'))
+  const canDeleteComment = (comment: Comment) =>
+    has('comment:delete:any') ||
+    (has('comment:delete:own') && user !== null && comment.author_id === user.id)
+
   return (
     <div className="blog-page">
       <article className="post-detail">
         <Link className="post-back" to="/blog">
           ← 返回博客列表
         </Link>
-        <h1 className="post-title">{post.title}</h1>
-        <div className="blog-meta post-meta">
-          {formatDate(post.created_at)}
-          {post.author_email ? ` · ${post.author_email}` : ''}
-        </div>
-        <MarkdownView className="post-body" content={post.body_md} />
+
+        {editing ? (
+          <form className="post-edit" onSubmit={handleSave} noValidate>
+            <label className="post-edit-field">
+              <span>标题</span>
+              <input
+                type="text"
+                value={editTitle}
+                maxLength={200}
+                disabled={saving}
+                onChange={(event) => {
+                  setEditTitle(event.target.value)
+                  setEditError('')
+                }}
+              />
+            </label>
+            <label className="post-edit-field">
+              <span>正文（Markdown）</span>
+              <textarea
+                value={editBody}
+                rows={16}
+                disabled={saving}
+                onChange={(event) => {
+                  setEditBody(event.target.value)
+                  setEditError('')
+                }}
+              />
+            </label>
+            {editError && <p className="comment-error">{editError}</p>}
+            <div className="post-actions">
+              <button
+                type="submit"
+                className="blog-button comment-submit"
+                disabled={saving}
+              >
+                {saving ? '保存中…' : '保存'}
+              </button>
+              <button
+                type="button"
+                className="blog-button"
+                disabled={saving}
+                onClick={cancelEdit}
+              >
+                取消
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <h1 className="post-title">{post.title}</h1>
+            <div className="blog-meta post-meta">
+              {formatDate(post.created_at)}
+              {post.author_name ? ` · ${post.author_name}` : ''}
+            </div>
+            {(canEditPost || canDeletePost) && (
+              <div className="post-actions">
+                {canEditPost && (
+                  <button type="button" className="blog-button" onClick={startEdit}>
+                    编辑
+                  </button>
+                )}
+                {canDeletePost && (
+                  <button
+                    type="button"
+                    className="blog-button post-delete"
+                    disabled={deletingPost}
+                    onClick={handleDeletePost}
+                  >
+                    {deletingPost ? '删除中…' : '删除'}
+                  </button>
+                )}
+              </div>
+            )}
+            {postActionError && <p className="comment-error">{postActionError}</p>}
+            <MarkdownView className="post-body" content={post.body_md} />
+          </>
+        )}
       </article>
 
       <section className="comment-section">
@@ -234,16 +384,16 @@ export default function PostDetail() {
               >
                 <div className="comment-head">
                   <span className="comment-avatar" aria-hidden="true">
-                    {(comment.author_email ?? '?').charAt(0).toUpperCase()}
+                    {(comment.author_name ?? '?').charAt(0).toUpperCase()}
                   </span>
-                  <span className="comment-author">{comment.author_email ?? '匿名'}</span>
+                  <span className="comment-author">{comment.author_name ?? '匿名'}</span>
                   <span className="comment-time">{formatDate(comment.created_at)}</span>
-                  {user?.role === 'admin' && (
+                  {canDeleteComment(comment) && (
                     <button
                       type="button"
                       className="comment-delete"
                       disabled={deletingId === comment.id}
-                      onClick={() => handleDelete(comment.id)}
+                      onClick={() => handleDeleteComment(comment.id)}
                     >
                       {deletingId === comment.id ? '删除中…' : '删除'}
                     </button>

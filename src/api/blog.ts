@@ -3,7 +3,7 @@ import { request } from '@/api/auth'
 export interface Post {
   id: number
   author_id: number
-  author_email: string | null
+  author_name: string | null
   title: string
   body_md: string
   created_at: string
@@ -14,7 +14,7 @@ export interface Comment {
   id: number
   post_id: number
   author_id: number
-  author_email: string | null
+  author_name: string | null
   parent_id: number | null
   body: string
   created_at: string
@@ -23,6 +23,11 @@ export interface Comment {
 export interface CreatePostPayload {
   title: string
   body_md: string
+}
+
+export interface UpdatePostPayload {
+  title?: string
+  body_md?: string
 }
 
 export const blogApi = {
@@ -37,6 +42,23 @@ export const blogApi = {
       '/posts',
       { method: 'POST', body: JSON.stringify(payload) },
       true,
+      { skipForbiddenLogout: true },
+    )
+  },
+  updatePost(id: number, payload: UpdatePostPayload): Promise<Post> {
+    return request<Post>(
+      `/posts/${id}`,
+      { method: 'PATCH', body: JSON.stringify(payload) },
+      true,
+      { skipForbiddenLogout: true },
+    )
+  },
+  deletePost(id: number): Promise<unknown> {
+    return request<unknown>(
+      `/posts/${id}`,
+      { method: 'DELETE' },
+      true,
+      { skipForbiddenLogout: true },
     )
   },
   listComments(postId: number): Promise<Comment[]> {
@@ -55,6 +77,7 @@ export const blogApi = {
       `/comments/${id}`,
       { method: 'DELETE' },
       true,
+      { skipForbiddenLogout: true },
     )
   },
 }

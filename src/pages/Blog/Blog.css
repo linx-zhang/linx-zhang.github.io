@@ -169,6 +169,59 @@ a.blog-button {
   max-width: 100%;
   height: auto;
 }
+.post-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+.post-delete {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+.post-delete:hover:not(:disabled) {
+  background: #fef2f2;
+}
+.post-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.post-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.post-edit-field span {
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.post-edit-field input,
+.post-edit-field textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.post-edit-field input:focus,
+.post-edit-field textarea:focus {
+  outline: none;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.08);
+}
+.post-edit-field textarea {
+  resize: vertical;
+}
+.post-edit-field input:disabled,
+.post-edit-field textarea:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+}
 .comment-section {
   margin-top: 2rem;
 }

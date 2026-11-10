@@ -108,7 +108,7 @@ export default function Blog() {
               <h2>{post.title}</h2>
               <div className="blog-meta">
                 {formatDate(post.created_at)}
-                {post.author_email ? ` · ${post.author_email}` : ''}
+                {post.author_name ? ` · ${post.author_name}` : ''}
               </div>
               <p className="blog-summary">{textSummary(post.body_md)}</p>
             </Link>
