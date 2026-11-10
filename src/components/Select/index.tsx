@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useFloatingPanel } from '@/components/FloatingPanel/useFloatingPanel'
 import './Select.css'
 
 export interface SelectOption {
@@ -17,12 +18,6 @@ export interface SelectProps {
   ariaLabel?: string
 }
 
-interface PanelPosition {
-  top: number
-  left: number
-  width: number
-}
-
 const PANEL_MAX_HEIGHT = 280
 
 /** 受控自定义下拉：浮层挂 body，避免被父级 overflow 裁切 */
@@ -34,44 +29,25 @@ export default function Select({
   placeholder = '请选择',
   ariaLabel,
 }: SelectProps) {
-  const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
-  const [position, setPosition] = useState<PanelPosition | null>(null)
 
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
+  const { open, position, triggerRef, panelRef, openPanel: openFloating, closePanel: closeFloating } =
+    useFloatingPanel({
+      estimateHeight: Math.min(PANEL_MAX_HEIGHT, options.length * 38 + 8),
+    })
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
 
   const selected = options.find((option) => option.value === value)
 
-  const computePosition = (): PanelPosition | null => {
-    const trigger = triggerRef.current
-    if (!trigger) return null
-    const rect = trigger.getBoundingClientRect()
-    const margin = 8
-    const estimated = Math.min(PANEL_MAX_HEIGHT, options.length * 38 + 8)
-    let top = rect.bottom + 4
-    if (top + estimated > window.innerHeight - margin) {
-      top = Math.max(margin, rect.top - estimated - 4)
-    }
-    let left = rect.left
-    const width = Math.min(rect.width, window.innerWidth - margin * 2)
-    if (left + width > window.innerWidth - margin) {
-      left = Math.max(margin, window.innerWidth - margin - width)
-    }
-    return { top, left, width }
-  }
-
   const openPanel = () => {
     if (disabled) return
-    setPosition(computePosition())
     const index = options.findIndex((option) => option.value === value && !option.disabled)
     setActiveIndex(index >= 0 ? index : firstEnabledIndex(options))
-    setOpen(true)
+    openFloating()
   }
 
   const closePanel = () => {
-    setOpen(false)
+    closeFloating()
     setActiveIndex(-1)
   }
 
@@ -81,25 +57,6 @@ export default function Select({
     closePanel()
     triggerRef.current?.focus()
   }
-
-  useEffect(() => {
-    if (!open) return
-    const onPointerDown = (event: MouseEvent) => {
-      const target = event.target as Node
-      if (triggerRef.current?.contains(target)) return
-      if (panelRef.current?.contains(target)) return
-      closePanel()
-    }
-    const onViewportChange = () => closePanel()
-    document.addEventListener('mousedown', onPointerDown)
-    window.addEventListener('resize', onViewportChange)
-    window.addEventListener('scroll', onViewportChange, true)
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown)
-      window.removeEventListener('resize', onViewportChange)
-      window.removeEventListener('scroll', onViewportChange, true)
-    }
-  }, [open])
 
   useEffect(() => {
     if (!open) return

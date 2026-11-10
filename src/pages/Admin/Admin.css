@@ -410,6 +410,22 @@
   color: #4b5563;
   font-size: 0.72rem;
 }
+.user-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.user-name {
+  color: #1f2937;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+.user-email-sub {
+  color: #6b7280;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
 .user-self-hint {
   display: block;
   margin-top: 0.3rem;
@@ -449,47 +465,6 @@
 }
 .user-action-danger:hover:not(:disabled) {
   background: #fef2f2;
-}
-.user-email-editor {
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid #f3f4f6;
-  background: #f9fafb;
-}
-.user-email-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.user-email-field span {
-  color: #4b5563;
-  font-size: 0.78rem;
-}
-.user-email-field input {
-  width: 100%;
-  max-width: 360px;
-  padding: 0.45rem 0.65rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
-  color: #1f2937;
-  font-family: inherit;
-  font-size: 0.85rem;
-}
-.user-email-field input:focus {
-  outline: none;
-  border-color: #9ca3af;
-  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.08);
-}
-.user-email-error {
-  margin: 0.5rem 0 0;
-  color: #b91c1c;
-  font-size: 0.8rem;
-}
-.user-email-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.7rem;
 }
 .user-empty {
   padding: 1.2rem;
@@ -541,15 +516,6 @@
     margin-bottom: 0.2rem;
     color: #6b7280;
     font-size: 0.75rem;
-  }
-  .user-email-editor {
-    padding: 0.8rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    margin-top: -0.25rem;
-  }
-  .user-email-field input {
-    max-width: none;
   }
   .user-filter {
     flex: 1 1 100%;
@@ -705,6 +671,9 @@
 .activity-field-type {
   flex: 0 0 150px;
 }
+.activity-field-range {
+  flex: 0 0 260px;
+}
 .activity-field input {
   width: 100%;
   padding: 0.5rem 0.7rem;
@@ -801,7 +770,8 @@
     flex: 1 1 calc(50% - 0.375rem);
   }
   .activity-field-user,
-  .activity-field-type {
+  .activity-field-type,
+  .activity-field-range {
     flex: 1 1 100%;
   }
   .activity-actions {

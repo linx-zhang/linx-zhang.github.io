@@ -1,0 +1,131 @@
+.date-panel {
+  position: fixed;
+  z-index: 70;
+  padding: 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.12);
+}
+.date-quick {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+.date-quick-item {
+  flex: 1;
+  padding: 0.32rem 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.date-quick-item:hover {
+  background: #f3f4f6;
+}
+.date-quick-clear {
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+.date-quick-clear:hover {
+  background: #fef2f2;
+}
+.date-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.date-nav {
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #4b5563;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.date-nav:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+.date-title {
+  color: #1f2937;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.date-weekdays,
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.date-weekdays span {
+  padding: 0.2rem 0;
+  color: #9ca3af;
+  font-size: 0.72rem;
+  text-align: center;
+}
+.date-day {
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.date-day:hover {
+  background: #f3f4f6;
+}
+.date-day:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.35);
+}
+.date-day-outside {
+  color: #d1d5db;
+}
+.date-day-today {
+  box-shadow: inset 0 0 0 1px #9ca3af;
+}
+.date-day-in-range {
+  background: #eef2f7;
+  border-radius: 0;
+}
+.date-day-in-range:hover {
+  background: #e5eaf1;
+}
+.date-day-start,
+.date-day-end {
+  background: #1f2937;
+  color: #fff;
+}
+.date-day-start:hover,
+.date-day-end:hover {
+  background: #111827;
+}
+.date-day-start {
+  border-radius: 6px 0 0 6px;
+}
+.date-day-end {
+  border-radius: 0 6px 6px 0;
+}
+.date-day-start.date-day-end {
+  border-radius: 6px;
+}
+.date-day-start.date-day-today,
+.date-day-end.date-day-today {
+  box-shadow: inset 0 0 0 1px #6b7280;
+}

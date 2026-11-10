@@ -3,6 +3,8 @@ import { ApiError } from '@/api/auth'
 import { adminApi } from '@/api/admin'
 import type { ActivityItem, ActivityType } from '@/api/admin'
 import Select from '@/components/Select'
+import DateRangePicker from '@/components/DateRangePicker'
+import type { DateRangeValue } from '@/components/DateRangePicker'
 
 const PAGE_SIZE = 20
 
@@ -68,8 +70,7 @@ function errorText(err: unknown): string {
 export default function ActivityTab() {
   const [userInput, setUserInput] = useState('')
   const [typeFilter, setTypeFilter] = useState<'' | ActivityType>('')
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
+  const [dateRange, setDateRange] = useState<DateRangeValue>({})
   const [filterError, setFilterError] = useState('')
   const [resolving, setResolving] = useState(false)
 
@@ -151,6 +152,7 @@ export default function ActivityTab() {
       }
     }
 
+    const { from: fromDate, to: toDate } = dateRange
     if (fromDate && toDate && fromDate > toDate) {
       setFilterError('开始日期不能晚于结束日期')
       return
@@ -170,8 +172,7 @@ export default function ActivityTab() {
   const resetFilters = () => {
     setUserInput('')
     setTypeFilter('')
-    setFromDate('')
-    setToDate('')
+    setDateRange({})
     setFilterError('')
     setPageIndex(0)
     setStatus('loading')
@@ -203,28 +204,17 @@ export default function ActivityTab() {
             ariaLabel="按事件类型筛选"
           />
         </div>
-        <label className="activity-field">
-          <span className="user-search-label">开始日期</span>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(event) => {
-              setFromDate(event.target.value)
+        <div className="activity-field activity-field-range">
+          <span className="user-search-label">日期范围</span>
+          <DateRangePicker
+            value={dateRange}
+            onChange={(next) => {
+              setDateRange(next)
               setFilterError('')
             }}
+            ariaLabel="按日期范围筛选"
           />
-        </label>
-        <label className="activity-field">
-          <span className="user-search-label">结束日期</span>
-          <input
-            type="date"
-            value={toDate}
-            onChange={(event) => {
-              setToDate(event.target.value)
-              setFilterError('')
-            }}
-          />
-        </label>
+        </div>
         <div className="activity-actions">
           <button
             type="button"
