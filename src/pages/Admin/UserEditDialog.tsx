@@ -2,18 +2,13 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError } from '@/api/auth'
 import { adminApi } from '@/api/admin'
-import type { AdminUser, UpdateUserPayload, UserRole } from '@/api/admin'
+import type { AdminUser, UpdateUserPayload } from '@/api/admin'
 import Modal from '@/components/Modal'
-import Select from '@/components/Select'
-import { ROLE_OPTIONS } from './userRoles'
 
 export interface UserEditDialogProps {
   user: AdminUser
-  isSelf: boolean
-  canDelete: boolean
   onClose: () => void
   onSaved: (user: AdminUser) => void
-  onDelete: (user: AdminUser) => void
 }
 
 function trimValue(value: string): string {
@@ -31,21 +26,17 @@ function editErrorText(err: unknown): string {
   return '网络请求失败，请检查连接后重试。'
 }
 
-/** 编辑用户：资料与账号两段，保存时只提交改动过的字段 */
+/** 编辑用户资料与邮箱，保存时只提交改动过的字段；角色与删除在行内操作 */
 export default function UserEditDialog({
   user,
-  isSelf,
-  canDelete,
   onClose,
   onSaved,
-  onDelete,
 }: UserEditDialogProps) {
   const [nickname, setNickname] = useState(user.nickname ?? '')
   const [firstName, setFirstName] = useState(user.first_name ?? '')
   const [lastName, setLastName] = useState(user.last_name ?? '')
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? '')
   const [email, setEmail] = useState(user.email)
-  const [role, setRole] = useState<UserRole>(user.role as UserRole)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -54,7 +45,6 @@ export default function UserEditDialog({
 
     const nextEmail = email.trim()
     if (nextEmail !== user.email) patch.email = nextEmail
-    if (!isSelf && role !== user.role) patch.role = role
 
     const nextProfile = {
       nickname: trimValue(nickname),
@@ -104,31 +94,19 @@ export default function UserEditDialog({
       width={480}
       onClose={onClose}
       footer={
-        <>
-          {canDelete && (
-            <button
-              type="button"
-              className="blog-button modal-button-danger"
-              disabled={saving}
-              onClick={() => onDelete(user)}
-            >
-              删除用户
-            </button>
-          )}
-          <div className="modal-footer-end">
-            <button type="button" className="blog-button" disabled={saving} onClick={onClose}>
-              取消
-            </button>
-            <button
-              type="submit"
-              form="user-edit-form"
-              className="blog-button comment-submit"
-              disabled={saving || !hasChanges}
-            >
-              {saving ? '保存中…' : '保存'}
-            </button>
-          </div>
-        </>
+        <div className="modal-footer-end">
+          <button type="button" className="blog-button" disabled={saving} onClick={onClose}>
+            取消
+          </button>
+          <button
+            type="submit"
+            form="user-edit-form"
+            className="blog-button comment-submit"
+            disabled={saving || !hasChanges}
+          >
+            {saving ? '保存中…' : '保存'}
+          </button>
+        </div>
       }
     >
       <form id="user-edit-form" className="modal-form" onSubmit={submit}>
@@ -196,20 +174,6 @@ export default function UserEditDialog({
             }}
           />
         </label>
-        <div className="modal-field">
-          <span>角色</span>
-          <Select
-            value={role}
-            onChange={(next) => {
-              setRole(next as UserRole)
-              setError('')
-            }}
-            options={ROLE_OPTIONS}
-            disabled={saving || isSelf}
-            ariaLabel={`修改 ${user.email} 的角色`}
-          />
-          {isSelf && <span className="modal-hint">不能修改自己的角色</span>}
-        </div>
 
         {error && <p className="modal-error">{error}</p>}
       </form>

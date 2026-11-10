@@ -372,7 +372,7 @@
 }
 .user-list-head {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) 185px 130px 110px 130px;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr) 130px 110px;
   gap: 0.75rem;
   padding: 0.6rem 1rem;
   border-bottom: 1px solid #e5e7eb;
@@ -382,7 +382,7 @@
 }
 .user-item {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) 185px 130px 110px 130px;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr) 130px 110px;
   gap: 0.75rem;
   align-items: center;
   padding: 0.85rem 1rem;
@@ -432,14 +432,26 @@
   color: #6b7280;
   font-size: 0.75rem;
 }
+.user-role-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.user-role-select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.user-role-row .invite-badge {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.user-role-row .user-action {
+  flex: none;
+}
 .user-created {
   color: #4b5563;
   font-size: 0.82rem;
-}
-.user-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
 }
 .user-action {
   padding: 0.3rem 0.55rem;
@@ -451,6 +463,10 @@
   font-size: 0.78rem;
   line-height: 1.2;
   cursor: pointer;
+}
+.user-edit {
+  flex: none;
+  margin-left: auto;
 }
 .user-action:hover:not(:disabled) {
   background: #f9fafb;
@@ -501,7 +517,8 @@
     overflow: visible;
   }
   .user-item {
-    display: block;
+    display: flex;
+    flex-direction: column;
     padding: 0.9rem 1rem;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
@@ -509,6 +526,12 @@
   }
   .user-cell {
     padding: 0.2rem 0;
+  }
+  .user-role-cell {
+    order: 10;
+  }
+  .user-role-row {
+    flex-wrap: nowrap;
   }
   .user-cell::before {
     content: attr(data-label);

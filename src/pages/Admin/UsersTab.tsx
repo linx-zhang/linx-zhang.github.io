@@ -9,7 +9,7 @@ import { displayName } from '@/components/Avatar/avatarText'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import Select from '@/components/Select'
 import UserEditDialog from './UserEditDialog'
-import { FILTER_OPTIONS, roleLabel } from './userRoles'
+import { FILTER_OPTIONS, ROLE_OPTIONS, roleLabel } from './userRoles'
 
 const PAGE_SIZE = 20
 
@@ -106,6 +106,31 @@ export default function UsersTab() {
   }, [debouncedQuery, roleFilter, pageIndex, reloadKey])
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+
+  const requestRoleChange = (target: AdminUser, next: UserRole) => {
+    if (target.role === next || updatingId === target.id) return
+    const previousRole = target.role
+    setActionError('')
+    setUpdatingId(target.id)
+    // 先就地更新，失败再回滚到原角色
+    setItems((prev) =>
+      prev.map((item) => (item.id === target.id ? { ...item, role: next } : item)),
+    )
+    adminApi
+      .updateUser(target.id, { role: next })
+      .then((updated) => {
+        setItems((prev) =>
+          prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)),
+        )
+      })
+      .catch((err) => {
+        setItems((prev) =>
+          prev.map((item) => (item.id === target.id ? { ...item, role: previousRole } : item)),
+        )
+        setActionError(errorText(err))
+      })
+      .finally(() => setUpdatingId(null))
+  }
 
   const handleSaved = (updated: AdminUser) => {
     setItems((prev) =>
@@ -217,7 +242,6 @@ export default function UsersTab() {
             <span>角色</span>
             <span>注册时间</span>
             <span>最后活跃</span>
-            <span>操作</span>
           </div>
           {items.map((item) => {
             const isSelf = currentUser !== null && item.id === currentUser.id
@@ -233,32 +257,36 @@ export default function UsersTab() {
                     )}
                   </div>
                   {isSelf && <span className="user-self-tag">你</span>}
-                </div>
-                <div className="user-cell" data-label="角色">
-                  <span
-                    className={`invite-badge${item.role === 'admin' ? ' invite-badge-admin' : ''}`}
-                  >
-                    {roleLabel(item.role)}
-                  </span>
-                  {isSelf && <span className="user-self-hint">不能修改自己的角色</span>}
-                </div>
-                <div className="user-cell user-created" data-label="注册时间">
-                  {formatTimestamp(item.created_at)}
-                </div>
-                <div className="user-cell user-created" data-label="最后活跃">
-                  {relativeTime(item.last_active_at)}
-                </div>
-                <div className="user-cell user-actions" data-label="操作">
-                  {canUpdate ? (
+                  {canUpdate && (
                     <button
                       type="button"
-                      className="user-action"
+                      className="user-action user-edit"
                       onClick={() => setEditingUser(item)}
                     >
                       编辑
                     </button>
-                  ) : (
-                    canDelete && (
+                  )}
+                </div>
+                <div className="user-cell user-role-cell" data-label="角色">
+                  <div className="user-role-row">
+                    {canUpdate ? (
+                      <div className="user-role-select">
+                        <Select
+                          value={item.role}
+                          onChange={(next) => requestRoleChange(item, next as UserRole)}
+                          options={ROLE_OPTIONS}
+                          disabled={isSelf || updatingId === item.id}
+                          ariaLabel={`修改 ${item.email} 的角色`}
+                        />
+                      </div>
+                    ) : (
+                      <span
+                        className={`invite-badge${item.role === 'admin' ? ' invite-badge-admin' : ''}`}
+                      >
+                        {roleLabel(item.role)}
+                      </span>
+                    )}
+                    {canDelete && (
                       <button
                         type="button"
                         className="user-action user-action-danger"
@@ -267,8 +295,15 @@ export default function UsersTab() {
                       >
                         删除
                       </button>
-                    )
-                  )}
+                    )}
+                  </div>
+                  {isSelf && <span className="user-self-hint">不能修改自己的角色</span>}
+                </div>
+                <div className="user-cell user-created" data-label="注册时间">
+                  {formatTimestamp(item.created_at)}
+                </div>
+                <div className="user-cell user-created" data-label="最后活跃">
+                  {relativeTime(item.last_active_at)}
                 </div>
               </div>
             )
@@ -312,11 +347,8 @@ export default function UsersTab() {
         <UserEditDialog
           key={editingUser.id}
           user={editingUser}
-          isSelf={currentUser !== null && editingUser.id === currentUser.id}
-          canDelete={canDelete}
           onClose={() => setEditingUser(null)}
           onSaved={handleSaved}
-          onDelete={requestDelete}
         />
       )}
 
