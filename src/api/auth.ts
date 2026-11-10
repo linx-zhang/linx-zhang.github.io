@@ -1,5 +1,5 @@
 // 后端 Worker 地址：切换环境只需改这一处
-export const AUTH_API_BASE = 'https://linx-api-78i.pages.dev/'
+export const AUTH_API_BASE = 'https://linx-api-78i.pages.dev'
 const TOKEN_KEY = 'blog_access_token'
 
 export interface AuthUser {
