@@ -5,13 +5,9 @@ import { adminApi } from '@/api/admin'
 import type { InviteCode, InviteRole } from '@/api/admin'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import Select from '@/components/Select'
+import { roleLabel } from './userRoles'
 
 const PAGE_SIZE = 20
-const ROLE_LABEL: Record<string, string> = {
-  internal: '普通用户',
-  admin: '管理员',
-  user: '普通用户',
-}
 
 function formatTimestamp(value: string): string {
   return value.replace('T', ' ').slice(0, 16)
@@ -268,7 +264,7 @@ export default function InvitesTab() {
                         : 'invite-badge'
                     }
                   >
-                    {ROLE_LABEL[invite.role] ?? invite.role}
+                    {roleLabel(invite.role)}
                   </span>
                   <span className={`invite-status invite-status-${status}`}>
                     {statusLabel(invite)}
