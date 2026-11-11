@@ -175,7 +175,7 @@ linx-zhang.github.io/
 │  │  └─ Profile/           # 独立简历页（PDF 导出）
 │  └─ utils/docs.ts         # 编译期扫描 raw-docs，生成文档清单
 ├─ raw-docs/                # 笔记源文件；仅 .md / .markdown / .html 参与构建
-├─ public/                  # favicon.svg、404.html（SPA 深链兜底）
+├─ public/                  # favicon.svg（取自 icons.svg 的 #documentation-icon）、icons.svg 图标 sprite、404.html（SPA 深链兜底）
 ├─ docs/                    # 构建产物，GitHub Pages 部署源
 └─ old/                     # 旧版站点源码，不参与当前构建
 ```
