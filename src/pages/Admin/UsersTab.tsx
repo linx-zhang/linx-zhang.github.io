@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ApiError } from '@/api/client'
+import { errorMessage } from '@/api/client'
 import { adminApi } from '@/api/admin'
 import type { AdminUser, UserRole } from '@/api/admin'
 import { useAuth } from '@/auth/AuthProvider'
@@ -33,15 +33,6 @@ function relativeTime(value: string | null): string {
   if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时前`
   if (diff < 30 * 86_400_000) return `${Math.floor(diff / 86_400_000)} 天前`
   return value.replace('T', ' ').slice(0, 10)
-}
-
-function errorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
-    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
-    return err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
 }
 
 export default function UsersTab() {
@@ -101,7 +92,7 @@ export default function UsersTab() {
       })
       .catch((err) => {
         if (cancelled) return
-        setListError(errorText(err))
+        setListError(errorMessage(err))
         setListStatus('error')
       })
     return () => {
@@ -131,7 +122,7 @@ export default function UsersTab() {
         setItems((prev) =>
           prev.map((item) => (item.id === target.id ? { ...item, role: previousRole } : item)),
         )
-        setActionError(errorText(err))
+        setActionError(errorMessage(err))
       })
       .finally(() => setUpdatingId(null))
   }
@@ -174,7 +165,7 @@ export default function UsersTab() {
           setTotal((value) => Math.max(0, value - 1))
           setEditingUser(null)
         } catch (err) {
-          setActionError(errorText(err))
+          setActionError(errorMessage(err))
         } finally {
           setUpdatingId(null)
         }

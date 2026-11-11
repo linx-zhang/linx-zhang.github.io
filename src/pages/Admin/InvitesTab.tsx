@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { ApiError } from '@/api/client'
+import { errorMessage } from '@/api/client'
 import { adminApi } from '@/api/admin'
 import type { InviteCode, InviteRole } from '@/api/admin'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
@@ -11,15 +11,6 @@ const ROLE_LABEL: Record<string, string> = {
   internal: '普通用户',
   admin: '管理员',
   user: '普通用户',
-}
-
-function errorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
-    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
-    return err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
 }
 
 function formatTimestamp(value: string): string {
@@ -77,7 +68,7 @@ export default function InvitesTab() {
       })
       .catch((err) => {
         if (cancelled) return
-        setListError(errorText(err))
+        setListError(errorMessage(err))
         setListStatus('error')
       })
     return () => {
@@ -100,7 +91,7 @@ export default function InvitesTab() {
       setPageIndex(0)
       setReloadKey((key) => key + 1)
     } catch (err) {
-      setCreateError(errorText(err))
+      setCreateError(errorMessage(err))
     } finally {
       setCreating(false)
     }
@@ -161,7 +152,7 @@ export default function InvitesTab() {
           await adminApi.deleteInviteCode(code)
           setNotice('邀请码已撤销。')
         } catch (err) {
-          setDeleteError(errorText(err))
+          setDeleteError(errorMessage(err))
         } finally {
           setDeletingCode(null)
           setListStatus('loading')

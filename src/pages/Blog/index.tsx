@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ApiError } from '@/api/client'
+import { errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
@@ -23,13 +23,6 @@ function textSummary(markdown: string): string {
     .replace(/\s+/g, ' ')
     .trim()
   return plain.length > 140 ? `${plain.slice(0, 140)}…` : plain
-}
-
-function errorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    return err.status >= 500 ? '服务暂时不可用，请稍后重试。' : err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
 }
 
 export default function Blog() {
@@ -60,7 +53,7 @@ export default function Blog() {
       })
       .catch((err) => {
         if (cancelled) return
-        setError(errorText(err))
+        setError(errorMessage(err))
         setStatus('error')
       })
     return () => {
@@ -111,7 +104,7 @@ export default function Blog() {
       const post = await blogApi.createPost({ title: trimmedTitle, body_md: bodyMd })
       navigate(`/blog/${post.id}`)
     } catch (err) {
-      setComposeError(errorText(err))
+      setComposeError(errorMessage(err))
     } finally {
       setPublishing(false)
     }

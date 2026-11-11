@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ApiError } from '@/api/client'
+import { ApiError, errorMessage } from '@/api/client'
 import { adminApi } from '@/api/admin'
 import type { ActivityItem, ActivityType } from '@/api/admin'
 import Select from '@/components/Select'
@@ -58,15 +58,6 @@ function endOfDayIso(value: string): string {
   return new Date(`${value}T23:59:59.999`).toISOString()
 }
 
-function errorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
-    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
-    return err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
-}
-
 export default function ActivityTab() {
   const [userInput, setUserInput] = useState('')
   const [typeFilter, setTypeFilter] = useState<'' | ActivityType>('')
@@ -105,7 +96,7 @@ export default function ActivityTab() {
           setStatus('missing')
           return
         }
-        setListError(errorText(err))
+        setListError(errorMessage(err))
         setStatus('error')
       })
     return () => {
@@ -141,7 +132,7 @@ export default function ActivityTab() {
           }
           userId = match.id
         } catch (err) {
-          setFilterError(errorText(err))
+          setFilterError(errorMessage(err))
           return
         } finally {
           setResolving(false)

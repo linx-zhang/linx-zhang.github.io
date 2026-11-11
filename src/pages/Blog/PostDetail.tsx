@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ApiError } from '@/api/client'
+import { ApiError, errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Comment, Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
@@ -13,15 +13,6 @@ import './Blog.css'
 
 function formatDate(value: string): string {
   return value.replace('T', ' ').slice(0, 16)
-}
-
-function errorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
-    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
-    return err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
 }
 
 function commentOrder(a: Comment, b: Comment): number {
@@ -82,7 +73,7 @@ export default function PostDetail() {
           setPostStatus('missing')
           return
         }
-        setPostError(errorText(err))
+        setPostError(errorMessage(err))
         setPostStatus('error')
       })
     return () => {
@@ -104,7 +95,7 @@ export default function PostDetail() {
       })
       .catch((err) => {
         if (cancelled) return
-        setCommentError(errorText(err))
+        setCommentError(errorMessage(err))
         setCommentStatus('error')
       })
     return () => {
@@ -122,7 +113,7 @@ export default function PostDetail() {
         setCommentStatus('ready')
       })
       .catch((err) => {
-        setCommentError(errorText(err))
+        setCommentError(errorMessage(err))
         setCommentStatus('error')
       })
   }
@@ -145,7 +136,7 @@ export default function PostDetail() {
       setBody('')
       refreshComments()
     } catch (err) {
-      setSubmitError(errorText(err))
+      setSubmitError(errorMessage(err))
     } finally {
       setSubmitting(false)
     }
@@ -165,7 +156,7 @@ export default function PostDetail() {
           await blogApi.deleteComment(commentId)
           refreshComments()
         } catch (err) {
-          setDeleteError(errorText(err))
+          setDeleteError(errorMessage(err))
         } finally {
           setDeletingId(null)
         }
@@ -213,7 +204,7 @@ export default function PostDetail() {
       setPost(updated)
       setEditing(false)
     } catch (err) {
-      setEditError(errorText(err))
+      setEditError(errorMessage(err))
     } finally {
       setSaving(false)
     }
@@ -233,7 +224,7 @@ export default function PostDetail() {
           await blogApi.deletePost(postId)
           navigate('/blog')
         } catch (err) {
-          setPostActionError(errorText(err))
+          setPostActionError(errorMessage(err))
         } finally {
           setDeletingPost(false)
         }

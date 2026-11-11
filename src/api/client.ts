@@ -25,6 +25,19 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * 把任意异常转成可直接展示的文案：5xx 统一提示、403 优先用后端 detail，其余直接用 detail。
+ * 页面层只调这一个函数，别再各自复制一份判断。
+ */
+export function errorMessage(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
+    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
+    return err.detail
+  }
+  return '网络请求失败，请检查连接后重试。'
+}
+
 export function getStoredToken(): string | null {
   return window.localStorage.getItem(TOKEN_KEY)
 }

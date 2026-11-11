@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ApiError } from '@/api/client'
+import { errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { usePermission } from '@/auth/usePermission'
@@ -11,15 +11,6 @@ const PAGE_SIZE = 20
 interface DeleteFailure {
   id: number
   detail: string
-}
-
-function errorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
-    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
-    return err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
 }
 
 function formatTimestamp(value: string): string {
@@ -55,7 +46,7 @@ export default function PostsTab() {
       })
       .catch((err) => {
         if (cancelled) return
-        setListError(errorText(err))
+        setListError(errorMessage(err))
         setStatus('error')
       })
     return () => {
@@ -123,7 +114,7 @@ export default function PostsTab() {
             setStatus('loading')
           }
         } catch (err) {
-          setBatchError(errorText(err))
+          setBatchError(errorMessage(err))
         } finally {
           setDeleting(false)
         }
