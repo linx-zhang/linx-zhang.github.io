@@ -108,6 +108,7 @@ npm run lint
 
 - 登录态：`AuthProvider` 把 token 存 `localStorage` 的 `blog_access_token`，启动时请求 `GET /auth/me`；`usePermission().has(code)` 读取后端下发的权限码
 - 路由守卫：`RequirePermission` 负责未登录引导与无权限提示
+- 传输层集中在 `src/api/client.ts`：`request()` 负责拼 base、注入 Bearer、解析 `{code,detail,data}` 信封、把错误转成 `ApiError(status, code, detail)`；base 常量 `API_BASE` 也在这里（硬编码，不读环境变量）
 - 401（以及未跳过时的 403）由 `request()` 统一清 token 并广播 `auth:unauthorized`；管理接口传 `skipForbiddenLogout` 以展示后端错误详情
 - 后端权限码：`account:*`、`post:*`、`comment:*`、`invite_code:*`、`user:*`、`activity:*`（细分为 `*:own` / `*:any` / `*:self`）
 - 个人资料：`PATCH /auth/me`（权限 `account:update:self`）只接受 `nickname` / `first_name` / `last_name` / `avatar_url`，不能修改邮箱与角色；管理端 `PATCH /admin/users/{id}` 额外接受 `email` / `role`
@@ -150,7 +151,7 @@ linx-zhang.github.io/
 │  ├─ main.tsx              # 路由表、ReactDOM 挂载、404 路径恢复
 │  ├─ routes.ts             # 路由常量与深链判定
 │  ├─ activity/             # ActivityTracker + useActivityTracker（page_view / heartbeat / page_leave）
-│  ├─ api/                  # auth.ts（用户与 token）、blog.ts（文章/评论）、admin.ts（管理接口）
+│  ├─ api/                  # client.ts（fetch 封装 / token / ApiError）、auth.ts、blog.ts、admin.ts
 │  ├─ auth/                 # AuthProvider、usePermission
 │  ├─ components/
 │  │  ├─ Layout/            # RootLayout 全站主壳、WikiLayout 知识库子壳
@@ -174,7 +175,7 @@ linx-zhang.github.io/
 │  │  └─ Profile/           # 独立简历页（PDF 导出）
 │  └─ utils/docs.ts         # 编译期扫描 raw-docs，生成文档清单
 ├─ raw-docs/                # 笔记源文件；仅 .md / .markdown / .html 参与构建
-├─ public/                  # favicon.svg、icons.svg、404.html（SPA 深链兜底）
+├─ public/                  # favicon.svg、404.html（SPA 深链兜底）
 ├─ docs/                    # 构建产物，GitHub Pages 部署源
 └─ old/                     # 旧版站点源码，不参与当前构建
 ```

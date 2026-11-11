@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ApiError, authApi } from '@/api/auth'
+import { ApiError } from '@/api/client'
+import { authApi } from '@/api/auth'
 import type { AuthUser } from '@/api/auth'
 import Modal from '@/components/Modal'
 

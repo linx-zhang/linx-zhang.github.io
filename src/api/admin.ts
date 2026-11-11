@@ -1,4 +1,4 @@
-import { request } from '@/api/auth'
+import { request } from '@/api/client'
 
 /** 后端 InviteCodeCreateIn.role 仅接受 internal / admin（不是 user） */
 export type InviteRole = 'internal' | 'admin'

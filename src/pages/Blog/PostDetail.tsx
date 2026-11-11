@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ApiError } from '@/api/auth'
+import { ApiError } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Comment, Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'

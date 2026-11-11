@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ApiError } from '@/api/auth'
+import { ApiError } from '@/api/client'
 import { adminApi } from '@/api/admin'
 import type { AdminUser, UserRole } from '@/api/admin'
 import { useAuth } from '@/auth/AuthProvider'

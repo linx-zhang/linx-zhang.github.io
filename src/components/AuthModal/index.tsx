@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { ApiError, authApi } from '@/api/auth'
+import { ApiError } from '@/api/client'
+import { authApi } from '@/api/auth'
 import type { AuthUser, LoginPayload } from '@/api/auth'
 import './AuthModal.css'
 

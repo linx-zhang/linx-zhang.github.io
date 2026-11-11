@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import AuthModal from '@/components/AuthModal'
-import { authApi, clearToken, getStoredToken, storeToken } from '@/api/auth'
+import { authApi } from '@/api/auth'
+import { clearToken, getStoredToken, storeToken } from '@/api/client'
 import type { AuthUser } from '@/api/auth'
 
 interface AuthContextValue {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ApiError } from '@/api/auth'
+import { ApiError } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { usePermission } from '@/auth/usePermission'

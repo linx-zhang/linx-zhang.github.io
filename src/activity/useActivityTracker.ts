@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { AUTH_API_BASE, getStoredToken } from '@/api/auth'
+import { API_BASE, getStoredToken } from '@/api/client'
 import { useAuth } from '@/auth/AuthProvider'
 
 export type ActivityType = 'page_view' | 'heartbeat' | 'page_leave'
@@ -12,7 +12,7 @@ export interface ActivityEvent {
   duration_ms?: number
 }
 
-const ACTIVITY_URL = `${AUTH_API_BASE}/activity`
+const ACTIVITY_URL = `${API_BASE}/activity`
 const MAX_BATCH = 50
 const MAX_QUEUED = 200
 const HEARTBEAT_INTERVAL_MS = 60_000

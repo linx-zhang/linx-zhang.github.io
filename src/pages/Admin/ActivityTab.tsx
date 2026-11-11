@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ApiError } from '@/api/auth'
+import { ApiError } from '@/api/client'
 import { adminApi } from '@/api/admin'
 import type { ActivityItem, ActivityType } from '@/api/admin'
 import Select from '@/components/Select'

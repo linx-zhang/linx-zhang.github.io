@@ -1,4 +1,4 @@
-import { request } from '@/api/auth'
+import { request } from '@/api/client'
 
 export interface Post {
   id: number
