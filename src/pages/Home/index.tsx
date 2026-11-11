@@ -100,7 +100,7 @@ export default function Home() {
 
       <div className="links-row">
         <a href="https://github.com/linx-zhang" target="_blank" rel="noreferrer">GitHub</a>
-        <a href="mailto:xxx@shturl.com">Email</a>
+        <a href="mailto:xxx@qq.com">Email</a>
       </div>
     </div>
   )

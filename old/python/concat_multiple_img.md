@@ -7,7 +7,7 @@ import numpy as np
 t = time.time()
 
 # 设置图片路径
-image_dir = r'C:\Users\Linx\Pictures\Screenshots'
+image_dir = r'./screenshots'
 
 # 获取目录下的所有图片文件
 image_files = [f for f in os.listdir(image_dir) if f.endswith('.jpg') or f.endswith('.png')]

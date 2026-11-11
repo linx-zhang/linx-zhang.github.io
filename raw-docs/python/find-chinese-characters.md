@@ -19,7 +19,7 @@ from functools import lru_cache
 sys.path.append(os.path.abspath(__file__))
 
 
-SCAN_DIR = r"D:\this_code\test\我的笔记\linx-zhang.github.io"
+SCAN_DIR = r"."
 # SCAN_DIR = input('Input Scan Folder, please:')
 RESULTS_FILE = os.path.join(SCAN_DIR, "zh.json")
 PASS_DIRS = [

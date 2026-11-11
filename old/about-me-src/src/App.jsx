@@ -18,7 +18,7 @@ function App() {
         <h1 style={{ margin: 0, fontSize: '2.2rem' }}>Linx Zhang</h1>
         <p style={{ fontSize: '1.15rem', color: '#4b5563', marginTop: '4px' }}>高级 Python 工程师 · 数据平台 / 后端架构</p>
         <div style={{ marginTop: '1rem' }}>
-          <a href="mailto:xxx@shturl.com" style={{ margin: '0 8px' }}>邮箱</a>
+          <a href="mailto:xxx@qq.com" style={{ margin: '0 8px' }}>邮箱</a>
           <a href="https://github.com/linx-zhang" style={{ margin: '0 8px' }}>GitHub</a>
           <a href="/" style={{ margin: '0 8px' }}>← 返回知识库</a>
           <button 
