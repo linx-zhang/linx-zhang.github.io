@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import AuthModal from '@/components/AuthModal'
 import { authApi, clearToken, getStoredToken, storeToken } from '@/api/auth'
@@ -9,7 +9,8 @@ interface AuthContextValue {
   /** 当前账号的权限码；未登录或后端未下发时为空数组 */
   permissions: string[]
   ready: boolean
-  openLogin: () => void
+  /** 打开登录弹窗；传 afterSuccess 时登录成功后再执行该动作（例如自动展开写文章表单） */
+  openLogin: (afterSuccess?: () => void) => void
   logout: () => void
   /** 资料保存后用返回值替换当前用户，顶栏立即刷新 */
   updateUser: (next: AuthUser) => void
@@ -27,6 +28,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [ready, setReady] = useState(() => !getStoredToken())
   const [loginOpen, setLoginOpen] = useState(false)
+  // 登录成功后要补做的动作，弹窗关闭时清空，避免下次登录时误触发
+  const afterLoginRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     if (!getStoredToken()) return
@@ -51,6 +54,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     const onUnauthorized = () => {
       setUser(null)
       setLoginOpen(false)
+      afterLoginRef.current = null
     }
     window.addEventListener('auth:unauthorized', onUnauthorized)
     return () => window.removeEventListener('auth:unauthorized', onUnauthorized)
@@ -61,6 +65,9 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser)
     setReady(true)
     setLoginOpen(false)
+    const afterLogin = afterLoginRef.current
+    afterLoginRef.current = null
+    if (typeof afterLogin === 'function') afterLogin()
     // 登录/注册响应不含 permissions（资料字段已包含），补拉 /auth/me 以拿到权限码
     authApi
       .me()
@@ -76,7 +83,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         user,
         permissions: user?.permissions ?? [],
         ready,
-        openLogin: () => setLoginOpen(true),
+        openLogin: (afterSuccess?: () => void) => {
+          afterLoginRef.current = afterSuccess ?? null
+          setLoginOpen(true)
+        },
         logout: () => {
           clearToken()
           setUser(null)
@@ -88,7 +98,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       {loginOpen && (
         <AuthModal
           initialMode="login"
-          onClose={() => setLoginOpen(false)}
+          onClose={() => {
+            afterLoginRef.current = null
+            setLoginOpen(false)
+          }}
           onSuccess={handleSuccess}
         />
       )}

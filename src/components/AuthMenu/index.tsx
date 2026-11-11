@@ -78,7 +78,7 @@ export default function AuthMenu() {
           )}
         </>
       ) : (
-        <button type="button" className="auth-login" onClick={openLogin}>
+        <button type="button" className="auth-login" onClick={() => openLogin()}>
           登录
         </button>
       )}

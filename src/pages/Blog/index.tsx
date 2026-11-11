@@ -33,7 +33,7 @@ function errorText(err: unknown): string {
 }
 
 export default function Blog() {
-  const { user } = useAuth()
+  const { user, openLogin } = useAuth()
   const navigate = useNavigate()
   const [pageIndex, setPageIndex] = useState(0)
   const [items, setItems] = useState<Post[]>([])
@@ -80,6 +80,16 @@ export default function Blog() {
     setReloadKey((key) => key + 1)
   }
 
+  const toggleComposer = () => {
+    setComposeError('')
+    // 未登录时按钮照样可见，点击后弹登录；登录成功后自动展开写作面板
+    if (!user) {
+      openLogin(() => setComposerOpen(true))
+      return
+    }
+    setComposerOpen((open) => !open)
+  }
+
   const handlePublish = async (event: FormEvent) => {
     event.preventDefault()
     setComposeError('')
@@ -114,19 +124,16 @@ export default function Blog() {
           <h1>博客</h1>
           <p>记录技术实践与日常思考。</p>
         </div>
-        {user && (
-          <button
-            type="button"
-            className={composerOpen ? 'blog-write blog-write-active' : 'blog-write'}
-            aria-expanded={composerOpen}
-            onClick={() => {
-              setComposerOpen((open) => !open)
-              setComposeError('')
-            }}
-          >
-            {composerOpen ? '收起' : '写文章'}
-          </button>
-        )}
+        <button
+          type="button"
+          className={composerOpen ? 'blog-write blog-write-active' : 'blog-write'}
+          aria-expanded={user ? composerOpen : undefined}
+          aria-haspopup={user ? undefined : 'dialog'}
+          title={user ? undefined : '登录后可写文章'}
+          onClick={toggleComposer}
+        >
+          {composerOpen ? '收起' : '写文章'}
+        </button>
       </header>
 
       {user && composerOpen && (

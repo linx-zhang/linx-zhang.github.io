@@ -28,7 +28,7 @@ export default function RequirePermission({ permission, children }: RequirePermi
         <div className="guard-card guard-guide">
           <h1>需要登录</h1>
           <p>登录管理员账号后即可进入管理后台。</p>
-          <button type="button" className="guard-button" onClick={openLogin}>
+          <button type="button" className="guard-button" onClick={() => openLogin()}>
             登录
           </button>
         </div>

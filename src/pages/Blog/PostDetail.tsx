@@ -457,7 +457,7 @@ export default function PostDetail() {
           ) : (
             <div className="comment-login">
               <p>登录后评论。</p>
-              <button type="button" className="blog-button" onClick={openLogin}>
+              <button type="button" className="blog-button" onClick={() => openLogin()}>
                 登录
               </button>
             </div>
