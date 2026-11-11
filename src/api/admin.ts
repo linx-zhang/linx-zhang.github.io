@@ -66,6 +66,17 @@ export interface UpdateUserPayload {
   avatar_url?: string | null
 }
 
+/** POST /admin/users/{id}/reset-password：新密码只在此响应出现一次 */
+export interface ResetPasswordResult {
+  id: number
+  email: string
+  /** 实际生效的密码：管理员指定值，或后端生成的临时密码 */
+  password: string
+  /** true 表示 password 由后端生成 */
+  generated: boolean
+  password_reset_at: string
+}
+
 export type ActivityType = 'page_view' | 'heartbeat' | 'page_leave'
 
 export interface ActivityItem {
@@ -142,6 +153,18 @@ export const adminApi = {
     return request<unknown>(`/admin/users/${id}`, { method: 'DELETE' }, true, {
       skipForbiddenLogout: true,
     })
+  },
+  /** 重置密码：可指定新密码，留空则由后端生成；同时使该用户已登录的会话失效 */
+  resetUserPassword(id: number, password?: string): Promise<ResetPasswordResult> {
+    return request<ResetPasswordResult>(
+      `/admin/users/${id}/reset-password`,
+      {
+        method: 'POST',
+        body: JSON.stringify(password ? { password } : {}),
+      },
+      true,
+      { skipForbiddenLogout: true },
+    )
   },
   listActivity(params: ActivityListParams = {}): Promise<ActivityPage> {
     const search = new URLSearchParams()

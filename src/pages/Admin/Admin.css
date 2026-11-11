@@ -1,5 +1,5 @@
 .admin-page {
-  max-width: 820px;
+  max-width: 920px;
   margin: 0 auto;
   padding: 2rem 1.5rem 3rem;
 }
@@ -393,7 +393,7 @@
 }
 .user-list-head.has-actions,
 .user-item.has-actions {
-  grid-template-columns: minmax(0, 2fr) 190px 120px 100px 100px;
+  grid-template-columns: minmax(0, 2fr) 190px 125px 95px 190px;
 }
 .user-cell {
   min-width: 0;
@@ -489,6 +489,13 @@
 .user-action-danger:hover:not(:disabled) {
   background: #fef2f2;
 }
+.user-action-reset {
+  white-space: nowrap;
+}
+/* 危险操作固定在行尾，与常规操作拉开一点距离，减少误触 */
+.user-action-danger {
+  margin-left: 0.25rem;
+}
 .user-empty {
   padding: 1.2rem;
   border: 1px solid #e5e7eb;
@@ -509,6 +516,71 @@
   margin-top: 0.25rem;
   color: #4b5563;
   font-size: 0.85rem;
+}
+
+/* --- 重置密码 --- */
+.reset-password-confirm,
+.reset-password-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.reset-password-hint-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #4b5563;
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+.reset-password-hint-list li {
+  margin-bottom: 0.3rem;
+}
+.reset-password-self {
+  color: #b45309;
+}
+.reset-password-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.reset-password-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+.reset-password-value:focus {
+  outline: none;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.08);
+}
+.reset-password-copy {
+  flex: none;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.reset-password-copy:hover {
+  border-color: #9ca3af;
+  color: #1f2937;
+}
+.reset-password-hint {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
 
 @media (max-width: 640px) {

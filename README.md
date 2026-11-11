@@ -14,7 +14,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；分区通过 ?tab=posts|invites|users|activity 深链（默认 posts）
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
 - Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 对 401（以及未跳过时的 403）清 token 并广播该事件；管理接口传 skipForbiddenLogout 以展示后端 detail。
-- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any、activity:read:any|write:self。
+- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self。
 - User profile: users 有 nickname / first_name / last_name / avatar_url；展示名优先级 昵称 → 「名 姓」→ 邮箱前缀，已删除用户为「已注销」。GET /auth/me 与登录/注册响应带这四字段（无值为 null）；PATCH /auth/me 走 account:update:self，只接受这四字段（传 email/role 会 422），返回完整用户对象（含 permissions）；PATCH /admin/users/{id} 同时接受四字段与 email/role。
 - Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；src/components/ConfirmDialog + useConfirm；src/components/Modal 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
 - Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
@@ -35,7 +35,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **分层路由**：`RootLayout` 提供全站导航、账号菜单与页脚；`WikiLayout` 提供知识库侧边栏；`/profile` 是脱离布局的独立页面
 - **账号体系**：登录 / 注册（邀请码）、权限码驱动的菜单与操作按钮、个人资料弹窗（昵称 / 名 / 姓 / 头像，保存后顶栏即时更新）
 - **博客**：文章列表、详情、Markdown 渲染、评论与回复、页内写作面板
-- **管理后台**：文章列表与批量删除、邀请码、用户管理（资料与账号分段的编辑弹窗）、活跃日志
+- **管理后台**：文章列表与批量删除、邀请码、用户管理（资料与账号分段的编辑弹窗、管理员重置密码：可手动指定或自动生成，并一次性展示生效密码）、活跃日志
 - **自定义基础组件**：Select、DateRangePicker、ConfirmDialog、Modal、Avatar 均为自研，未引入第三方 UI 库
 - **活跃采集**：登录后 60 秒心跳、路由级 `page_view`、离开时 `page_leave`（带停留时长，`fetch` + `keepalive` 携带 Bearer）
 - **静态文档知识库**：构建期通过 `import.meta.glob` 读取 `raw-docs` 下的 Markdown / HTML，按 slug 一级目录生成分类
@@ -111,6 +111,7 @@ npm run lint
 - 401（以及未跳过时的 403）由 `request()` 统一清 token 并广播 `auth:unauthorized`；管理接口传 `skipForbiddenLogout` 以展示后端错误详情
 - 后端权限码：`account:*`、`post:*`、`comment:*`、`invite_code:*`、`user:*`、`activity:*`（细分为 `*:own` / `*:any` / `*:self`）
 - 个人资料：`PATCH /auth/me`（权限 `account:update:self`）只接受 `nickname` / `first_name` / `last_name` / `avatar_url`，不能修改邮箱与角色；管理端 `PATCH /admin/users/{id}` 额外接受 `email` / `role`
+- 重置密码：`POST /admin/users/{id}/reset-password`（权限 `user:reset_password:any`，仅管理员可见按钮）可传 `{ password }` 指定新密码，留空则由后端生成 16 位临时密码；生效的密码只在响应的 `data.password` 出现一次（`data.generated` 区分来源）。同时写入 `password_changed_at`，重置前签发的 token 会立即 401，前端据 `auth:unauthorized` 退出登录
 - 展示名优先级：昵称 → 「名 姓」→ 邮箱前缀；已删除用户显示「已注销」。头像统一使用 `Avatar`：有 `avatar_url` 显示图片，加载失败回退首字母
 
 ---
@@ -123,7 +124,7 @@ npm run lint
 | --- | --- |
 | `posts` | 文章纯列表、全选与单次 `POST /posts/batch-delete` 批量删除 |
 | `invites` | 邀请码创建、列表与删除 |
-| `users` | 用户搜索 / 角色筛选 / 分页；行内角色下拉即时保存并支持失败回滚，行内删除走二次确认；「编辑」弹窗只改资料与邮箱，保存只提交改动字段 |
+| `users` | 用户搜索 / 角色筛选 / 分页；行内操作从左到右为「编辑」「重置密码」「删除」（危险操作固定行尾），角色下拉即时保存并支持失败回滚；「重置密码」先二次确认，可手动填写新密码（留空则由后端生成 16 位临时密码），成功后弹窗一次性展示生效的密码并可一键复制（关闭后无法再查看）；「编辑」弹窗只改资料与邮箱，保存只提交改动字段 |
 | `activity` | 按用户、类型、日期范围筛选活跃日志；日期范围使用自定义 `DateRangePicker`，按本地日界转 ISO |
 
 ---
@@ -169,7 +170,7 @@ linx-zhang.github.io/
 │  │  ├─ DocsHome/          # 知识库分类总览
 │  │  ├─ Docs/              # 单篇文档（Markdown 渲染 / HTML iframe）
 │  │  ├─ Blog/              # 列表 + 写作面板、详情 + 评论
-│  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ActivityTab）
+│  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ResetPasswordDialog / ActivityTab）
 │  │  └─ Profile/           # 独立简历页（PDF 导出）
 │  └─ utils/docs.ts         # 编译期扫描 raw-docs，生成文档清单
 ├─ raw-docs/                # 笔记源文件；仅 .md / .markdown / .html 参与构建

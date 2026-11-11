@@ -8,6 +8,7 @@ import Avatar from '@/components/Avatar'
 import { displayName } from '@/components/Avatar/avatarText'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import Select from '@/components/Select'
+import ResetPasswordDialog from './ResetPasswordDialog'
 import UserEditDialog from './UserEditDialog'
 import { FILTER_OPTIONS, ROLE_OPTIONS, roleLabel } from './userRoles'
 
@@ -49,7 +50,8 @@ export default function UsersTab() {
   const { confirm, dialog } = useConfirm()
   const canUpdate = has('user:update:any')
   const canDelete = has('user:delete:any')
-  const showActions = canUpdate || canDelete
+  const canResetPassword = has('user:reset_password:any')
+  const showActions = canUpdate || canDelete || canResetPassword
 
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -66,6 +68,7 @@ export default function UsersTab() {
   const [reloadKey, setReloadKey] = useState(0)
 
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
+  const [resettingUser, setResettingUser] = useState<AdminUser | null>(null)
 
   const appliedQuery = useRef('')
 
@@ -299,6 +302,16 @@ export default function UsersTab() {
                         编辑
                       </button>
                     )}
+                    {canResetPassword && (
+                      <button
+                        type="button"
+                        className="user-action user-action-reset"
+                        disabled={updatingId === item.id}
+                        onClick={() => setResettingUser(item)}
+                      >
+                        重置密码
+                      </button>
+                    )}
                     {canDelete && (
                       <button
                         type="button"
@@ -355,6 +368,15 @@ export default function UsersTab() {
           user={editingUser}
           onClose={() => setEditingUser(null)}
           onSaved={handleSaved}
+        />
+      )}
+
+      {resettingUser && (
+        <ResetPasswordDialog
+          key={resettingUser.id}
+          user={resettingUser}
+          isSelf={currentUser !== null && resettingUser.id === currentUser.id}
+          onClose={() => setResettingUser(null)}
         />
       )}
 
