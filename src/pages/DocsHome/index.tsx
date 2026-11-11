@@ -66,8 +66,8 @@ export default function DocsHome() {
                 </Link>
                 <div className="doc-date">{doc.filePath}</div>
                 <div className="doc-tags">
-                  <span className="tag">{cat}</span>
-                  <span className="tag">{doc.type.toUpperCase()}</span>
+                  <span className="doc-tag">{cat}</span>
+                  <span className="doc-tag">{doc.type.toUpperCase()}</span>
                 </div>
               </div>
             );

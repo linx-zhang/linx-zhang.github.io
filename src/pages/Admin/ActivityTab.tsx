@@ -5,8 +5,7 @@ import type { ActivityItem, ActivityType } from '@/api/admin'
 import Select from '@/components/Select'
 import DateRangePicker from '@/components/DateRangePicker'
 import type { DateRangeValue } from '@/components/DateRangePicker'
-
-const PAGE_SIZE = 20
+import { PAGE_SIZE } from '@/utils/format'
 
 const TYPE_OPTIONS = [
   { value: '', label: '全部类型' },

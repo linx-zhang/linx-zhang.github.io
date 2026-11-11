@@ -5,13 +5,8 @@ import { adminApi } from '@/api/admin'
 import type { InviteCode, InviteRole } from '@/api/admin'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import Select from '@/components/Select'
+import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
 import { roleLabel } from './userRoles'
-
-const PAGE_SIZE = 20
-
-function formatTimestamp(value: string): string {
-  return value.replace('T', ' ').slice(0, 16)
-}
 
 function statusOf(invite: InviteCode): 'unused' | 'used' | 'expired' {
   if (invite.used_at) return 'used'

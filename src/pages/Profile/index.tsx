@@ -16,7 +16,7 @@ export default function Profile() {
       <div ref={printContentRef} className="profile-print-root">
         <div className="profile-header-bar">
           <h1>Linx Zhang</h1>
-          <p className="subtitle">高级 Python 工程师 · 数据平台 / 后端架构</p>
+          <p className="profile-subtitle">高级 Python 工程师 · 数据平台 / 后端架构</p>
           {/* 新增：联系方式文本，网页和PDF都会显示 */}
           <div className="contact-line print-only">
             <span>xxx@qq.com</span>

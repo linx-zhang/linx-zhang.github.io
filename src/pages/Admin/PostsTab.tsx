@@ -5,16 +5,11 @@ import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { usePermission } from '@/auth/usePermission'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
-
-const PAGE_SIZE = 20
+import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
 
 interface DeleteFailure {
   id: number
   detail: string
-}
-
-function formatTimestamp(value: string): string {
-  return value.replace('T', ' ').slice(0, 16)
 }
 
 export default function PostsTab() {

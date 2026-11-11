@@ -11,12 +11,7 @@ import Select from '@/components/Select'
 import ResetPasswordDialog from './ResetPasswordDialog'
 import UserEditDialog from './UserEditDialog'
 import { FILTER_OPTIONS, ROLE_OPTIONS, roleLabel } from './userRoles'
-
-const PAGE_SIZE = 20
-
-function formatTimestamp(value: string): string {
-  return value.replace('T', ' ').slice(0, 16)
-}
+import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
 
 function parseTimestamp(value: string): number {
   const normalized = value.includes('T') ? value : `${value.replace(' ', 'T')}Z`

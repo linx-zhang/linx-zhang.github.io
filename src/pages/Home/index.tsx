@@ -2,11 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
+import { formatDate } from '@/utils/format'
 import './Home.css'
-
-function formatDate(value: string): string {
-  return value.replace('T', ' ').slice(0, 10)
-}
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
@@ -34,7 +31,7 @@ export default function Home() {
     <div className="home-page">
       <div className="hero">
         <h1>Linx Zhang</h1>
-        <p className="subtitle">
+        <p className="home-subtitle">
           高级 Python 后端工程师 · 数据平台 / 后端架构
         </p>
         <p className="desc">

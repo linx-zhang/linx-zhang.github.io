@@ -5,13 +5,8 @@ import { errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
+import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
 import './Blog.css'
-
-const PAGE_SIZE = 20
-
-function formatDate(value: string): string {
-  return value.replace('T', ' ').slice(0, 16)
-}
 
 function textSummary(markdown: string): string {
   const plain = markdown
@@ -200,7 +195,7 @@ export default function Blog() {
             <Link key={post.id} className="blog-card" to={`/blog/${post.id}`}>
               <h2>{post.title}</h2>
               <div className="blog-meta">
-                {formatDate(post.created_at)}
+                {formatTimestamp(post.created_at)}
                 {post.author_name ? ` · ${post.author_name}` : ''}
               </div>
               <p className="blog-summary">{textSummary(post.body_md)}</p>

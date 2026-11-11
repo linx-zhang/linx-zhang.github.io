@@ -9,11 +9,8 @@ import { usePermission } from '@/auth/usePermission'
 import MarkdownView from '@/components/MarkdownView'
 import Avatar from '@/components/Avatar'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
+import { formatTimestamp } from '@/utils/format'
 import './Blog.css'
-
-function formatDate(value: string): string {
-  return value.replace('T', ' ').slice(0, 16)
-}
 
 function commentOrder(a: Comment, b: Comment): number {
   if (a.created_at === b.created_at) return a.id - b.id
@@ -339,7 +336,7 @@ export default function PostDetail() {
           <>
             <h1 className="post-title">{post.title}</h1>
             <div className="blog-meta post-meta">
-              {formatDate(post.created_at)}
+              {formatTimestamp(post.created_at)}
               {post.author_name ? ` · ${post.author_name}` : ''}
             </div>
             {(canEditPost || canDeletePost) && (
@@ -397,7 +394,7 @@ export default function PostDetail() {
                 <div className="comment-head">
                   <Avatar name={comment.author_name} size="sm" />
                   <span className="comment-author">{comment.author_name ?? '匿名'}</span>
-                  <span className="comment-time">{formatDate(comment.created_at)}</span>
+                  <span className="comment-time">{formatTimestamp(comment.created_at)}</span>
                   {canDeleteComment(comment) && (
                     <button
                       type="button"
