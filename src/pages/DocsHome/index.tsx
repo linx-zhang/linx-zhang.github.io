@@ -1,92 +1,98 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { getDocList } from '@/utils/docs';
+import { useDocList } from '@/utils/useDocs';
 import './DocsHome.css';
 
 export default function DocsHome() {
-  const docList = getDocList();
+  const { docs, error } = useDocList();
   const [activeCategory, setActiveCategory] = useState<string>('全部');
 
-  // 根据 slug 的第一层路径自动提取分类 (例如 "golang/abc" -> "golang")
+  const docList = useMemo(() => docs ?? [], [docs]);
+
+  // 分类来自构建期生成的 index.json，slug 第一层即分类
   const categories = useMemo(() => {
     const cats = new Set<string>();
-    docList.forEach(doc => {
-      const parts = doc.slug.split('/');
-      if (parts.length > 1) {
-        cats.add(parts[0]);
-      } else {
-        cats.add('综合'); // 没有子目录的放在综合里
-      }
-    });
+    docList.forEach((doc) => cats.add(doc.category));
     const sortedCats = Array.from(cats).sort((a, b) => a.localeCompare(b, 'zh-CN'));
     return ['全部', ...sortedCats];
   }, [docList]);
 
-  // 根据当前选中分类过滤文档
   const filteredDocs = useMemo(() => {
     if (activeCategory === '全部') return docList;
-    return docList.filter(doc => {
-      const parts = doc.slug.split('/');
-      const cat = parts.length > 1 ? parts[0] : '综合';
-      return cat === activeCategory;
-    });
+    return docList.filter((doc) => doc.category === activeCategory);
   }, [docList, activeCategory]);
 
   return (
     <div className="docs-home">
       <header className="docs-home-header">
         <h1>Wiki 知识库</h1>
-        <p>共收录 {docList.length} 篇文档 / 笔记</p>
+        <p>
+          {docs
+            ? `${docList.length} 篇文档 · ${categories.length - 1} 个分类`
+            : error
+              ? error
+              : '正在加载文档索引…'}
+        </p>
       </header>
 
-      <div className="docs-home-layout">
-        {/* 左侧：分类导航 */}
-        <aside className="docs-categories">
-          {categories.map(cat => (
-            <div
-              key={cat}
-              className={`category-item ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
-            >
-              {cat}
-            </div>
-          ))}
-        </aside>
+      {error && (
+        <div className="empty-tip">
+          文档索引没能加载出来，请确认 /wiki/index.json 已随构建产出。
+        </div>
+      )}
 
-        {/* 右侧：文档列表 */}
-        <main className="doc-list">
-          {filteredDocs.map((doc) => {
-            const parts = doc.slug.split('/');
-            const cat = parts.length > 1 ? parts[0] : '综合';
-            
-            return (
+      {!error && (
+        <>
+          {/* 分类改成顶部一行 chip，不再单独占一列导航 */}
+          <div className="docs-filter-bar">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                className={`docs-chip ${activeCategory === cat ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <main className="doc-list">
+            {filteredDocs.map((doc) => (
               <div key={doc.slug} className="doc-item">
-                <Link to={`/wiki/${doc.slug}`} className="doc-title">
-                  {doc.title}
-                </Link>
-                <div className="doc-date">
-                  <a
-                    className="doc-source"
-                    href={`https://github.com/linx-zhang/linx-zhang.github.io/blob/main${doc.filePath}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    源文件 · {doc.type}
-                  </a>
+                {/* 第一行：标题 + 右侧操作 */}
+                <div className="doc-item-head">
+                  <Link to={`/wiki/${doc.slug}`} className="doc-title">
+                    {doc.title}
+                  </Link>
+                  <div className="doc-actions">
+                    <a
+                      className="doc-source"
+                      href={`https://github.com/linx-zhang/linx-zhang.github.io/blob/main${doc.filePath}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      源文件
+                    </a>
+                    <a className="doc-standalone" href={doc.href} target="_blank" rel="noreferrer">
+                      独立页 ↗
+                    </a>
+                  </div>
                 </div>
-                <div className="doc-tags">
-                  <span className="doc-tag">{cat}</span>
-                  <span className="doc-tag">{doc.type.toUpperCase()}</span>
+                {/* 第二行：分类 · 类型 */}
+                <div className="doc-meta">
+                  {doc.category}
+                  <span className="doc-meta-dot">·</span>
+                  {doc.type.toUpperCase()}
                 </div>
               </div>
-            );
-          })}
+            ))}
 
-          {filteredDocs.length === 0 && (
-            <div className="empty-tip">该分类下暂无文档</div>
-          )}
-        </main>
-      </div>
+            {docs && filteredDocs.length === 0 && (
+              <div className="empty-tip">该分类下暂无文档</div>
+            )}
+          </main>
+        </>
+      )}
     </div>
   );
 }

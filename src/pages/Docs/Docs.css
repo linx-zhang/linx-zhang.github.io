@@ -1,15 +1,50 @@
-/* 单篇文档页：标题栏 + 正文（Markdown 或 HTML），Markdown 排版交给 github-markdown-css */
+/* 单篇文档页：面包屑 + 正文（Markdown 或 HTML），Markdown 排版交给 github-markdown-css */
 .doc-page {
-  height: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 24px;
   display: flex;
   flex-direction: column;
 }
 
+/* 面包屑：12px 灰字，最后一段深色；太长时截断，不换行 */
+.doc-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #8b949e;
+  min-width: 0;
+}
+
+.doc-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.doc-breadcrumb a:hover {
+  color: #0969da;
+  text-decoration: underline;
+}
+
+.doc-crumb-sep {
+  color: #d0d7de;
+}
+
+.doc-crumb-cat {
+  white-space: nowrap;
+}
+
+.doc-crumb-current {
+  color: #1f2937;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* 应用型页面的标题由父页补，普通文档不显示，避免与静态页 H1 重复 */
 .doc-page-header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -17,19 +52,40 @@
 .doc-page-header h1 {
   margin: 0;
   color: #1f2937;
+  font-size: 1.5rem;
 }
 
 .doc-page-body {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
+/* 背景透明，让静态页与父页同一底色，不再是"卡片套卡片" */
 .doc-iframe {
   width: 100%;
   height: 75vh;
   border: none;
+  background: transparent;
   flex-grow: 1;
+  display: block;
+}
+
+/* 普通文档：高度由静态页 postMessage 上报，撑满后不在页内出滚动条 */
+.doc-iframe--auto {
+  min-height: 60vh;
+}
+
+/* 完整应用型页面（自带布局与脚本）：固定高度，页内自己滚动 */
+.doc-iframe--app {
+  height: 85vh;
+  background: #f6f8fa;
+}
+
+/* 应用型文档放宽容器，避免把宽布局挤在 860px 里 */
+.doc-page--wide {
+  max-width: 100%;
 }
 
 .doc-missing {

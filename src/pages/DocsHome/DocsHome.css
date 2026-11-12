@@ -1,117 +1,128 @@
+/* 目录页：只有一列内容，分类用顶部 chip，条目压成两行 */
 .docs-home {
-  max-width: 1200px; /* 放宽容器，解决有些窄的问题 */
-  margin: 0 auto;
-  padding: 24px;
+  max-width: 860px;
 }
 
 .docs-home-header {
   border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 16px;
-  margin-bottom: 32px;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .docs-home-header h1 {
   color: #1f2937;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
+  font-size: 1.6rem;
 }
 
 .docs-home-header p {
   color: #6b7280;
   margin: 0;
+  font-size: 14px;
 }
 
-/* 左右分栏布局 */
-.docs-home-layout {
+/* 分类 chip：一行横排，选中态沿用低饱和靛蓝 */
+.docs-filter-bar {
   display: flex;
-  gap: 40px;
-  align-items: flex-start;
-}
-
-/* 左侧分类区 */
-.docs-categories {
-  width: 200px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 20px;
 }
 
-.category-item {
-  padding: 8px 12px;
-  border-radius: 6px;
+.docs-chip {
+  padding: 5px 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 999px;
   cursor: pointer;
+  font-size: 13px;
   color: #4b5563;
-  transition: all 0.2s;
-  font-size: 15px;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.category-item:hover {
-  background: #f3f4f6;
+.docs-chip:hover {
+  background: #f6f8fa;
+  border-color: #d0d7de;
+  color: #1f2937;
 }
 
-.category-item.active {
+.docs-chip.active {
   background: #eef2ff;
+  border-color: #c7d2fe;
   color: #4f46e5;
   font-weight: 500;
 }
 
-/* 右侧列表区 */
 .doc-list {
-  flex-grow: 1;
+  display: block;
 }
 
+/* 两行结构：标题 + 操作 / 分类 · 类型 */
 .doc-item {
-  padding: 16px 0;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f1f3;
 }
 
 .doc-item:first-child {
-  padding-top: 0;
+  padding-top: 4px;
+}
+
+.doc-item-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
 }
 
 .doc-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #0969da;
   text-decoration: none;
-  display: block;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .doc-title:hover {
   text-decoration: underline;
 }
 
-.doc-date {
-  font-size: 13px;
-  color: #6e7781;
-  margin-top: 6px;
+/* 操作贴着标题右端，只在需要时看得到 */
+.doc-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
 }
 
 /* 列表里的“源文件”指向 GitHub 上的原始文档，不再直接暴露仓库内路径 */
-.doc-source {
-  color: inherit;
+.doc-source,
+.doc-standalone {
+  color: #8b949e;
   text-decoration: none;
-  border-bottom: 1px dotted #d0d7de;
+  white-space: nowrap;
 }
 
-.doc-source:hover {
+.doc-source:hover,
+.doc-standalone:hover {
   color: #0969da;
-  border-bottom-color: #0969da;
+  text-decoration: underline;
 }
 
-.doc-tags {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-}
-
-.doc-tag {
+/* 第二行：分类 · 类型 */
+.doc-meta {
+  margin-top: 4px;
   font-size: 12px;
-  padding: 2px 10px;
-  background: #f6f8fa;
-  border-radius: 999px;
-  color: #57606a;
-  border: 1px solid #d0d7de;
+  color: #8b949e;
+}
+
+.doc-meta-dot {
+  margin: 0 6px;
+  color: #d0d7de;
 }
 
 .empty-tip {
@@ -120,4 +131,14 @@
   color: #6b7280;
   background: #f9fafb;
   border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  .doc-item-head {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .doc-actions {
+    gap: 12px;
+  }
 }
