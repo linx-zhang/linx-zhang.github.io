@@ -267,7 +267,14 @@ export default function Blog() {
       )}
 
       {status === 'ready' && items.length === 0 && (
-        <div className="blog-state">{filtering ? '没有匹配的文章。' : '还没有文章。'}</div>
+        <div className="blog-state">
+          <p>{filtering ? '没有匹配的文章。' : pageIndex > 0 ? '这一页没有文章了。' : '还没有文章。'}</p>
+          {pageIndex > 0 && (
+            <button type="button" className="blog-button" onClick={() => goToPage(0)}>
+              回到第 1 页
+            </button>
+          )}
+        </div>
       )}
 
       {status === 'ready' && items.length > 0 && (
