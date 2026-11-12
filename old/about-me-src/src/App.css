@@ -1,9 +1,0 @@
-@media print {
-  a {
-    color: #1f2937;
-    text-decoration: none;
-  }
-  @page {
-    margin: 1.2cm;
-  }
-}

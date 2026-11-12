@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资产增长模拟器（25 岁起）</title>
+  <!-- 使用主流且零插件依赖的 Apache ECharts -->
+  <script src="/wiki/vendor/echarts.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+    .wrapper {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .wrapper { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06);
+    }
+    h2 {
+      margin: 0 0 16px 0;
+      font-size: 1.15rem;
+      color: #0f172a;
+      border-left: 4px solid #2563eb;
+      padding-left: 10px;
+    }
+    .field { margin-bottom: 15px; }
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+    .field span { color: #2563eb; font-weight: 700; }
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      outline: none;
+      accent-color: #2563eb;
+      cursor: pointer;
+    }
+    .btn-reset {
+      width: 100%;
+      padding: 10px;
+      background: #e2e8f0;
+      color: #334155;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+    .btn-reset:hover { background: #cbd5e1; }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .kpi-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .kpi-title { font-size: 0.75rem; color: #64748b; margin-bottom: 4px; }
+    .kpi-val { font-size: 1.25rem; font-weight: 700; color: #0f172a; }
+    /* 显式声明固定像素高度，彻底解决容器尺寸折叠问题 */
+    #chartContainer {
+      width: 100%;
+      height: 520px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- 控制面板 -->
+  <div class="card">
+    <h2>参数配置</h2>
+
+    <div class="field">
+      <label>月薪 (k): <span id="txt_income">10.0</span></label>
+      <input type="range" id="income" min="5" max="35" step="0.5" value="10.0">
+    </div>
+
+    <div class="field">
+      <label>每月必要生活 (k): <span id="txt_living">4.5</span></label>
+      <input type="range" id="living" min="2" max="12" step="0.1" value="4.5">
+    </div>
+
+    <div class="field">
+      <label>长期理财年化收益: <span id="txt_rate">6.0%</span></label>
+      <input type="range" id="rate" min="0.01" max="0.12" step="0.005" value="0.06">
+    </div>
+
+    <hr style="border: 0; border-top: 1px dashed #e2e8f0; margin: 18px 0;">
+
+    <div class="field">
+      <label>买车年龄 (25 + N): <span id="txt_car_age">3.0</span></label>
+      <input type="range" id="car_age" min="1" max="15" step="0.5" value="3.0">
+    </div>
+
+    <div class="field">
+      <label>买车金额 (k, 0为不买): <span id="txt_car_amt">120</span></label>
+      <input type="range" id="car_amt" min="0" max="300" step="5" value="120">
+    </div>
+
+    <div class="field">
+      <label>买房首付年龄 (25 + N): <span id="txt_house_age">7.0</span></label>
+      <input type="range" id="house_age" min="2" max="20" step="0.5" value="7.0">
+    </div>
+
+    <div class="field">
+      <label>买房首付金额 (k, 0为不买): <span id="txt_house_amt">250</span></label>
+      <input type="range" id="house_amt" min="0" max="800" step="10" value="250">
+    </div>
+
+    <button class="btn-reset" onclick="resetForm()">重置所有参数</button>
+  </div>
+
+  <!-- 图表区域 -->
+  <div class="card">
+    <h2>资产走势图 (25 ~ 55 岁)</h2>
+    
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-title">每月净结余</div>
+        <div class="kpi-val" id="kpi_surplus">0.00 k</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">中期资金峰值</div>
+        <div class="kpi-val" id="kpi_mid_peak">0.0 k</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">55岁退休总资产</div>
+        <div class="kpi-val" id="kpi_total">0.0 k</div>
+      </div>
+    </div>
+
+    <div id="chartContainer"></div>
+  </div>
+</div>
+
+<script>
+const rate_cash = 0.02;
+const rate_mid = 0.035;
+const emerg_target = 27.0;
+const total_months = 30 * 12;
+
+let myChart = null;
+
+function runSimulation(income, living, rateLong, carOffset, carAmt, houseOffset, houseAmt) {
+  const disc = living / 4.0;
+  const surplus = Math.max(0.0, income - (living + disc));
+
+  const baseEmerg = surplus * 0.20;
+  const baseMid = surplus * 0.30;
+  const baseLong = surplus * 0.50;
+
+  const rCash = Math.pow(1 + rate_cash, 1 / 12) - 1;
+  const rMid = Math.pow(1 + rate_mid, 1 / 12) - 1;
+  const rLong = Math.pow(1 + rateLong, 1 / 12) - 1;
+
+  let balEmerg = 0.0, balMid = 0.0, balLong = 0.0;
+  let maxMid = 0.0;
+
+  // 严格校验：金额大于 0 时才计算有效扣款月
+  const carMonth = (carAmt > 0) ? Math.round(carOffset * 12) : -1;
+  const houseMonth = (houseAmt > 0) ? Math.round(houseOffset * 12) : -1;
+
+  const ages = [];
+  const dsEmerg = [], dsMid = [], dsLong = [], dsTotal = [];
+  const markPoints = [];
+
+  for (let m = 0; m < total_months; m++) {
+    const age = +(25.0 + m / 12.0).toFixed(2);
+
+    let curAddEmerg = baseEmerg;
+    let curAddLong = baseLong;
+
+    if (balEmerg >= emerg_target) {
+      curAddEmerg = 0.0;
+      curAddLong += baseEmerg;
+    }
+
+    balEmerg = balEmerg * (1 + rCash) + curAddEmerg;
+    balMid = balMid * (1 + rMid) + baseMid;
+    balLong = balLong * (1 + rLong) + curAddLong;
+
+    if (balMid > maxMid) maxMid = balMid;
+
+    // 扣款事件
+    const handleExpense = (amt, name) => {
+      if (amt <= 0) return;
+      let need = amt;
+
+      const takeMid = Math.min(balMid, need);
+      balMid -= takeMid; need -= takeMid;
+
+      if (need > 0) {
+        const takeEmerg = Math.min(balEmerg, need);
+        balEmerg -= takeEmerg; need -= takeEmerg;
+      }
+      if (need > 0) {
+        balLong -= need;
+      }
+
+      const currentTotal = +(balEmerg + balMid + balLong).toFixed(1);
+      markPoints.push({
+        name: name,
+        coord: [age.toString(), currentTotal],
+        value: `${name}\n-${amt}k`,
+        itemStyle: { color: '#ef4444' }
+      });
+    };
+
+    if (m === carMonth) handleExpense(carAmt, '买车');
+    if (m === houseMonth) handleExpense(houseAmt, '买房首付');
+
+    const total = +(balEmerg + balMid + balLong).toFixed(1);
+
+    ages.push(age.toString());
+    dsEmerg.push(+balEmerg.toFixed(1));
+    dsMid.push(+balMid.toFixed(1));
+    dsLong.push(+balLong.toFixed(1));
+    dsTotal.push(total);
+  }
+
+  return { ages, dsEmerg, dsMid, dsLong, dsTotal, surplus, maxMid, markPoints };
+}
+
+function update() {
+  const income = parseFloat(document.getElementById('income').value);
+  const living = parseFloat(document.getElementById('living').value);
+  const rate = parseFloat(document.getElementById('rate').value);
+  const carAge = parseFloat(document.getElementById('car_age').value);
+  const carAmt = parseFloat(document.getElementById('car_amt').value);
+  const houseAge = parseFloat(document.getElementById('house_age').value);
+  const houseAmt = parseFloat(document.getElementById('house_amt').value);
+
+  // 刷新文本
+  document.getElementById('txt_income').innerText = income.toFixed(1);
+  document.getElementById('txt_living').innerText = living.toFixed(1);
+  document.getElementById('txt_rate').innerText = (rate * 100).toFixed(1) + '%';
+  document.getElementById('txt_car_age').innerText = carAge.toFixed(1);
+  document.getElementById('txt_car_amt').innerText = carAmt > 0 ? carAmt : '0 (不买车)';
+  document.getElementById('txt_house_age').innerText = houseAge.toFixed(1);
+  document.getElementById('txt_house_amt').innerText = houseAmt > 0 ? houseAmt : '0 (不买房)';
+
+  const res = runSimulation(income, living, rate, carAge, carAmt, houseAge, houseAmt);
+
+  // 刷新卡片数值
+  document.getElementById('kpi_surplus').innerText = res.surplus.toFixed(2) + ' k';
+  document.getElementById('kpi_mid_peak').innerText = res.maxMid.toFixed(1) + ' k';
+  document.getElementById('kpi_total').innerText = res.dsTotal[res.dsTotal.length - 1] + ' k';
+
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'cross' },
+      formatter: function(params) {
+        let str = `<b>年龄: ${params[0].axisValue} 岁</b><br/>`;
+        params.forEach(p => {
+          str += `${p.marker} ${p.seriesName}: <b>${p.value} k</b><br/>`;
+        });
+        return str;
+      }
+    },
+    legend: {
+      data: ['应急金', '中期资金(车/房)', '长期理财', '总资产'],
+      top: 0
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '5%',
+      top: '40px',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: res.ages,
+      name: '年龄 (岁)',
+      axisLabel: {
+        interval: 23 // 约每2年显示一个刻度标签
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: '金额 (k 元)',
+      splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } }
+    },
+    series: [
+      {
+        name: '应急金',
+        type: 'line',
+        showSymbol: false,
+        data: res.dsEmerg,
+        itemStyle: { color: '#10b981' },
+        lineStyle: { width: 2 }
+      },
+      {
+        name: '中期资金(车/房)',
+        type: 'line',
+        showSymbol: false,
+        data: res.dsMid,
+        itemStyle: { color: '#f59e0b' },
+        lineStyle: { width: 2 }
+      },
+      {
+        name: '长期理财',
+        type: 'line',
+        showSymbol: false,
+        data: res.dsLong,
+        itemStyle: { color: '#3b82f6' },
+        lineStyle: { width: 2 }
+      },
+      {
+        name: '总资产',
+        type: 'line',
+        showSymbol: false,
+        data: res.dsTotal,
+        itemStyle: { color: '#0f172a' },
+        lineStyle: { width: 2.5, type: 'dashed' },
+        markPoint: {
+          symbol: 'pin',
+          symbolSize: 55,
+          label: {
+            fontSize: 10,
+            lineHeight: 12
+          },
+          data: res.markPoints
+        }
+      }
+    ]
+  };
+
+  myChart.setOption(option, true);
+}
+
+function resetForm() {
+  document.getElementById('income').value = 10.0;
+  document.getElementById('living').value = 4.5;
+  document.getElementById('rate').value = 0.06;
+  document.getElementById('car_age').value = 3.0;
+  document.getElementById('car_amt').value = 120;
+  document.getElementById('house_age').value = 7.0;
+  document.getElementById('house_amt').value = 250;
+  update();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const dom = document.getElementById('chartContainer');
+  myChart = echarts.init(dom);
+  window.addEventListener('resize', () => myChart.resize());
+
+  document.querySelectorAll('input[type=range]').forEach(el => {
+    el.addEventListener('input', update);
+  });
+
+  update();
+});
+</script>
+</body>
+</html>
