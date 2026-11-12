@@ -5,7 +5,7 @@ import type { ActivityItem, ActivityType } from '@/api/admin'
 import Select from '@/components/Select'
 import DateRangePicker from '@/components/DateRangePicker'
 import type { DateRangeValue } from '@/components/DateRangePicker'
-import { PAGE_SIZE } from '@/utils/format'
+import { PAGE_SIZE, parseServerTimestamp } from '@/utils/format'
 
 const TYPE_OPTIONS = [
   { value: '', label: '全部类型' },
@@ -25,14 +25,8 @@ function typeLabel(type: string): string {
   return TYPE_OPTIONS.find((option) => option.value === type)?.label ?? type
 }
 
-function parseServerTime(value: string): Date | null {
-  const normalized = value.includes('T') ? value : `${value.replace(' ', 'T')}Z`
-  const date = new Date(normalized)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
 function formatTime(value: string): string {
-  const date = parseServerTime(value)
+  const date = parseServerTimestamp(value)
   if (!date) return value
   const pad = (input: number) => String(input).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(

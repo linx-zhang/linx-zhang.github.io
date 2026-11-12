@@ -11,23 +11,18 @@ import Select from '@/components/Select'
 import ResetPasswordDialog from './ResetPasswordDialog'
 import UserEditDialog from './UserEditDialog'
 import { FILTER_OPTIONS, ROLE_OPTIONS, roleLabel } from './userRoles'
-import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
-
-function parseTimestamp(value: string): number {
-  const normalized = value.includes('T') ? value : `${value.replace(' ', 'T')}Z`
-  return Date.parse(normalized)
-}
+import { PAGE_SIZE, formatDate, formatTimestamp, parseServerTimestamp } from '@/utils/format'
 
 function relativeTime(value: string | null): string {
   if (!value) return '—'
-  const ts = parseTimestamp(value)
-  if (Number.isNaN(ts)) return value
-  const diff = Date.now() - ts
+  const date = parseServerTimestamp(value)
+  if (!date) return value
+  const diff = Date.now() - date.getTime()
   if (diff < 60_000) return '刚刚'
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟前`
   if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时前`
   if (diff < 30 * 86_400_000) return `${Math.floor(diff / 86_400_000)} 天前`
-  return value.replace('T', ' ').slice(0, 10)
+  return formatDate(value)
 }
 
 export default function UsersTab() {
@@ -252,7 +247,10 @@ export default function UsersTab() {
                 <div className="user-cell user-role-cell" data-label="角色">
                   <div className="user-role-row">
                     {canUpdate ? (
-                      <div className="user-role-select">
+                      <div
+                        className="user-role-select"
+                        title={isSelf ? '不能修改自己的角色' : undefined}
+                      >
                         <Select
                           value={item.role}
                           onChange={(next) => requestRoleChange(item, next as UserRole)}
@@ -269,7 +267,6 @@ export default function UsersTab() {
                       </span>
                     )}
                   </div>
-                  {isSelf && <span className="user-self-hint">不能修改自己的角色</span>}
                 </div>
                 <div className="user-cell user-created" data-label="注册时间">
                   {formatTimestamp(item.created_at)}

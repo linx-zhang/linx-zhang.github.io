@@ -10,6 +10,10 @@ export interface InviteCode {
   expires_at: string | null
   created_at: string
   used_at: string | null
+  /** 生成时填的备注：这个码发给谁 */
+  note?: string | null
+  /** 使用该码注册的用户邮箱；未使用时为 null */
+  used_by_email?: string | null
 }
 
 export interface InviteCodePage {
@@ -21,6 +25,8 @@ export interface CreateInvitePayload {
   role: InviteRole
   count: number
   expires_in_days: number
+  /** 备注，可选，最多 64 字 */
+  note?: string
 }
 
 export interface InviteListParams {

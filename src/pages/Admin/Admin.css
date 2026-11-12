@@ -430,12 +430,6 @@
   font-size: 0.75rem;
   overflow-wrap: anywhere;
 }
-.user-self-hint {
-  display: block;
-  margin-top: 0.3rem;
-  color: #6b7280;
-  font-size: 0.75rem;
-}
 .user-role-row {
   display: flex;
   align-items: center;

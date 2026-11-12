@@ -36,6 +36,7 @@ export default function InvitesTab() {
   const [role, setRole] = useState<InviteRole>('internal')
   const [count, setCount] = useState('1')
   const [days, setDays] = useState('7')
+  const [note, setNote] = useState('')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
   const [notice, setNotice] = useState('')
@@ -67,13 +68,14 @@ export default function InvitesTab() {
     }
   }, [pageIndex, reloadKey])
 
-  const submitCreate = async (countValue: number, daysValue: number) => {
+  const submitCreate = async (countValue: number, daysValue: number, noteValue: string) => {
     setCreating(true)
     try {
       const created = await adminApi.createInviteCodes({
         role,
         count: countValue,
         expires_in_days: daysValue,
+        ...(noteValue.trim() ? { note: noteValue.trim() } : {}),
       })
       setHighlight(created.map((item) => item.code))
       setNotice(`已创建 ${created.length} 个邀请码，已高亮显示，可直接复制。`)
@@ -103,6 +105,10 @@ export default function InvitesTab() {
       setCreateError('有效天数需为 1–365 的整数')
       return
     }
+    if (note.trim().length > 64) {
+      setCreateError('备注最多 64 个字符')
+      return
+    }
 
     if (role === 'admin') {
       confirm({
@@ -111,12 +117,12 @@ export default function InvitesTab() {
         confirmText: '生成',
         pendingText: '生成中…',
         tone: 'danger',
-        onConfirm: () => submitCreate(countValue, daysValue),
+        onConfirm: () => submitCreate(countValue, daysValue, note),
       })
       return
     }
 
-    void submitCreate(countValue, daysValue)
+    void submitCreate(countValue, daysValue, note)
   }
 
   const handleCopy = async (code: string) => {
@@ -195,6 +201,16 @@ export default function InvitesTab() {
               max={365}
               value={days}
               onChange={(event) => setDays(event.target.value)}
+            />
+          </label>
+          <label className="admin-field invite-field">
+            <span>备注（可选，这个码给谁）</span>
+            <input
+              type="text"
+              value={note}
+              maxLength={64}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="例如：张三 · 微信"
             />
           </label>
           <button type="submit" className="blog-button admin-submit invite-submit" disabled={creating}>
@@ -276,11 +292,13 @@ export default function InvitesTab() {
                   )}
                 </div>
                 <div className="invite-item-meta">
+                  {invite.note && <span>备注：{invite.note}</span>}
                   <span>
                     有效期：
                     {invite.expires_at ? formatTimestamp(invite.expires_at) : '未设置'}
                   </span>
                   {invite.used_at && <span>使用时间：{formatTimestamp(invite.used_at)}</span>}
+                  {invite.used_by_email && <span>关联用户：{invite.used_by_email}</span>}
                   <span>创建时间：{formatTimestamp(invite.created_at)}</span>
                 </div>
               </li>

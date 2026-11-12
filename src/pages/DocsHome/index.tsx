@@ -64,7 +64,16 @@ export default function DocsHome() {
                 <Link to={`/wiki/${doc.slug}`} className="doc-title">
                   {doc.title}
                 </Link>
-                <div className="doc-date">{doc.filePath}</div>
+                <div className="doc-date">
+                  <a
+                    className="doc-source"
+                    href={`https://github.com/linx-zhang/linx-zhang.github.io/blob/main${doc.filePath}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    源文件 · {doc.type}
+                  </a>
+                </div>
                 <div className="doc-tags">
                   <span className="doc-tag">{cat}</span>
                   <span className="doc-tag">{doc.type.toUpperCase()}</span>

@@ -89,6 +89,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
           setLoginOpen(true)
         },
         logout: () => {
+          // 先让服务端作废已签发的 token（失败也不影响本地退出），再清本地状态
+          void authApi.logout().catch(() => {})
           clearToken()
           setUser(null)
         },
