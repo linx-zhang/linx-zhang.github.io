@@ -31,3 +31,7 @@ dist-ssr
 # 知识库构建产物（scripts/build-wiki.mjs 生成，随 vite build 拷进 docs/wiki）
 /public/wiki/
 /.cache/
+
+# 构建中转目录（scripts/build-docs.mjs 用）
+/docs_build/
+/.docs-trash/
