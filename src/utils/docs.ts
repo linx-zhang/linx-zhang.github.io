@@ -1,62 +1,47 @@
-const rawModules = import.meta.glob('/raw-docs/**/*.{md,markdown,html}', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
+// 文档清单不再 import.meta.glob 全量内联进 bundle，改为读取构建期生成的 /wiki/index.json。
+// 每篇文档本身是独立静态页 /wiki/<slug>.html，站内用 iframe 直连，外链可直接分享。
 
 export interface DocItem {
   slug: string
-  filePath: string
   title: string
-  rawContent: string
   type: 'md' | 'html'
+  category: string
+  /** 仓库内的源文件路径，用于"源文件"链接 */
+  filePath: string
+  /** 独立静态页地址 */
+  href: string
+  /** 完整页面（自带样式/脚本，站内按固定高度内嵌），否则按内容高度自适应 */
+  standalone: boolean
 }
 
-function parseDocs(): DocItem[] {
-  const list = Object.entries(rawModules).map(([filePath, rawContent]) => {
-    const isHtml = filePath.endsWith('.html')
-
-    const slug = filePath
-      .replace(/^\/raw-docs\//, '')
-      .replace(/\.(md|markdown|html)$/, '')
-
-    // HTML 抓 <title>，Markdown 抓首个一级标题，都没有就退回 slug
-    let title = slug
-    if (isHtml) {
-      const titleMatch = rawContent.match(/<title[^>]*>([^<]+)<\/title>/i)
-      if (titleMatch) title = titleMatch[1].trim()
-    } else {
-      const firstLine = rawContent.trim().split('\n')[0] || ''
-      const titleMatch = firstLine.match(/^#\s+(.+)$/)
-      if (titleMatch) title = titleMatch[1].trim()
-    }
-
-    return {
-      slug,
-      filePath,
-      title,
-      rawContent,
-      type: (isHtml ? 'html' : 'md') as 'md' | 'html',
-    }
-  })
-
-  // 中文标题按 zh-CN 排序；只在这一个模块里排一次
-  return list.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'))
-}
+const INDEX_URL = '/wiki/index.json'
 
 let cachedDocs: DocItem[] | null = null
+let inflight: Promise<DocItem[]> | null = null
 
-/** 全量文档清单：解析与排序只在首次调用时执行，之后返回同一个数组 */
-export function getDocList(): DocItem[] {
-  cachedDocs ??= parseDocs()
+/** 加载文档清单；并发调用共用同一个请求，成功后走内存缓存 */
+export function loadDocList(): Promise<DocItem[]> {
+  if (cachedDocs) return Promise.resolve(cachedDocs)
+  inflight ??= fetch(INDEX_URL)
+    .then((res) => {
+      if (!res.ok) throw new Error(`文档索引加载失败（HTTP ${res.status}）`)
+      return res.json() as Promise<DocItem[]>
+    })
+    .then((list) => {
+      cachedDocs = list
+      return list
+    })
+    .finally(() => {
+      inflight = null
+    })
+  return inflight
+}
+
+/** 已加载的清单（未加载时为 null），供渲染期同步取值 */
+export function peekDocList(): DocItem[] | null {
   return cachedDocs
 }
 
-let cachedBySlug: Map<string, DocItem> | null = null
-
-export function getDocBySlug(slug: string): DocItem | undefined {
-  if (!cachedBySlug) {
-    cachedBySlug = new Map(getDocList().map((doc) => [doc.slug, doc]))
-  }
-  return cachedBySlug.get(slug)
+export function findDoc(slug: string): DocItem | undefined {
+  return cachedDocs?.find((doc) => doc.slug === slug)
 }

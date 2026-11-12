@@ -27,3 +27,7 @@ dist-ssr
 .trae-html-share-packages/
 .screenshots/
 .idea/
+
+# 知识库构建产物（scripts/build-wiki.mjs 生成，随 vite build 拷进 docs/wiki）
+/public/wiki/
+/.cache/
