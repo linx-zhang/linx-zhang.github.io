@@ -103,6 +103,47 @@
   justify-content: flex-end;
   gap: 0.6rem;
 }
+.blog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+.blog-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 180px;
+}
+.blog-filter-field span {
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.blog-filter-field input {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.blog-filter-field input:focus {
+  outline: none;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.08);
+}
+.blog-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+}
 .blog-list {
   display: flex;
   flex-direction: column;

@@ -41,9 +41,21 @@ export interface BatchDeleteResult {
   failed: BatchDeleteFailure[]
 }
 
+export interface PostFilters {
+  /** 标题模糊搜索 */
+  q?: string
+  /** 作者模糊搜索：邮箱、昵称或「名 姓」 */
+  author?: string
+}
+
 export const blogApi = {
-  listPosts(limit: number, offset: number): Promise<Post[]> {
-    return request<Post[]>(`/posts?limit=${limit}&offset=${offset}`)
+  listPosts(limit: number, offset: number, filters: PostFilters = {}): Promise<Post[]> {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+    const q = filters.q?.trim()
+    if (q) params.set('q', q)
+    const author = filters.author?.trim()
+    if (author) params.set('author', author)
+    return request<Post[]>(`/posts?${params.toString()}`)
   },
   getPost(id: number): Promise<Post> {
     return request<Post>(`/posts/${id}`)

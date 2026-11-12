@@ -17,6 +17,15 @@ function commentOrder(a: Comment, b: Comment): number {
   return a.created_at < b.created_at ? -1 : 1
 }
 
+/** 列表页把当前地址（含页码与筛选条件）存进 sessionStorage，返回时用它而不是硬回第一页 */
+function listUrl(): string {
+  try {
+    return sessionStorage.getItem('blog_list_url') || '/blog'
+  } catch {
+    return '/blog'
+  }
+}
+
 export default function PostDetail() {
   const { id } = useParams()
   const postId = Number(id)
@@ -219,7 +228,7 @@ export default function PostDetail() {
         setDeletingPost(true)
         try {
           await blogApi.deletePost(postId)
-          navigate('/blog')
+          navigate(listUrl())
         } catch (err) {
           setPostActionError(errorMessage(err))
         } finally {
@@ -234,7 +243,7 @@ export default function PostDetail() {
       <div className="blog-page">
         <div className="blog-state">
           <p>文章不存在或已被删除。</p>
-          <Link className="blog-button" to="/blog">
+          <Link className="blog-button" to={listUrl()}>
             返回博客列表
           </Link>
         </div>
@@ -263,7 +272,7 @@ export default function PostDetail() {
             >
               重试
             </button>
-            <Link className="blog-button" to="/blog">
+            <Link className="blog-button" to={listUrl()}>
               返回列表
             </Link>
           </div>
@@ -282,7 +291,7 @@ export default function PostDetail() {
   return (
     <div className="blog-page">
       <article className="post-detail">
-        <Link className="post-back" to="/blog">
+        <Link className="post-back" to={listUrl()}>
           ← 返回博客列表
         </Link>
 

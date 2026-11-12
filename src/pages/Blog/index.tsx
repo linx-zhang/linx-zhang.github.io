@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
-import { usePagedFetch } from '@/hooks/usePagedFetch'
-import { formatTimestamp } from '@/utils/format'
+import type { PagedStatus } from '@/hooks/usePagedFetch'
+import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
 import './Blog.css'
 
 function textSummary(markdown: string): string {
@@ -25,9 +25,90 @@ function textSummary(markdown: string): string {
 export default function Blog() {
   const { user, openLogin } = useAuth()
   const navigate = useNavigate()
-  const { items, pageIndex, hasNext, status, error, goToPage, retry } = usePagedFetch<Post>(
-    (limit, offset) => blogApi.listPosts(limit, offset),
-  )
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // 页码、筛选条件都放在 URL 里：刷新和「从详情返回」都能回到同一页
+  const rawPage = Number.parseInt(searchParams.get('page') ?? '1', 10)
+  const pageIndex = Number.isFinite(rawPage) && rawPage > 1 ? rawPage - 1 : 0
+  const q = searchParams.get('q') ?? ''
+  const author = searchParams.get('author') ?? ''
+
+  // 输入框只在用户键入时更新；URL 变化由下面的操作函数同步重置
+  const [qInput, setQInput] = useState(q)
+  const [authorInput, setAuthorInput] = useState(author)
+
+  const [items, setItems] = useState<Post[]>([])
+  const [hasNext, setHasNext] = useState(false)
+  const [status, setStatus] = useState<PagedStatus>('loading')
+  const [error, setError] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    blogApi
+      .listPosts(PAGE_SIZE + 1, pageIndex * PAGE_SIZE, { q, author })
+      .then((rows) => {
+        if (cancelled) return
+        setItems(rows.slice(0, PAGE_SIZE))
+        setHasNext(rows.length > PAGE_SIZE)
+        setError('')
+        setStatus('ready')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(errorMessage(err))
+        setStatus('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [pageIndex, q, author, reloadKey])
+
+  const beginLoading = () => {
+    setStatus('loading')
+    setError('')
+  }
+
+  // 记住当前列表地址，详情页的「返回列表」用它，而不是硬回第一页
+  useEffect(() => {
+    const query = searchParams.toString()
+    sessionStorage.setItem('blog_list_url', query ? `/blog?${query}` : '/blog')
+  }, [searchParams])
+
+  const goToPage = (nextIndex: number) => {
+    beginLoading()
+    const params = new URLSearchParams(searchParams)
+    if (nextIndex > 0) params.set('page', String(nextIndex + 1))
+    else params.delete('page')
+    setSearchParams(params, { replace: true })
+    window.scrollTo({ top: 0 })
+  }
+
+  const applyFilters = (event: FormEvent) => {
+    event.preventDefault()
+    beginLoading()
+    const params = new URLSearchParams()
+    const nextQ = qInput.trim()
+    const nextAuthor = authorInput.trim()
+    if (nextQ) params.set('q', nextQ)
+    if (nextAuthor) params.set('author', nextAuthor)
+    // 换筛选条件时回到第 1 页，避免停在已不存在的页码上
+    setSearchParams(params, { replace: true })
+  }
+
+  const clearFilters = () => {
+    setQInput('')
+    setAuthorInput('')
+    beginLoading()
+    setSearchParams(new URLSearchParams(), { replace: true })
+  }
+
+  const retry = () => {
+    beginLoading()
+    setReloadKey((key) => key + 1)
+  }
+
+  const filtering = q.trim().length > 0 || author.trim().length > 0
 
   const [composerOpen, setComposerOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -91,6 +172,39 @@ export default function Blog() {
         </button>
       </header>
 
+      <form className="blog-filters" onSubmit={applyFilters} role="search">
+        <label className="blog-filter-field">
+          <span>作者</span>
+          <input
+            type="text"
+            value={authorInput}
+            maxLength={64}
+            placeholder="邮箱 / 昵称 / 姓名"
+            onChange={(event) => setAuthorInput(event.target.value)}
+          />
+        </label>
+        <label className="blog-filter-field">
+          <span>标题</span>
+          <input
+            type="text"
+            value={qInput}
+            maxLength={64}
+            placeholder="标题关键词，支持模糊搜索"
+            onChange={(event) => setQInput(event.target.value)}
+          />
+        </label>
+        <div className="blog-filter-actions">
+          <button type="submit" className="blog-button">
+            筛选
+          </button>
+          {(filtering || qInput.trim() || authorInput.trim()) && (
+            <button type="button" className="blog-button" onClick={clearFilters}>
+              清除
+            </button>
+          )}
+        </div>
+      </form>
+
       {user && composerOpen && (
         <form className="blog-composer" onSubmit={handlePublish} noValidate>
           <label className="blog-composer-field">
@@ -153,7 +267,7 @@ export default function Blog() {
       )}
 
       {status === 'ready' && items.length === 0 && (
-        <div className="blog-state">还没有文章。</div>
+        <div className="blog-state">{filtering ? '没有匹配的文章。' : '还没有文章。'}</div>
       )}
 
       {status === 'ready' && items.length > 0 && (
@@ -181,7 +295,10 @@ export default function Blog() {
           >
             上一页
           </button>
-          <span className="blog-page-index">第 {pageIndex + 1} 页</span>
+          <span className="blog-page-index">
+            第 {pageIndex + 1} 页
+            {filtering ? '（筛选中）' : ''}
+          </span>
           <button
             type="button"
             className="blog-button"
