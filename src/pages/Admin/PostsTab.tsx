@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { usePermission } from '@/auth/usePermission'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
-import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
+import { usePagedFetch } from '@/hooks/usePagedFetch'
+import { formatTimestamp } from '@/utils/format'
 
 interface DeleteFailure {
   id: number
@@ -17,37 +18,13 @@ export default function PostsTab() {
   const { confirm, dialog } = useConfirm()
   const canDelete = has('post:delete:any')
 
-  const [pageIndex, setPageIndex] = useState(0)
-  const [items, setItems] = useState<Post[]>([])
-  const [hasNext, setHasNext] = useState(false)
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [listError, setListError] = useState('')
-  const [reloadKey, setReloadKey] = useState(0)
+  const { items, setItems, pageIndex, hasNext, status, error, goToPage, retry } =
+    usePagedFetch<Post>((limit, offset) => blogApi.listPosts(limit, offset))
 
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [deleting, setDeleting] = useState(false)
   const [failures, setFailures] = useState<DeleteFailure[]>([])
   const [batchError, setBatchError] = useState('')
-
-  useEffect(() => {
-    let cancelled = false
-    blogApi
-      .listPosts(PAGE_SIZE + 1, pageIndex * PAGE_SIZE)
-      .then((posts) => {
-        if (cancelled) return
-        setItems(posts.slice(0, PAGE_SIZE))
-        setHasNext(posts.length > PAGE_SIZE)
-        setStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setListError(errorMessage(err))
-        setStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [pageIndex, reloadKey])
 
   const selectedPosts = items.filter((post) => selected.has(post.id))
   const allSelected = items.length > 0 && items.every((post) => selected.has(post.id))
@@ -76,9 +53,7 @@ export default function PostsTab() {
   const refresh = () => {
     setSelected(new Set())
     setBatchError('')
-    setStatus('loading')
-    setListError('')
-    setReloadKey((key) => key + 1)
+    retry()
   }
 
   const requestBatchDelete = () => {
@@ -105,8 +80,7 @@ export default function PostsTab() {
           const remaining = items.filter((post) => !deleted.has(post.id))
           setItems(remaining)
           if (remaining.length === 0 && pageIndex > 0) {
-            setPageIndex((index) => Math.max(0, index - 1))
-            setStatus('loading')
+            goToPage(pageIndex - 1)
           }
         } catch (err) {
           setBatchError(errorMessage(err))
@@ -159,7 +133,7 @@ export default function PostsTab() {
 
       {status === 'error' && (
         <div className="user-empty">
-          <p>{listError}</p>
+          <p>{error}</p>
           <button type="button" className="blog-button" onClick={refresh}>
             重试
           </button>
@@ -238,10 +212,7 @@ export default function PostsTab() {
             type="button"
             className="blog-button"
             disabled={pageIndex === 0 || deleting}
-            onClick={() => {
-              setPageIndex((index) => Math.max(0, index - 1))
-              setStatus('loading')
-            }}
+            onClick={() => goToPage(pageIndex - 1)}
           >
             上一页
           </button>
@@ -250,10 +221,7 @@ export default function PostsTab() {
             type="button"
             className="blog-button"
             disabled={!hasNext || deleting}
-            onClick={() => {
-              setPageIndex((index) => index + 1)
-              setStatus('loading')
-            }}
+            onClick={() => goToPage(pageIndex + 1)}
           >
             下一页
           </button>

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError } from '@/api/client'
 import { authApi } from '@/api/auth'
 import type { AuthUser, LoginPayload } from '@/api/auth'
+import DialogShell from '@/components/DialogShell'
 import './AuthModal.css'
 
 type Mode = 'login' | 'register'
@@ -32,14 +33,6 @@ export default function AuthModal({ initialMode, onClose, onSuccess }: AuthModal
   const [inviteCode, setInviteCode] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -78,97 +71,101 @@ export default function AuthModal({ initialMode, onClose, onSuccess }: AuthModal
   }
 
   return (
-    <div
-      className="auth-overlay"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
+    <DialogShell
+      overlayClassName="auth-overlay"
+      cardClassName="auth-modal"
+      ariaLabel="登录或注册"
+      onClose={onClose}
+      blocking={submitting}
+      initialFocusSelector=".auth-tab"
     >
-      <div className="auth-modal" role="dialog" aria-modal="true" aria-label="登录或注册">
-        <button type="button" className="auth-close" onClick={onClose} aria-label="关闭">
-          ×
-        </button>
-
-        <div className="auth-tabs">
-          <button
-            type="button"
-            className={mode === 'login' ? 'auth-tab active' : 'auth-tab'}
-            onClick={() => {
-              setMode('login')
-              setError('')
-            }}
-          >
-            登录
+      {() => (
+        <>
+          <button type="button" className="auth-close" onClick={onClose} aria-label="关闭">
+            ×
           </button>
-          <button
-            type="button"
-            className={mode === 'register' ? 'auth-tab active' : 'auth-tab'}
-            onClick={() => {
-              setMode('register')
-              setError('')
-            }}
-          >
-            注册
-          </button>
-        </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label className="auth-field">
-            <span>邮箱</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              placeholder="you@example.com"
-              required
-            />
-          </label>
+          <div className="auth-tabs">
+            <button
+              type="button"
+              className={mode === 'login' ? 'auth-tab active' : 'auth-tab'}
+              onClick={() => {
+                setMode('login')
+                setError('')
+              }}
+            >
+              登录
+            </button>
+            <button
+              type="button"
+              className={mode === 'register' ? 'auth-tab active' : 'auth-tab'}
+              onClick={() => {
+                setMode('register')
+                setError('')
+              }}
+            >
+              注册
+            </button>
+          </div>
 
-          <label className="auth-field">
-            <span>密码</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              placeholder={mode === 'register' ? '8–128 个字符' : '输入密码'}
-              required
-            />
-          </label>
-
-          {mode === 'register' && (
+          <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
-              <span>邀请码（可选）</span>
+              <span>邮箱</span>
               <input
-                type="text"
-                value={inviteCode}
-                onChange={(event) => setInviteCode(event.target.value)}
-                placeholder="没有可留空"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
+                placeholder="you@example.com"
+                required
               />
             </label>
-          )}
 
-          {error && <p className="auth-error">{error}</p>}
+            <label className="auth-field">
+              <span>密码</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                placeholder={mode === 'register' ? '8–128 个字符' : '输入密码'}
+                required
+              />
+            </label>
 
-          <button type="submit" className="auth-submit" disabled={submitting}>
-            {submitting ? '提交中…' : mode === 'login' ? '登录' : '注册'}
-          </button>
-        </form>
+            {mode === 'register' && (
+              <label className="auth-field">
+                <span>邀请码（可选）</span>
+                <input
+                  type="text"
+                  value={inviteCode}
+                  onChange={(event) => setInviteCode(event.target.value)}
+                  placeholder="没有可留空"
+                />
+              </label>
+            )}
 
-        <p className="auth-switch">
-          {mode === 'login' ? '还没有账号？' : '已有账号？'}
-          <button
-            type="button"
-            onClick={() => {
-              setMode(mode === 'login' ? 'register' : 'login')
-              setError('')
-            }}
-          >
-            {mode === 'login' ? '注册' : '去登录'}
-          </button>
-        </p>
-      </div>
-    </div>
+            {error && <p className="auth-error">{error}</p>}
+
+            <button type="submit" className="auth-submit" disabled={submitting}>
+              {submitting ? '提交中…' : mode === 'login' ? '登录' : '注册'}
+            </button>
+          </form>
+
+          <p className="auth-switch">
+            {mode === 'login' ? '还没有账号？' : '已有账号？'}
+            <button
+              type="button"
+              onClick={() => {
+                setMode(mode === 'login' ? 'register' : 'login')
+                setError('')
+              }}
+            >
+              {mode === 'login' ? '注册' : '去登录'}
+            </button>
+          </p>
+        </>
+      )}
+    </DialogShell>
   )
 }

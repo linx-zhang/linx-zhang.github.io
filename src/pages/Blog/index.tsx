@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
-import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
+import { usePagedFetch } from '@/hooks/usePagedFetch'
+import { formatTimestamp } from '@/utils/format'
 import './Blog.css'
 
 function textSummary(markdown: string): string {
@@ -23,50 +24,15 @@ function textSummary(markdown: string): string {
 export default function Blog() {
   const { user, openLogin } = useAuth()
   const navigate = useNavigate()
-  const [pageIndex, setPageIndex] = useState(0)
-  const [items, setItems] = useState<Post[]>([])
-  const [hasNext, setHasNext] = useState(false)
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [error, setError] = useState('')
-  const [reloadKey, setReloadKey] = useState(0)
+  const { items, pageIndex, hasNext, status, error, goToPage, retry } = usePagedFetch<Post>(
+    (limit, offset) => blogApi.listPosts(limit, offset),
+  )
 
   const [composerOpen, setComposerOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [bodyMd, setBodyMd] = useState('')
   const [publishing, setPublishing] = useState(false)
   const [composeError, setComposeError] = useState('')
-
-  useEffect(() => {
-    let cancelled = false
-    blogApi
-      .listPosts(PAGE_SIZE + 1, pageIndex * PAGE_SIZE)
-      .then((posts) => {
-        if (cancelled) return
-        setItems(posts.slice(0, PAGE_SIZE))
-        setHasNext(posts.length > PAGE_SIZE)
-        setStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setError(errorMessage(err))
-        setStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [pageIndex, reloadKey])
-
-  const goToPage = (next: number) => {
-    setStatus('loading')
-    setError('')
-    setPageIndex(next)
-  }
-
-  const retry = () => {
-    setStatus('loading')
-    setError('')
-    setReloadKey((key) => key + 1)
-  }
 
   const toggleComposer = () => {
     setComposeError('')

@@ -1,39 +1,34 @@
-// src/utils/docs.ts
-
-// 1. 扫描时加上 html
 const rawModules = import.meta.glob('/raw-docs/**/*.{md,markdown,html}', {
   query: '?raw',
   import: 'default',
   eager: true,
-}) as Record<string, string>;
+}) as Record<string, string>
 
 export interface DocItem {
-  slug: string;
-  filePath: string;
-  title: string;
-  rawContent: string;
-  type: 'md' | 'html';
+  slug: string
+  filePath: string
+  title: string
+  rawContent: string
+  type: 'md' | 'html'
 }
 
-export function getDocList(): DocItem[] {
+function parseDocs(): DocItem[] {
   const list = Object.entries(rawModules).map(([filePath, rawContent]) => {
-    // 判断扩展名
-    const isHtml = filePath.endsWith('.html');
-    
-    // 去除前缀和后缀，兼容 html
+    const isHtml = filePath.endsWith('.html')
+
     const slug = filePath
       .replace(/^\/raw-docs\//, '')
-      .replace(/\.(md|markdown|html)$/, '');
+      .replace(/\.(md|markdown|html)$/, '')
 
-    // 提取标题 (如果是 HTML，简单正则抓一下 <title> 标签，抓不到就用 slug)
-    let title = slug;
+    // HTML 抓 <title>，Markdown 抓首个一级标题，都没有就退回 slug
+    let title = slug
     if (isHtml) {
-      const titleMatch = rawContent.match(/<title[^>]*>([^<]+)<\/title>/i);
-      if (titleMatch) title = titleMatch[1].trim();
+      const titleMatch = rawContent.match(/<title[^>]*>([^<]+)<\/title>/i)
+      if (titleMatch) title = titleMatch[1].trim()
     } else {
-      const firstLine = rawContent.trim().split('\n')[0] || '';
-      const titleMatch = firstLine.match(/^#\s+(.+)$/);
-      if (titleMatch) title = titleMatch[1].trim();
+      const firstLine = rawContent.trim().split('\n')[0] || ''
+      const titleMatch = firstLine.match(/^#\s+(.+)$/)
+      if (titleMatch) title = titleMatch[1].trim()
     }
 
     return {
@@ -42,13 +37,26 @@ export function getDocList(): DocItem[] {
       title,
       rawContent,
       type: (isHtml ? 'html' : 'md') as 'md' | 'html',
-    };
-  });
+    }
+  })
 
-  // 全局统一排序：按标题中文升序
-  return list.sort((a, b) => a.title.localeCompare(b.title, 'en-US'));
+  // 中文标题按 zh-CN 排序；只在这一个模块里排一次
+  return list.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'))
 }
 
+let cachedDocs: DocItem[] | null = null
+
+/** 全量文档清单：解析与排序只在首次调用时执行，之后返回同一个数组 */
+export function getDocList(): DocItem[] {
+  cachedDocs ??= parseDocs()
+  return cachedDocs
+}
+
+let cachedBySlug: Map<string, DocItem> | null = null
+
 export function getDocBySlug(slug: string): DocItem | undefined {
-  return getDocList().find((d) => d.slug === slug);
+  if (!cachedBySlug) {
+    cachedBySlug = new Map(getDocList().map((doc) => [doc.slug, doc]))
+  }
+  return cachedBySlug.get(slug)
 }
