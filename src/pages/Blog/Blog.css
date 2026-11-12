@@ -326,6 +326,46 @@ a.blog-button {
   background: #f9fafb;
   color: #6b7280;
 }
+.post-neighbors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.post-neighbor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #1f2937;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.post-neighbor:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 2px 10px rgba(31, 41, 55, 0.08);
+}
+.post-neighbor-next {
+  text-align: right;
+}
+.post-neighbor-label {
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+.post-neighbor-title {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.post-neighbor-empty {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  justify-content: center;
+  border-style: dashed;
+  background: transparent;
+}
 .comment-section {
   margin-top: 2rem;
 }

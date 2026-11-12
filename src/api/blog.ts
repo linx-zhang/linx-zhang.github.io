@@ -48,7 +48,30 @@ export interface PostFilters {
   author?: string
 }
 
+export interface PostNeighborRef {
+  id: number
+  title: string
+}
+
+/** 上一篇 / 下一篇：prev 是列表里更靠前（更新）的一篇，next 是更早的一篇 */
+export interface PostNeighbors {
+  /** 这篇文章在列表中的位置（0 基）；有筛选条件时为 null（不为此再做一次 COUNT） */
+  index: number | null
+  prev: PostNeighborRef | null
+  next: PostNeighborRef | null
+}
+
 export const blogApi = {
+  /** 传入选中的筛选条件，相邻文章就按同一份筛选结果排序；当前文章不在结果里时两者都为 null */
+  getNeighbors(postId: number, filters: PostFilters = {}): Promise<PostNeighbors> {
+    const params = new URLSearchParams()
+    const q = filters.q?.trim()
+    if (q) params.set('q', q)
+    const author = filters.author?.trim()
+    if (author) params.set('author', author)
+    const query = params.toString()
+    return request<PostNeighbors>(`/posts/${postId}/neighbors${query ? `?${query}` : ''}`)
+  },
   listPosts(limit: number, offset: number, filters: PostFilters = {}): Promise<Post[]> {
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
     const q = filters.q?.trim()

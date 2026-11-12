@@ -3,13 +3,13 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError, errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
-import type { Comment, Post } from '@/api/blog'
+import type { Comment, Post, PostNeighbors } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
 import { usePermission } from '@/auth/usePermission'
 import MarkdownView from '@/components/MarkdownView'
 import Avatar from '@/components/Avatar'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
-import { formatTimestamp } from '@/utils/format'
+import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
 import './Blog.css'
 
 function commentOrder(a: Comment, b: Comment): number {
@@ -26,6 +26,39 @@ function listUrl(): string {
   }
 }
 
+/**
+ * 从列表页存下的地址里取出筛选条件——详情页据此按同一份结果顺序翻页。
+ * 也把「返回列表」定位到这篇文章所在的页：有筛选条件时不动页码，
+ * 因为筛选结果的页码得另外 COUNT 一遍，代价不值得。
+ */
+function listFilters(): { q: string; author: string } {
+  try {
+    const params = new URLSearchParams(
+      (sessionStorage.getItem('blog_list_url') ?? '').split('?')[1] ?? '',
+    )
+    return { q: params.get('q') ?? '', author: params.get('author') ?? '' }
+  } catch {
+    return { q: '', author: '' }
+  }
+}
+
+function rememberPageForPost(index: number | null) {
+  if (index === null) return
+  try {
+    const stored = sessionStorage.getItem('blog_list_url')
+    if (!stored) return
+    const params = new URLSearchParams(stored.split('?')[1] ?? '')
+    if (params.get('q') || params.get('author')) return
+    const page = Math.floor(index / PAGE_SIZE) + 1
+    if (page > 1) params.set('page', String(page))
+    else params.delete('page')
+    const query = params.toString()
+    sessionStorage.setItem('blog_list_url', query ? `/blog?${query}` : '/blog')
+  } catch {
+    /* sessionStorage 不可用时忽略即可 */
+  }
+}
+
 export default function PostDetail() {
   const { id } = useParams()
   const postId = Number(id)
@@ -37,6 +70,7 @@ export default function PostDetail() {
   const { confirm, dialog } = useConfirm()
 
   const [post, setPost] = useState<Post | null>(null)
+  const [neighbors, setNeighbors] = useState<PostNeighbors | null>(null)
   const [postStatus, setPostStatus] = useState<'loading' | 'ready' | 'missing' | 'error'>(
     validId ? 'loading' : 'missing',
   )
@@ -86,6 +120,26 @@ export default function PostDetail() {
       cancelled = true
     }
   }, [postId, validId, postReloadKey])
+
+  // 上一篇 / 下一篇：按当前列表的筛选条件取邻篇，拿不到就整块不展示
+  useEffect(() => {
+    if (!validId) return
+    let cancelled = false
+    blogApi
+      .getNeighbors(postId, listFilters())
+      .then((value) => {
+        if (cancelled) return
+        setNeighbors(value)
+        rememberPageForPost(value.index)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setNeighbors(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [postId, validId])
 
   useEffect(() => {
     if (!validId) return
@@ -372,6 +426,27 @@ export default function PostDetail() {
           </>
         )}
       </article>
+
+      {(neighbors?.prev || neighbors?.next) && (
+        <nav className="post-neighbors" aria-label="相邻文章">
+          {neighbors.prev ? (
+            <Link className="post-neighbor" to={`/blog/${neighbors.prev.id}`}>
+              <span className="post-neighbor-label">← 上一篇（更新）</span>
+              <span className="post-neighbor-title">{neighbors.prev.title}</span>
+            </Link>
+          ) : (
+            <span className="post-neighbor post-neighbor-empty">已经是最新一篇</span>
+          )}
+          {neighbors.next ? (
+            <Link className="post-neighbor post-neighbor-next" to={`/blog/${neighbors.next.id}`}>
+              <span className="post-neighbor-label">下一篇（更早）→</span>
+              <span className="post-neighbor-title">{neighbors.next.title}</span>
+            </Link>
+          ) : (
+            <span className="post-neighbor post-neighbor-empty">已经是最早一篇</span>
+          )}
+        </nav>
+      )}
 
       <section className="comment-section">
         <h2 className="comment-heading">评论</h2>
