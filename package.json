@@ -9,6 +9,7 @@
     "predev": "node scripts/build-wiki.mjs",
     "prebuild": "node scripts/build-wiki.mjs",
     "build": "tsc -b && vite build",
+    "postbuild": "node scripts/postbuild-wiki-index.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },
