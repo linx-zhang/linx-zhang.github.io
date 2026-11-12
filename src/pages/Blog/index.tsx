@@ -15,7 +15,8 @@ function textSummary(markdown: string): string {
     .replace(/`([^`]*)`/g, '$1')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/[#>*_~-]+/g, ' ')
+    .replace(/[#>*_~]+/g, ' ')
+    .replace(/\s*[-]{2,}\s*/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
   return plain.length > 140 ? `${plain.slice(0, 140)}…` : plain
