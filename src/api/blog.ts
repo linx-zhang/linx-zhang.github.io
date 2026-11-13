@@ -53,10 +53,9 @@ export interface PostNeighborRef {
   title: string
 }
 
-/** 上一篇 / 下一篇：prev 是列表里更靠前（更新）的一篇，next 是更早的一篇 */
+/** 上一篇 / 下一篇：prev 是列表里更靠前（更新）的一篇，next 是更早的一篇。
+ * 不再返回「在第几篇」——返回列表靠 router state 记住来源页，不需要服务端 COUNT。 */
 export interface PostNeighbors {
-  /** 这篇文章在列表中的位置（0 基）；有筛选条件时为 null（不为此再做一次 COUNT） */
-  index: number | null
   prev: PostNeighborRef | null
   next: PostNeighborRef | null
 }

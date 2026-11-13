@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
@@ -25,6 +25,7 @@ function textSummary(markdown: string): string {
 export default function Blog() {
   const { user, openLogin } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
 
   // 页码、筛选条件都放在 URL 里：刷新和「从详情返回」都能回到同一页
@@ -32,6 +33,8 @@ export default function Blog() {
   const pageIndex = Number.isFinite(rawPage) && rawPage > 1 ? rawPage - 1 : 0
   const q = searchParams.get('q') ?? ''
   const author = searchParams.get('author') ?? ''
+  // 详情页靠这个 state 知道「该回哪一页」——不进 URL，也就不会被分享出去
+  const fromHere = location.pathname + location.search
 
   // 输入框只在用户键入时更新；URL 变化由下面的操作函数同步重置
   const [qInput, setQInput] = useState(q)
@@ -280,7 +283,12 @@ export default function Blog() {
       {status === 'ready' && items.length > 0 && (
         <div className="blog-list">
           {items.map((post) => (
-            <Link key={post.id} className="blog-card" to={`/blog/${post.id}`}>
+            <Link
+              key={post.id}
+              className="blog-card"
+              to={`/blog/${post.id}`}
+              state={{ from: fromHere }}
+            >
               <h2>{post.title}</h2>
               <div className="blog-meta">
                 {formatTimestamp(post.created_at)}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ApiError, errorMessage } from '@/api/client'
 import { blogApi } from '@/api/blog'
 import type { Comment, Post, PostNeighbors } from '@/api/blog'
@@ -9,7 +9,7 @@ import { usePermission } from '@/auth/usePermission'
 import MarkdownView from '@/components/MarkdownView'
 import Avatar from '@/components/Avatar'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
-import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
+import { formatTimestamp } from '@/utils/format'
 import './Blog.css'
 
 function commentOrder(a: Comment, b: Comment): number {
@@ -17,8 +17,8 @@ function commentOrder(a: Comment, b: Comment): number {
   return a.created_at < b.created_at ? -1 : 1
 }
 
-/** 列表页把当前地址（含页码与筛选条件）存进 sessionStorage，返回时用它而不是硬回第一页 */
-function listUrl(): string {
+/** 兜底：列表页把当前地址（含页码与筛选）存进 sessionStorage，同一标签页内刷新也不丢 */
+function storedListUrl(): string {
   try {
     return sessionStorage.getItem('blog_list_url') || '/blog'
   } catch {
@@ -27,35 +27,21 @@ function listUrl(): string {
 }
 
 /**
- * 从列表页存下的地址里取出筛选条件——详情页据此按同一份结果顺序翻页。
- * 也把「返回列表」定位到这篇文章所在的页：有筛选条件时不动页码，
- * 因为筛选结果的页码得另外 COUNT 一遍，代价不值得。
+ * 「返回列表」的目标地址。优先用列表跳转时带过来的 router state——
+ * 它不落进 URL、不受分享污染，正好对应"应用内导航"这个唯一需要精确回位的场景；
+ * 没有 state（新标签打开、外部链接进来）才退回本标签页上次停过的地址。
  */
-function listFilters(): { q: string; author: string } {
+function listUrl(from: unknown): string {
+  return typeof from === 'string' && from.startsWith('/blog') ? from : storedListUrl()
+}
+
+/** 从列表地址里取筛选条件——详情页据此按同一份结果顺序翻上一篇/下一篇 */
+function filtersOf(url: string): { q: string; author: string } {
   try {
-    const params = new URLSearchParams(
-      (sessionStorage.getItem('blog_list_url') ?? '').split('?')[1] ?? '',
-    )
+    const params = new URLSearchParams(url.split('?')[1] ?? '')
     return { q: params.get('q') ?? '', author: params.get('author') ?? '' }
   } catch {
     return { q: '', author: '' }
-  }
-}
-
-function rememberPageForPost(index: number | null) {
-  if (index === null) return
-  try {
-    const stored = sessionStorage.getItem('blog_list_url')
-    if (!stored) return
-    const params = new URLSearchParams(stored.split('?')[1] ?? '')
-    if (params.get('q') || params.get('author')) return
-    const page = Math.floor(index / PAGE_SIZE) + 1
-    if (page > 1) params.set('page', String(page))
-    else params.delete('page')
-    const query = params.toString()
-    sessionStorage.setItem('blog_list_url', query ? `/blog?${query}` : '/blog')
-  } catch {
-    /* sessionStorage 不可用时忽略即可 */
   }
 }
 
@@ -64,6 +50,10 @@ export default function PostDetail() {
   const postId = Number(id)
   const validId = Number.isInteger(postId) && postId > 0
   const navigate = useNavigate()
+  const location = useLocation()
+  const fromState = (location.state as { from?: unknown } | null)?.from
+  const backToList = listUrl(fromState)
+  const listFilters = filtersOf(backToList)
 
   const { user, openLogin } = useAuth()
   const { has } = usePermission()
@@ -126,11 +116,10 @@ export default function PostDetail() {
     if (!validId) return
     let cancelled = false
     blogApi
-      .getNeighbors(postId, listFilters())
+      .getNeighbors(postId, listFilters)
       .then((value) => {
         if (cancelled) return
         setNeighbors(value)
-        rememberPageForPost(value.index)
       })
       .catch(() => {
         if (cancelled) return
@@ -139,7 +128,7 @@ export default function PostDetail() {
     return () => {
       cancelled = true
     }
-  }, [postId, validId])
+  }, [postId, validId, listFilters.q, listFilters.author])
 
   useEffect(() => {
     if (!validId) return
@@ -282,7 +271,7 @@ export default function PostDetail() {
         setDeletingPost(true)
         try {
           await blogApi.deletePost(postId)
-          navigate(listUrl())
+          navigate(backToList)
         } catch (err) {
           setPostActionError(errorMessage(err))
         } finally {
@@ -297,7 +286,7 @@ export default function PostDetail() {
       <div className="blog-page">
         <div className="blog-state">
           <p>文章不存在或已被删除。</p>
-          <Link className="blog-button" to={listUrl()}>
+          <Link className="blog-button" to={backToList}>
             返回博客列表
           </Link>
         </div>
@@ -326,7 +315,7 @@ export default function PostDetail() {
             >
               重试
             </button>
-            <Link className="blog-button" to={listUrl()}>
+            <Link className="blog-button" to={backToList}>
               返回列表
             </Link>
           </div>
@@ -345,7 +334,7 @@ export default function PostDetail() {
   return (
     <div className="blog-page">
       <article className="post-detail">
-        <Link className="post-back" to={listUrl()}>
+        <Link className="post-back" to={backToList}>
           ← 返回博客列表
         </Link>
 
@@ -430,7 +419,7 @@ export default function PostDetail() {
       {(neighbors?.prev || neighbors?.next) && (
         <nav className="post-neighbors" aria-label="相邻文章">
           {neighbors.prev ? (
-            <Link className="post-neighbor" to={`/blog/${neighbors.prev.id}`}>
+            <Link className="post-neighbor" to={`/blog/${neighbors.prev.id}`} state={{ from: fromState }}>
               <span className="post-neighbor-label">← 上一篇（更新）</span>
               <span className="post-neighbor-title">{neighbors.prev.title}</span>
             </Link>
@@ -438,7 +427,7 @@ export default function PostDetail() {
             <span className="post-neighbor post-neighbor-empty">已经是最新一篇</span>
           )}
           {neighbors.next ? (
-            <Link className="post-neighbor post-neighbor-next" to={`/blog/${neighbors.next.id}`}>
+            <Link className="post-neighbor post-neighbor-next" to={`/blog/${neighbors.next.id}`} state={{ from: fromState }}>
               <span className="post-neighbor-label">下一篇（更早）→</span>
               <span className="post-neighbor-title">{neighbors.next.title}</span>
             </Link>
