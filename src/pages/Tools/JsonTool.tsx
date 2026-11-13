@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useCopy } from '@/hooks/useCopy'
 import JsonTree from './JsonTree'
 
 /** 树形视图的上限：再大就只给文本，避免一次展开上千节点卡住 */
@@ -47,7 +48,7 @@ export default function JsonTool() {
   const [output, setOutput] = useState('')
   const [error, setError] = useState('')
   const [indent, setIndent] = useState(2)
-  const [copied, setCopied] = useState(false)
+  const { isCopied, copy } = useCopy()
   const [parsed, setParsed] = useState<unknown>(null)
   const [view, setView] = useState<'tree' | 'text'>('tree')
   const [treeKey, setTreeKey] = useState(0)
@@ -82,15 +83,10 @@ export default function JsonTool() {
     }
   }
 
-  const copy = async () => {
+  const copyResult = async () => {
     if (!output) return
-    try {
-      await navigator.clipboard.writeText(output)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1600)
-    } catch {
-      setError('浏览器不允许写剪贴板，手动选中输出区复制吧')
-    }
+    if (await copy(output)) return
+    setError('浏览器不允许写剪贴板，手动选中输出区复制吧')
   }
 
   return (
@@ -116,11 +112,11 @@ export default function JsonTool() {
         </label>
         <button
           type="button"
-          className={copied ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
-          onClick={copy}
+          className={isCopied() ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
+          onClick={() => void copyResult()}
           disabled={!output}
         >
-          {copied ? '已复制' : '复制结果'}
+          {isCopied() ? '已复制' : '复制结果'}
         </button>
       </div>
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useCopy } from '@/hooks/useCopy'
 
 interface Converted {
   local: string
@@ -103,7 +104,7 @@ export default function TimestampTool() {
   const [unit, setUnit] = useState<'auto' | 'sec' | 'ms'>('auto')
   const [result, setResult] = useState<Converted | null>(null)
   const [error, setError] = useState('')
-  const [copiedKey, setCopiedKey] = useState('')
+  const { isCopied, copy } = useCopy()
 
   const run = (value: string, mode: 'auto' | 'sec' | 'ms' = unit) => {
     try {
@@ -191,18 +192,10 @@ export default function TimestampTool() {
                 <code>{row.value}</code>
                 <button
                   type="button"
-                  className={copiedKey === row.label ? 'tool-mini is-copied' : 'tool-mini'}
-                  onClick={() => {
-                    navigator.clipboard
-                      .writeText(row.value)
-                      .then(() => {
-                        setCopiedKey(row.label)
-                        window.setTimeout(() => setCopiedKey(''), 1600)
-                      })
-                      .catch(() => {})
-                  }}
+                  className={isCopied(row.label) ? 'tool-mini is-copied' : 'tool-mini'}
+                  onClick={() => void copy(row.value, row.label)}
                 >
-                  {copiedKey === row.label ? '已复制' : '复制'}
+                  {isCopied(row.label) ? '已复制' : '复制'}
                 </button>
               </dd>
             </div>

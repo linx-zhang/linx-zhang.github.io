@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useCopy } from '@/hooks/useCopy'
 
 /** 取 [0, max) 的随机整数：拒绝采样，避免取模偏斜 */
 function randomBelow(max: number): number {
@@ -113,7 +114,7 @@ export default function RandomTool() {
   const [uppercase, setUppercase] = useState(false)
   const [hyphenless, setHyphenless] = useState(false)
   const [uuids, setUuids] = useState<string[]>(() => [uuidV4(), uuidV4(), uuidV4()])
-  const [uuidCopied, setUuidCopied] = useState('')
+  const { isCopied, copy } = useCopy()
 
   const [length, setLength] = useState(16)
   const [sets, setSets] = useState<Record<SetKey, boolean>>({
@@ -126,7 +127,6 @@ export default function RandomTool() {
   const [requireEach, setRequireEach] = useState(true)
   const [password, setPassword] = useState('')
   const [poolSize, setPoolSize] = useState(0)
-  const [pwCopied, setPwCopied] = useState(false)
   const [pwNote, setPwNote] = useState('')
 
   const genUuid = useCallback(() => {
@@ -161,19 +161,6 @@ export default function RandomTool() {
 
   const strength = useMemo(() => strengthOf(password.length, poolSize), [password.length, poolSize])
   const canCopyUuid = displayUuids.length > 0
-
-  const copyText = async (text: string, done: () => void) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      done()
-      window.setTimeout(() => {
-        setUuidCopied('')
-        setPwCopied(false)
-      }, 1600)
-    } catch {
-      /* 浏览器不给写剪贴板时，用户仍可手动选中 */
-    }
-  }
 
   return (
     <div className="tool tool-stack">
@@ -230,11 +217,11 @@ export default function RandomTool() {
           </button>
           <button
             type="button"
-            className={uuidCopied === 'all' ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
+            className={isCopied('uuids') ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
             disabled={!canCopyUuid}
-            onClick={() => copyText(displayUuids.join('\n'), () => setUuidCopied('all'))}
+            onClick={() => void copy(displayUuids.join('\n'), 'uuids')}
           >
-            {uuidCopied === 'all' ? '已复制' : '复制全部'}
+            {isCopied('uuids') ? '已复制' : '复制全部'}
           </button>
         </div>
 
@@ -244,10 +231,10 @@ export default function RandomTool() {
               <code>{id}</code>
               <button
                 type="button"
-                className={uuidCopied === `${index}` ? 'tool-mini is-copied' : 'tool-mini'}
-                onClick={() => copyText(id, () => setUuidCopied(`${index}`))}
+                className={isCopied(`uuid-${index}`) ? 'tool-mini is-copied' : 'tool-mini'}
+                onClick={() => void copy(id, `uuid-${index}`)}
               >
-                {uuidCopied === `${index}` ? '已复制' : '复制'}
+                {isCopied(`uuid-${index}`) ? '已复制' : '复制'}
               </button>
             </li>
           ))}
@@ -317,14 +304,10 @@ export default function RandomTool() {
               </span>
               <button
                 type="button"
-                className={pwCopied ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
-                onClick={() =>
-                  copyText(password, () => {
-                    setPwCopied(true)
-                  })
-                }
+                className={isCopied('password') ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
+                onClick={() => void copy(password, 'password')}
               >
-                {pwCopied ? '已复制' : '复制密码'}
+                {isCopied('password') ? '已复制' : '复制密码'}
               </button>
             </div>
           </div>

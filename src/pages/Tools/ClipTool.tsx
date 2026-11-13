@@ -4,7 +4,7 @@ import { clipApi } from '@/api/clips'
 import type { ClipShare } from '@/api/clips'
 import { ApiError, errorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthProvider'
-import { copyText } from '@/utils/clipboard'
+import { useCopy } from '@/hooks/useCopy'
 import { formatTimestamp } from '@/utils/format'
 
 const BODY_MAX = 20_000
@@ -13,18 +13,6 @@ const TITLE_MAX = 80
 /** 分享链接就是当前站点上的这个路径，复制给谁都能在浏览器打开 */
 function shareUrl(code: string): string {
   return `${window.location.origin}/tools/clip/${code}`
-}
-
-function useCopy(): [string, (key: string, text: string) => void] {
-  const [copiedKey, setCopiedKey] = useState('')
-  const copy = (key: string, text: string) => {
-    void copyText(text).then((ok) => {
-      if (!ok) return
-      setCopiedKey(key)
-      window.setTimeout(() => setCopiedKey(''), 1600)
-    })
-  }
-  return [copiedKey, copy]
 }
 
 function CopyButton({
@@ -53,7 +41,7 @@ function ClipView({ code }: { code: string }) {
   const [clip, setClip] = useState<ClipShare | null>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState('')
-  const [copiedKey, copy] = useCopy()
+  const { isCopied, copy } = useCopy()
 
   useEffect(() => {
     let cancelled = false
@@ -108,8 +96,8 @@ function ClipView({ code }: { code: string }) {
         <CopyButton
           label="复制全文"
           copiedLabel="已复制"
-          copied={copiedKey === 'body'}
-          onClick={() => copy('body', clip.body)}
+          copied={isCopied()}
+          onClick={() => void copy(clip.body)}
         />
       </div>
 
@@ -141,7 +129,7 @@ function ClipComposer() {
   const [error, setError] = useState('')
   const [created, setCreated] = useState<ClipShare | null>(null)
   const [revoking, setRevoking] = useState(false)
-  const [copiedKey, copy] = useCopy()
+  const { isCopied, copy } = useCopy()
 
   const stats = useMemo(
     () => `${body.length} / ${BODY_MAX} 字符 · ${body.split('\n').length} 行`,
@@ -218,8 +206,8 @@ function ClipComposer() {
             <CopyButton
               label="复制链接"
               copiedLabel="已复制"
-              copied={copiedKey === 'link'}
-              onClick={() => copy('link', url)}
+              copied={isCopied()}
+              onClick={() => void copy(url)}
               primary
             />
           </div>

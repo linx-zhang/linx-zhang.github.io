@@ -1,7 +1,13 @@
 import { lazy, Suspense } from 'react'
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import './Tools.css'
+
+const JsonTool = lazy(() => import('./JsonTool'))
+const SqlTool = lazy(() => import('./SqlTool'))
+const TimestampTool = lazy(() => import('./TimestampTool'))
+const RandomTool = lazy(() => import('./RandomTool'))
+const ClipTool = lazy(() => import('./ClipTool'))
 
 interface ToolMeta {
   slug: string
@@ -9,6 +15,8 @@ interface ToolMeta {
   hint: string
   detail: string
   icon: ReactNode
+  /** 每个工具自带渲染组件：新增工具只要在 TOOLS 里加一条，不用改渲染分支 */
+  Component: ComponentType<{ code?: string }>
 }
 
 const untilIcon = (
@@ -22,6 +30,7 @@ const TOOLS: ToolMeta[] = [
   {
     slug: 'json',
     label: 'JSON 格式化',
+    Component: JsonTool,
     hint: '格式化 / 压缩 / 报错定位',
     detail: '粘贴一段 JSON，整理成缩进结构；格式错了会指出多出或少了哪个符号。',
     icon: (
@@ -34,6 +43,7 @@ const TOOLS: ToolMeta[] = [
   {
     slug: 'sql',
     label: 'SQL 格式化',
+    Component: SqlTool,
     hint: '按子句换行、关键字大写',
     detail: '一长串 SQL 拆成一行一个子句；可选 MySQL / PostgreSQL 等方言。',
     icon: (
@@ -46,6 +56,7 @@ const TOOLS: ToolMeta[] = [
   {
     slug: 'timestamp',
     label: '时间戳转换',
+    Component: TimestampTool,
     hint: '秒 / 毫秒 ↔ 本地时间',
     detail: '数字时间戳和日期互转，自动判断单位，也能手动锁定按秒还是按毫秒。',
     icon: untilIcon,
@@ -53,6 +64,7 @@ const TOOLS: ToolMeta[] = [
   {
     slug: 'random',
     label: 'UUID / 密码',
+    Component: RandomTool,
     hint: 'v4 / v7 · 可选字符集',
     detail: '生成 UUID（v4 随机、v7 时间有序）和随机密码，字符集自选，可排除 0/O、1/l/I 这类易混字符。',
     icon: (
@@ -67,6 +79,7 @@ const TOOLS: ToolMeta[] = [
   {
     slug: 'clip',
     label: '共享剪切板',
+    Component: ClipTool,
     hint: '日志粘进来 · 24 小时短链',
     detail: '把日志或一小段文本存到后端，生成一条 24 小时内谁都能读的链接；过期自动失效，也能随时撤销。',
     icon: (
@@ -78,12 +91,6 @@ const TOOLS: ToolMeta[] = [
     ),
   },
 ]
-
-const JsonTool = lazy(() => import('./JsonTool'))
-const SqlTool = lazy(() => import('./SqlTool'))
-const TimestampTool = lazy(() => import('./TimestampTool'))
-const RandomTool = lazy(() => import('./RandomTool'))
-const ClipTool = lazy(() => import('./ClipTool'))
 
 function findTool(slug: string | undefined): ToolMeta | undefined {
   return TOOLS.find((tool) => tool.slug === slug)
@@ -130,11 +137,7 @@ export default function Tools() {
       </header>
 
       <Suspense fallback={<div className="tools-state">加载中…</div>}>
-        {tool.slug === 'json' && <JsonTool />}
-        {tool.slug === 'sql' && <SqlTool />}
-        {tool.slug === 'timestamp' && <TimestampTool />}
-        {tool.slug === 'random' && <RandomTool />}
-        {tool.slug === 'clip' && <ClipTool code={code} />}
+        <tool.Component code={code} />
       </Suspense>
     </div>
   )

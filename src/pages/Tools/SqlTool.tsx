@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useCopy } from '@/hooks/useCopy'
 import { format } from 'sql-formatter'
 import { tokenizeSql } from './highlight'
 
@@ -16,7 +17,7 @@ export default function SqlTool() {
   const [error, setError] = useState('')
   const [language, setLanguage] = useState<string>('sql')
   const [keywordCase, setKeywordCase] = useState<'upper' | 'lower'>('upper')
-  const [copied, setCopied] = useState(false)
+  const { isCopied, copy } = useCopy()
 
   const tokens = useMemo(() => (output ? tokenizeSql(output) : []), [output])
 
@@ -42,15 +43,10 @@ export default function SqlTool() {
     }
   }
 
-  const copy = async () => {
+  const copyResult = async () => {
     if (!output) return
-    try {
-      await navigator.clipboard.writeText(output)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1600)
-    } catch {
-      setError('浏览器不允许写剪贴板，手动选中输出区复制吧')
-    }
+    if (await copy(output)) return
+    setError('浏览器不允许写剪贴板，手动选中输出区复制吧')
   }
 
   return (
@@ -86,11 +82,11 @@ export default function SqlTool() {
         </label>
         <button
           type="button"
-          className={copied ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
-          onClick={copy}
+          className={isCopied() ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
+          onClick={() => void copyResult()}
           disabled={!output}
         >
-          {copied ? '已复制' : '复制结果'}
+          {isCopied() ? '已复制' : '复制结果'}
         </button>
       </div>
 
