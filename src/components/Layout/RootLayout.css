@@ -33,14 +33,17 @@ body {
   text-decoration: none;
   color: #4b5563;
   font-weight: 500;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
 }
+/* 悬停只改颜色：文字下划线会和 active 的 border 叠成两条线（触屏点完还会留着） */
 .nav a:hover {
-  text-decoration: underline;
+  color: #1f2937;
 }
 .nav a.active {
   color: #1f2937;
   font-weight: 600;
-  border-bottom: 2px solid #1f2937;
+  border-bottom-color: #1f2937;
 }
 .main-content {
   flex: 1;

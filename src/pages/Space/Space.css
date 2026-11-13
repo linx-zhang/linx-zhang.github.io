@@ -226,6 +226,58 @@
   margin-top: 0.4rem;
 }
 
+/* 收起态的入口：整条都要像个按钮，别让人猜哪里能写 */
+.space-compose-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  background: #1f2937;
+  color: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.space-compose-trigger svg {
+  width: 16px;
+  height: 16px;
+}
+
+.space-compose-trigger span {
+  color: #cbd5e1;
+  font-size: 0.74rem;
+  font-weight: 400;
+}
+
+.space-dock-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.space-dock-foot .space-hint,
+.space-dock-foot .space-error {
+  margin-top: 0;
+}
+
+.space-collapse {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
 /* 输入区：手机上固定在底部，桌面上回到列表上方一条 */
 .space-dock {
   position: fixed;
@@ -276,11 +328,68 @@
 
 .space-due {
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  align-items: center;
+  gap: 0.25rem;
   flex: 0 0 auto;
-  font-size: 0.7rem;
+}
+
+/* 原生日期输入只作为系统日历的锚点，不显示它自己的「年/月/日」空槽 */
+.space-due-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.space-due-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 38px;
+  padding: 0 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
   color: #9ca3af;
+  font: inherit;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.space-due-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.space-due-btn:hover {
+  border-color: #cbd2da;
+  color: #4b5563;
+}
+
+/* 选了日期就变成一条可读的状态，而不是三个空槽 */
+.space-due-btn.is-set {
+  border-color: #cbd2da;
+  color: #b91c1c;
+}
+
+.space-due-clear {
+  width: 24px;
+  min-height: 38px;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.space-due-clear:hover {
+  color: #4b5563;
 }
 
 .space-due input {
@@ -353,15 +462,11 @@
 
   .space-due {
     flex: 1 1 auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.4rem;
+    justify-content: flex-start;
     min-width: 0;
   }
 
-  .space-due input {
-    flex: 1 1 auto;
-    width: auto;
+  .space-due-btn {
     min-width: 0;
   }
 }
@@ -415,6 +520,12 @@
 @media (min-width: 768px) {
   .space-page {
     padding: 1.75rem 1rem 3rem;
+  }
+
+  /* 宽屏一直展开，收起按钮与「记一条」入口都不该出现 */
+  .space-collapse,
+  .space-compose-trigger {
+    display: none;
   }
 
   .space-header h1 {

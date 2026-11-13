@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
@@ -58,6 +58,33 @@ export default function Space() {
   const [dueAt, setDueAt] = useState('')
   const [saving, setSaving] = useState(false)
   const [composeError, setComposeError] = useState('')
+  // 手机上先给一个「＋ 记一条」按钮，点开才是输入区；桌面上宽屏默认展开
+  const [expanded, setExpanded] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
+  )
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const dateInputRef = useRef<HTMLInputElement>(null)
+
+  /** 拉起系统日历；老浏览器没有 showPicker 时退化为聚焦原生输入 */
+  const openPicker = () => {
+    const input = dateInputRef.current
+    if (!input) return
+    if (typeof input.showPicker === 'function') {
+      try {
+        input.showPicker()
+        return
+      } catch {
+        // 非用户手势触发时会抛 NotAllowedError，落到下面的聚焦
+      }
+    }
+    input.focus()
+  }
+
+  useEffect(() => {
+    if (!expanded) return
+    const timer = window.setTimeout(() => textareaRef.current?.focus(), 60)
+    return () => window.clearTimeout(timer)
+  }, [expanded])
 
   const loadPage = useCallback(
     (done: boolean | undefined, offset: number) => memoApi.list(done, PAGE_SIZE, offset),
@@ -238,37 +265,94 @@ export default function Space() {
       </nav>
 
       <div className="space-dock">
-        <form className="space-composer" onSubmit={submit} noValidate>
-          <textarea
-            value={body}
-            rows={1}
-            maxLength={2000}
-            placeholder="记一条，明天再看"
-            aria-label="新备忘录"
-            onChange={(event) => {
-              setBody(event.target.value)
-              setComposeError('')
-              event.target.style.height = 'auto'
-              event.target.style.height = `${Math.min(event.target.scrollHeight, 140)}px`
-            }}
-            onKeyDown={onKeyDown}
-          />
-          <label className="space-due">
-            <span>到期日</span>
-            <input type="date" value={dueAt} onChange={(event) => setDueAt(event.target.value)} />
-          </label>
+        {!expanded ? (
           <button
-            type="submit"
-            className="space-button space-button-primary"
-            disabled={saving || body.trim().length === 0}
+            type="button"
+            className="space-compose-trigger"
+            onClick={() => setExpanded(true)}
           >
-            {saving ? '保存中…' : '保存'}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            记一条
+            <span>备忘录 / 待办</span>
           </button>
-        </form>
-        {composeError ? (
-          <p className="space-error">{composeError}</p>
         ) : (
-          <p className="space-hint">Ctrl / ⌘ + Enter 保存</p>
+          <>
+            <form className="space-composer" onSubmit={submit} noValidate>
+              <textarea
+                ref={textareaRef}
+                value={body}
+                rows={1}
+                maxLength={2000}
+                placeholder="写点什么，比如「周五前交周报」"
+                aria-label="新备忘录"
+                onChange={(event) => {
+                  setBody(event.target.value)
+                  setComposeError('')
+                  event.target.style.height = 'auto'
+                  event.target.style.height = `${Math.min(event.target.scrollHeight, 140)}px`
+                }}
+                onKeyDown={onKeyDown}
+              />
+              {/* 原生 date 输入在中文环境里会露出「年/月/日」三个空槽，很怪：
+                  把它藏起来，只用一个按钮显示状态，点按钮再拉起系统日历 */}
+              <div className="space-due">
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  className="space-due-native"
+                  value={dueAt}
+                  aria-label="到期日"
+                  onChange={(event) => setDueAt(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className={dueAt ? 'space-due-btn is-set' : 'space-due-btn'}
+                  onClick={openPicker}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+                    <path d="M7 4v3M17 4v3M4 9h16M5 7h14v12H5z" />
+                  </svg>
+                  {dueAt ? `${dueAt.slice(5)} 到期` : '到期日'}
+                </button>
+                {dueAt && (
+                  <button
+                    type="button"
+                    className="space-due-clear"
+                    aria-label="清除到期日"
+                    onClick={() => setDueAt('')}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              <button
+                type="submit"
+                className="space-button space-button-primary"
+                disabled={saving || body.trim().length === 0}
+              >
+                {saving ? '保存中…' : '保存'}
+              </button>
+            </form>
+            <div className="space-dock-foot">
+              <button
+                type="button"
+                className="space-collapse"
+                onClick={() => {
+                  setExpanded(false)
+                  setComposeError('')
+                }}
+              >
+                收起
+              </button>
+              {composeError ? (
+                <p className="space-error">{composeError}</p>
+              ) : (
+                <p className="space-hint">Ctrl / ⌘ + Enter 保存</p>
+              )}
+            </div>
+          </>
         )}
       </div>
 
@@ -300,7 +384,7 @@ export default function Space() {
 
       {status !== 'error' && items.length === 0 && status === 'ready' && (
         <div className="space-state">
-          {filtering ? '这里还没有条目。' : '还没有备忘录，写一条试试。'}
+          {filtering ? '这里还没有条目。' : '还没有备忘录，点下面的「＋ 记一条」写第一条。'}
         </div>
       )}
 
