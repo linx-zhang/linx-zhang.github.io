@@ -1,0 +1,417 @@
+/* 个人空间：先按 375px 写，宽屏只加列宽与留白 */
+.space-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1rem 1rem calc(7rem + env(safe-area-inset-bottom));
+  color: #1f2937;
+}
+
+.space-header h1 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.space-meta {
+  margin-top: 0.25rem;
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+/* 快捷入口：几格都用 flex，只有 1-3 个时也不会留下空列 */
+.space-quick {
+  display: flex;
+  margin-top: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.space-quick a {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 60px;
+  padding: 0.6rem 0.7rem;
+  border-right: 1px solid #e5e7eb;
+  color: #1f2937;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.space-quick a:last-child {
+  border-right: none;
+}
+
+.space-quick a span {
+  color: #9ca3af;
+  font-size: 0.74rem;
+  font-weight: 400;
+}
+
+.space-quick a:hover {
+  background: #f9fafb;
+}
+
+/* 列表头：分段筛选 */
+.space-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+}
+
+.space-seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.space-seg button {
+  min-height: 32px;
+  padding: 0 0.7rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #4b5563;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.space-seg button[aria-pressed='true'] {
+  background: #fff;
+  color: #1f2937;
+  box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+.space-order {
+  color: #9ca3af;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+/* 列表 */
+.space-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.space-memo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.space-memo.is-done {
+  background: #fbfbfc;
+}
+
+.space-check {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 32px;
+  margin: -0.35rem 0 -0.35rem -0.5rem;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.space-box {
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #cbd2da;
+  border-radius: 5px;
+  color: transparent;
+}
+
+.space-box svg {
+  width: 12px;
+  height: 12px;
+}
+
+.space-check[aria-pressed='true'] .space-box {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #fff;
+}
+
+.space-memo-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.space-memo-text {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.space-memo.is-done .space-memo-text {
+  color: #6b7280;
+  text-decoration: line-through;
+  text-decoration-color: #cbd2da;
+}
+
+.space-memo-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+  color: #9ca3af;
+  font-size: 0.76rem;
+}
+
+.space-tag {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  color: #4b5563;
+}
+
+/* 到期与逾期都标红：这是列表里唯一需要被一眼看见的状态 */
+.space-tag-today,
+.space-tag-late {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.space-tag-late {
+  font-weight: 600;
+}
+
+.space-del {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: none;
+  color: #c3c9d1;
+  cursor: pointer;
+}
+
+.space-del svg {
+  width: 17px;
+  height: 17px;
+}
+
+.space-del:hover {
+  color: #4b5563;
+}
+
+.space-more {
+  margin-top: 0.4rem;
+}
+
+/* 输入区：手机上固定在底部，桌面上回到列表上方一条 */
+.space-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  padding: 0.6rem 0.8rem calc(0.6rem + env(safe-area-inset-bottom));
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.space-dock > * {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.space-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.space-composer textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  max-height: 140px;
+  padding: 0.5rem 0.2rem;
+  border: none;
+  outline: none;
+  resize: none;
+  /* 16px：移动端聚焦时 iOS 不放大页面 */
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #1f2937;
+  background: transparent;
+}
+
+.space-composer textarea::placeholder {
+  color: #9ca3af;
+}
+
+.space-due {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.space-due input {
+  width: 7.4rem;
+  min-height: 34px;
+  padding: 0 0.3rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.78rem;
+  color: #1f2937;
+  background: #fff;
+}
+
+.space-button {
+  min-height: 38px;
+  padding: 0 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.space-button:hover {
+  background: #f9fafb;
+}
+
+.space-button-primary {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #fff;
+}
+
+.space-button-primary:hover {
+  background: #111827;
+}
+
+.space-button-primary:disabled {
+  border-color: #cbd2da;
+  background: #cbd2da;
+  color: #fff;
+  cursor: default;
+}
+
+.space-hint,
+.space-error {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  text-align: right;
+  color: #9ca3af;
+}
+
+.space-error {
+  color: #b91c1c;
+}
+
+/* 状态与登录门 */
+.space-state {
+  padding: 2.2rem 1rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 10px;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.space-state-error {
+  color: #1f2937;
+  border-style: solid;
+}
+
+.space-state-error p {
+  margin-bottom: 0.6rem;
+}
+
+.space-gate {
+  max-width: 380px;
+  margin: 3rem auto;
+  padding: 1.6rem 1.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.space-gate h1 {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.space-gate p {
+  margin: 0.5rem 0 1.1rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.space-foot {
+  margin-top: 1.4rem;
+  color: #9ca3af;
+  font-size: 0.74rem;
+}
+
+@media (min-width: 768px) {
+  .space-page {
+    padding: 1.75rem 1rem 3rem;
+  }
+
+  .space-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .space-dock {
+    position: static;
+    padding: 0;
+    border-top: none;
+    background: transparent;
+  }
+
+  .space-dock {
+    margin-top: 1.1rem;
+  }
+
+  .space-composer {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .space-hint,
+  .space-error {
+    text-align: right;
+  }
+}

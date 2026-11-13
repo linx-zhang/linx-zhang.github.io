@@ -175,38 +175,41 @@ export default function Blog() {
         </button>
       </header>
 
-      <form className="blog-filters" onSubmit={applyFilters} role="search">
-        <label className="blog-filter-field">
-          <span>作者</span>
-          <input
-            type="text"
-            value={authorInput}
-            maxLength={64}
-            placeholder="邮箱 / 昵称 / 姓名"
-            onChange={(event) => setAuthorInput(event.target.value)}
-          />
-        </label>
-        <label className="blog-filter-field">
-          <span>标题</span>
-          <input
-            type="text"
-            value={qInput}
-            maxLength={64}
-            placeholder="标题关键词，支持模糊搜索"
-            onChange={(event) => setQInput(event.target.value)}
-          />
-        </label>
-        <div className="blog-filter-actions">
-          <button type="submit" className="blog-button">
-            筛选
-          </button>
-          {(filtering || qInput.trim() || authorInput.trim()) && (
-            <button type="button" className="blog-button" onClick={clearFilters}>
-              清除
+      {/* 写作面板展开时收起筛选栏：两块表单挤在一起，输入焦点会打架 */}
+      {!composerOpen && (
+        <form className="blog-filters" onSubmit={applyFilters} role="search">
+          <label className="blog-filter-field">
+            <span>作者</span>
+            <input
+              type="text"
+              value={authorInput}
+              maxLength={64}
+              placeholder="邮箱 / 昵称 / 姓名"
+              onChange={(event) => setAuthorInput(event.target.value)}
+            />
+          </label>
+          <label className="blog-filter-field">
+            <span>标题</span>
+            <input
+              type="text"
+              value={qInput}
+              maxLength={64}
+              placeholder="标题关键词，支持模糊搜索"
+              onChange={(event) => setQInput(event.target.value)}
+            />
+          </label>
+          <div className="blog-filter-actions">
+            <button type="submit" className="blog-button">
+              筛选
             </button>
-          )}
-        </div>
-      </form>
+            {(filtering || qInput.trim() || authorInput.trim()) && (
+              <button type="button" className="blog-button" onClick={clearFilters}>
+                清除
+              </button>
+            )}
+          </div>
+        </form>
+      )}
 
       {user && composerOpen && (
         <form className="blog-composer" onSubmit={handlePublish} noValidate>
