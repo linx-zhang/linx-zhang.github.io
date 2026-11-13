@@ -50,11 +50,26 @@ const TOOLS: ToolMeta[] = [
     detail: '数字时间戳和日期互转，自动判断单位，也能手动锁定按秒还是按毫秒。',
     icon: untilIcon,
   },
+  {
+    slug: 'random',
+    label: 'UUID / 密码',
+    hint: 'v4 / v7 · 可选字符集',
+    detail: '生成 UUID（v4 随机、v7 时间有序）和随机密码，字符集自选，可排除 0/O、1/l/I 这类易混字符。',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+        <rect x="4.5" y="10" width="15" height="10.5" rx="2.4" />
+        <path d="M8 10V7.2a4 4 0 0 1 8 0V10" />
+        <circle cx="12" cy="15" r="1.5" />
+        <path d="M12 16.5v1.9" />
+      </svg>
+    ),
+  },
 ]
 
 const JsonTool = lazy(() => import('./JsonTool'))
 const SqlTool = lazy(() => import('./SqlTool'))
 const TimestampTool = lazy(() => import('./TimestampTool'))
+const RandomTool = lazy(() => import('./RandomTool'))
 
 function findTool(slug: string | undefined): ToolMeta | undefined {
   return TOOLS.find((tool) => tool.slug === slug)
@@ -103,6 +118,7 @@ export default function Tools() {
         {tool.slug === 'json' && <JsonTool />}
         {tool.slug === 'sql' && <SqlTool />}
         {tool.slug === 'timestamp' && <TimestampTool />}
+        {tool.slug === 'random' && <RandomTool />}
       </Suspense>
     </div>
   )

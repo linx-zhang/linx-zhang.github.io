@@ -31,7 +31,7 @@
 /* 入口：中等大小的图标 + 名字，一屏放得下，别挤成一排小链接 */
 .tools-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.7rem;
   margin-top: 1.4rem;
 }
@@ -397,5 +397,343 @@
 @media (min-width: 721px) and (max-width: 1000px) {
   .tools-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===== 输出区：高亮代码与 JSON 树 ===== */
+
+.tool-pane-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* 文本 / 树形切换：两个小胶囊拼在一起，不抢眼但看得懂 */
+.tool-seg {
+  display: inline-flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.tool-seg-item {
+  padding: 0.22rem 0.55rem;
+  border: none;
+  background: #fff;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.tool-seg-item + .tool-seg-item {
+  border-left: 1px solid #f3f4f6;
+}
+
+.tool-seg-item.is-active {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+/* 高亮输出：跟 textarea 同样的高度和留白，切换视图时不跳 */
+.tool-code-scroll {
+  flex: 1;
+  min-height: max(340px, calc(100vh - 340px));
+  max-height: max(340px, calc(100vh - 340px));
+  overflow: auto;
+  padding: 0.8rem;
+  background: #fbfbfc;
+}
+
+.tool-code {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #1f2937;
+  white-space: pre;
+  tab-size: 2;
+}
+
+/* 语法配色：关键字、字符串、数字、注释各占一档，函数单独一档 */
+.sql-keyword {
+  color: #cf222e;
+  font-weight: 600;
+}
+
+.sql-function {
+  color: #8250df;
+}
+
+.sql-string {
+  color: #0a3069;
+}
+
+.sql-quoted {
+  color: #0a3069;
+}
+
+.sql-number {
+  color: #0550ae;
+}
+
+.sql-comment {
+  color: #6e7781;
+  font-style: italic;
+}
+
+.sql-punct {
+  color: #57606a;
+}
+
+/* JSON 树：一层缩进 14px，箭头单独一列，长值折行不撑破宽度 */
+.json-tree {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #1f2937;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.json-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.28rem;
+}
+
+.json-row.is-toggle {
+  cursor: default;
+}
+
+.json-arrow {
+  flex: none;
+  width: 1rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  cursor: pointer;
+}
+
+.json-arrow:hover {
+  color: #1f2937;
+}
+
+.json-key {
+  color: #0550ae;
+}
+
+.json-index {
+  color: #9ca3af;
+}
+
+.json-colon {
+  color: #57606a;
+}
+
+.json-bracket {
+  color: #57606a;
+}
+
+.json-string {
+  color: #0a3069;
+}
+
+.json-number {
+  color: #b45309;
+}
+
+.json-bool {
+  color: #8250df;
+}
+
+.json-null {
+  color: #9ca3af;
+}
+
+.json-tail {
+  color: #9ca3af;
+}
+
+.json-hint {
+  margin: 0 0.15rem;
+  color: #9ca3af;
+  font-size: 0.72rem;
+}
+
+/* ===== UUID / 密码工具 ===== */
+
+.tool-stack {
+  gap: 1rem;
+}
+
+.tool-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem 1.15rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.tool-block-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.tool-block-head p {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.tool-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.tool-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: #1f2937;
+  cursor: pointer;
+}
+
+.tool-number {
+  width: 4.2rem;
+  min-height: 36px;
+  padding: 0 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.rand-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  background: #fbfbfc;
+}
+
+.rand-row code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  color: #1f2937;
+}
+
+/* 密码结果：大字号等宽，右键能看清每个字符 */
+.pw-output {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fbfbfc;
+}
+
+.pw-output code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: #111827;
+}
+
+.pw-side {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pw-strength {
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.72rem;
+}
+
+.pw-strength-弱 {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.pw-strength-中 {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.pw-strength-强 {
+  background: #ecfdf3;
+  color: #047857;
+}
+
+.pw-strength-很强 {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.tool-empty {
+  margin: 0;
+  padding: 1.4rem 1rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 10px;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 720px) {
+  .tool-code-scroll {
+    min-height: 40vh;
+    max-height: none;
+  }
+
+  .pw-output {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .pw-side {
+    width: 100%;
+    justify-content: space-between;
   }
 }

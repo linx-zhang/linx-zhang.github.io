@@ -1,4 +1,8 @@
 import { useMemo, useState } from 'react'
+import JsonTree from './JsonTree'
+
+/** 树形视图的上限：再大就只给文本，避免一次展开上千节点卡住 */
+const TREE_LIMIT = 120_000
 
 /** 把各浏览器那句英文报错翻成「第几行第几列 + 这里缺什么 / 多什么」 */
 function locate(input: string, message: string): string {
@@ -44,6 +48,12 @@ export default function JsonTool() {
   const [error, setError] = useState('')
   const [indent, setIndent] = useState(2)
   const [copied, setCopied] = useState(false)
+  const [parsed, setParsed] = useState<unknown>(null)
+  const [view, setView] = useState<'tree' | 'text'>('tree')
+  const [treeKey, setTreeKey] = useState(0)
+  const [allCollapsed, setAllCollapsed] = useState(false)
+
+  const canTree = parsed !== null && output.length <= TREE_LIMIT
 
   const stats = useMemo(() => {
     if (!input.trim()) return ''
@@ -54,14 +64,20 @@ export default function JsonTool() {
     setError('')
     if (!input.trim()) {
       setOutput('')
+      setParsed(null)
       setError('先粘一段 JSON 进来')
       return
     }
     try {
-      const parsed = JSON.parse(input)
-      setOutput(mode === 'pretty' ? JSON.stringify(parsed, null, indent === 1 ? '\t' : indent) : JSON.stringify(parsed))
+      const next = JSON.parse(input)
+      setParsed(next)
+      setTreeKey((key) => key + 1)
+      setOutput(
+        mode === 'pretty' ? JSON.stringify(next, null, indent === 1 ? '\t' : indent) : JSON.stringify(next),
+      )
     } catch (err) {
       setOutput('')
+      setParsed(null)
       setError(locate(input, err instanceof Error ? err.message : String(err)))
     }
   }
@@ -131,15 +147,56 @@ export default function JsonTool() {
         <div className="tool-pane">
           <div className="tool-pane-head">
             <span>输出</span>
-            {output && <span className="tool-meta">{output.length} 字符</span>}
+            <div className="tool-pane-tools">
+              {output && <span className="tool-meta">{output.length} 字符</span>}
+              {canTree && (
+                <>
+                  <div className="tool-seg" role="group" aria-label="输出视图">
+                    <button
+                      type="button"
+                      className={view === 'tree' ? 'tool-seg-item is-active' : 'tool-seg-item'}
+                      onClick={() => setView('tree')}
+                    >
+                      树形
+                    </button>
+                    <button
+                      type="button"
+                      className={view === 'text' ? 'tool-seg-item is-active' : 'tool-seg-item'}
+                      onClick={() => setView('text')}
+                    >
+                      文本
+                    </button>
+                  </div>
+                  {view === 'tree' && (
+                    <button
+                      type="button"
+                      className="tool-mini"
+                      onClick={() => {
+                        setAllCollapsed((prev) => !prev)
+                        setTreeKey((key) => key + 1)
+                      }}
+                    >
+                      {allCollapsed ? '全部展开' : '全部折叠'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-          <textarea
-            className="tool-editor is-output"
-            value={output}
-            spellCheck={false}
-            readOnly
-            placeholder="格式化结果会出现在这里"
-          />
+
+          {canTree && view === 'tree' ? (
+            <div className="tool-code-scroll">
+              <JsonTree key={treeKey} value={parsed} defaultCollapsed={allCollapsed} />
+            </div>
+          ) : (
+            <textarea
+              className="tool-editor is-output"
+              value={output}
+              spellCheck={false}
+              readOnly
+              placeholder="格式化结果会出现在这里"
+            />
+          )}
         </div>
       </div>
     </div>

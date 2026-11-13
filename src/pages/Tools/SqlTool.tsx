@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { format } from 'sql-formatter'
+import { tokenizeSql } from './highlight'
 
 const LANGUAGES = [
   { value: 'sql', label: '通用' },
@@ -16,6 +17,8 @@ export default function SqlTool() {
   const [language, setLanguage] = useState<string>('sql')
   const [keywordCase, setKeywordCase] = useState<'upper' | 'lower'>('upper')
   const [copied, setCopied] = useState(false)
+
+  const tokens = useMemo(() => (output ? tokenizeSql(output) : []), [output])
 
   const run = () => {
     setError('')
@@ -115,13 +118,29 @@ export default function SqlTool() {
             <span>输出</span>
             {output && <span className="tool-meta">{output.length} 字符</span>}
           </div>
-          <textarea
-            className="tool-editor is-output"
-            value={output}
-            spellCheck={false}
-            readOnly
-            placeholder="格式化结果会出现在这里"
-          />
+          {output ? (
+            <div className="tool-code-scroll">
+              <pre className="tool-code">
+                {tokens.map((token, index) =>
+                  token.cls ? (
+                    <span key={index} className={token.cls}>
+                      {token.text}
+                    </span>
+                  ) : (
+                    token.text
+                  ),
+                )}
+              </pre>
+            </div>
+          ) : (
+            <textarea
+              className="tool-editor is-output"
+              value=""
+              spellCheck={false}
+              readOnly
+              placeholder="格式化结果会出现在这里"
+            />
+          )}
         </div>
       </div>
     </div>
