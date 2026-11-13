@@ -18,6 +18,8 @@ export interface InviteCode {
 
 export interface InviteCodePage {
   items: InviteCode[]
+  /** 服务端多取一条判断；「共 N 个」仍来自 total */
+  has_next: boolean
   total: number
 }
 
@@ -53,6 +55,8 @@ export interface AdminUser {
 
 export interface AdminUserPage {
   items: AdminUser[]
+  /** 服务端多取一条判断；「共 N 条」仍来自 total */
+  has_next: boolean
   total: number
 }
 
@@ -98,7 +102,8 @@ export interface ActivityItem {
 
 export interface ActivityPage {
   items: ActivityItem[]
-  total: number
+  /** 后端不返回 total（activity_events 是唯一无界表，每次翻页再 COUNT 不值），用 limit+1 探测 */
+  has_next: boolean
 }
 
 export interface ActivityListParams {

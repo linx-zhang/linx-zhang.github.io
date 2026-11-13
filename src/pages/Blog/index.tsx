@@ -46,11 +46,11 @@ export default function Blog() {
   useEffect(() => {
     let cancelled = false
     blogApi
-      .listPosts(PAGE_SIZE + 1, pageIndex * PAGE_SIZE, { q, author })
-      .then((rows) => {
+      .listPosts(PAGE_SIZE, pageIndex * PAGE_SIZE, { q, author })
+      .then((page) => {
         if (cancelled) return
-        setItems(rows.slice(0, PAGE_SIZE))
-        setHasNext(rows.length > PAGE_SIZE)
+        setItems(page.items)
+        setHasNext(page.has_next)
         setError('')
         setStatus('ready')
       })

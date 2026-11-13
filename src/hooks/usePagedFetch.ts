@@ -16,12 +16,18 @@ export interface PagedFetch<T> {
   retry: () => void
 }
 
+/** 列表接口的统一形状：服务端多取一条判断 has_next */
+export interface Page<T> {
+  items: T[]
+  has_next: boolean
+}
+
 /**
- * 「取一页」的通用分页加载：多取一条判断是否还有下一页，
- * 统一 loading / ready / error 三态与重试。
+ * 「取一页」的通用分页加载：接口自己返回 has_next（服务端多取一条判断），
+ * 客户端只发 limit，不再自己请求 limit+1 再切片；统一 loading / ready / error 三态与重试。
  */
 export function usePagedFetch<T>(
-  fetcher: (limit: number, offset: number) => Promise<T[]>,
+  fetcher: (limit: number, offset: number) => Promise<Page<T>>,
 ): PagedFetch<T> {
   const [pageIndex, setPageIndex] = useState(0)
   const [items, setItems] = useState<T[]>([])
@@ -40,11 +46,11 @@ export function usePagedFetch<T>(
   useEffect(() => {
     let cancelled = false
     fetcherRef
-      .current(PAGE_SIZE + 1, pageIndex * PAGE_SIZE)
-      .then((rows) => {
+      .current(PAGE_SIZE, pageIndex * PAGE_SIZE)
+      .then((page) => {
         if (cancelled) return
-        setItems(rows.slice(0, PAGE_SIZE))
-        setHasNext(rows.length > PAGE_SIZE)
+        setItems(page.items)
+        setHasNext(page.has_next)
         setStatus('ready')
       })
       .catch((err) => {

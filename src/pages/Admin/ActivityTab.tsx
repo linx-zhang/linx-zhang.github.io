@@ -61,7 +61,7 @@ export default function ActivityTab() {
   const [applied, setApplied] = useState<AppliedFilters>({})
   const [pageIndex, setPageIndex] = useState(0)
   const [items, setItems] = useState<ActivityItem[]>([])
-  const [total, setTotal] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error' | 'missing'>('loading')
   const [listError, setListError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -80,7 +80,7 @@ export default function ActivityTab() {
       .then((page) => {
         if (cancelled) return
         setItems(page.items)
-        setTotal(page.total)
+        setHasNext(page.has_next)
         setStatus('ready')
       })
       .catch((err) => {
@@ -96,8 +96,6 @@ export default function ActivityTab() {
       cancelled = true
     }
   }, [applied, pageIndex, reloadKey])
-
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const applyFilters = async () => {
     const raw = userInput.trim()
@@ -223,7 +221,9 @@ export default function ActivityTab() {
 
       <div className="invite-list-head">
         <h2 className="admin-section-title">活跃日志</h2>
-        <span className="invite-total">共 {total} 条</span>
+        <span className="invite-total">
+          {status === 'ready' ? `本页 ${items.length} 条` : ''}
+        </span>
       </div>
 
       {status === 'loading' && <div className="user-empty">加载中…</div>}
@@ -295,7 +295,7 @@ export default function ActivityTab() {
         </div>
       )}
 
-      {status === 'ready' && totalPages > 1 && (
+      {status === 'ready' && (pageIndex > 0 || hasNext) && (
         <div className="admin-pager">
           <button
             type="button"
@@ -308,13 +308,11 @@ export default function ActivityTab() {
           >
             上一页
           </button>
-          <span>
-            第 {pageIndex + 1} / {totalPages} 页
-          </span>
+          <span>第 {pageIndex + 1} 页</span>
           <button
             type="button"
             className="blog-button"
-            disabled={pageIndex + 1 >= totalPages}
+            disabled={!hasNext}
             onClick={() => {
               setPageIndex((index) => index + 1)
               setStatus('loading')

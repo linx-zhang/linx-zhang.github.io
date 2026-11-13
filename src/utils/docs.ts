@@ -1,5 +1,5 @@
 // 文档清单不再 import.meta.glob 全量内联进 bundle，改为读取构建期生成的 /wiki/index.json。
-// 每篇文档本身是独立静态页 /wiki/<slug>.html，站内用 iframe 直连，外链可直接分享。
+// md 的 href 指向 /wiki/<slug>.md（运行时 fetch 后渲染），html 的 href 指向 /wiki/<slug>.html（iframe 直连）。
 
 export interface DocItem {
   slug: string
@@ -40,8 +40,4 @@ export function loadDocList(): Promise<DocItem[]> {
 /** 已加载的清单（未加载时为 null），供渲染期同步取值 */
 export function peekDocList(): DocItem[] | null {
   return cachedDocs
-}
-
-export function findDoc(slug: string): DocItem | undefined {
-  return cachedDocs?.find((doc) => doc.slug === slug)
 }

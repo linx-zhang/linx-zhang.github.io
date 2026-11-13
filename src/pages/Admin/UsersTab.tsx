@@ -41,6 +41,7 @@ export default function UsersTab() {
 
   const [items, setItems] = useState<AdminUser[]>([])
   const [total, setTotal] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
   const [listStatus, setListStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [listError, setListError] = useState('')
 
@@ -78,6 +79,7 @@ export default function UsersTab() {
         if (cancelled) return
         setItems(page.items)
         setTotal(page.total)
+        setHasNext(page.has_next)
         setListStatus('ready')
       })
       .catch((err) => {
@@ -334,7 +336,7 @@ export default function UsersTab() {
           <button
             type="button"
             className="blog-button"
-            disabled={pageIndex + 1 >= totalPages || listStatus === 'loading'}
+            disabled={!hasNext || listStatus === 'loading'}
             onClick={() => {
               setPageIndex((index) => index + 1)
               setListStatus('loading')

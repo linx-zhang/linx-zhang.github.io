@@ -13,9 +13,9 @@ export default function Home() {
     let cancelled = false
     blogApi
       .listPosts(3, 0)
-      .then((list) => {
+      .then((page) => {
         if (cancelled) return
-        setPosts(list)
+        setPosts(page.items)
         setPostsStatus('ready')
       })
       .catch(() => {

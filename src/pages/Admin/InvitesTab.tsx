@@ -29,6 +29,7 @@ export default function InvitesTab() {
   const [pageIndex, setPageIndex] = useState(0)
   const [items, setItems] = useState<InviteCode[]>([])
   const [total, setTotal] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
   const [listStatus, setListStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [listError, setListError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -56,6 +57,7 @@ export default function InvitesTab() {
         if (cancelled) return
         setItems(page.items)
         setTotal(page.total)
+        setHasNext(page.has_next)
         setListStatus('ready')
       })
       .catch((err) => {
@@ -324,7 +326,7 @@ export default function InvitesTab() {
           <button
             type="button"
             className="blog-button"
-            disabled={(pageIndex + 1) * PAGE_SIZE >= total}
+            disabled={!hasNext}
             onClick={() => changePage(pageIndex + 1)}
           >
             下一页

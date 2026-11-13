@@ -9,7 +9,6 @@
     "predev": "node scripts/build-wiki.mjs",
     "prebuild": "node scripts/build-wiki.mjs",
     "build": "tsc -b && node scripts/build-docs.mjs",
-    "build:direct": "vite build",
     "postbuild": "node scripts/postbuild-wiki-index.mjs",
     "lint": "oxlint",
     "preview": "vite preview"
@@ -24,6 +23,7 @@
     "react-to-print": "^3.3.0",
     "rehype-prism-plus": "^2.0.2",
     "rehype-raw": "^7.0.0",
+    "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
@@ -32,7 +32,6 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.89.0",
-    "remark-frontmatter": "^5.0.0",
     "typescript": "~7.0.2",
     "vite": "^8.3.5"
   }

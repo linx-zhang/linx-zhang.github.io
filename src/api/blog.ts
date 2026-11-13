@@ -61,6 +61,12 @@ export interface PostNeighbors {
   next: PostNeighborRef | null
 }
 
+/** 列表统一形状：服务端多取一条判断 has_next，客户端不再自己请求 limit+1 */
+export interface PostPage {
+  items: Post[]
+  has_next: boolean
+}
+
 export const blogApi = {
   /** 传入选中的筛选条件，相邻文章就按同一份筛选结果排序；当前文章不在结果里时两者都为 null */
   getNeighbors(postId: number, filters: PostFilters = {}): Promise<PostNeighbors> {
@@ -72,13 +78,13 @@ export const blogApi = {
     const query = params.toString()
     return request<PostNeighbors>(`/posts/${postId}/neighbors${query ? `?${query}` : ''}`)
   },
-  listPosts(limit: number, offset: number, filters: PostFilters = {}): Promise<Post[]> {
+  listPosts(limit: number, offset: number, filters: PostFilters = {}): Promise<PostPage> {
     const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
     const q = filters.q?.trim()
     if (q) params.set('q', q)
     const author = filters.author?.trim()
     if (author) params.set('author', author)
-    return request<Post[]>(`/posts?${params.toString()}`)
+    return request<PostPage>(`/posts?${params.toString()}`)
   },
   getPost(id: number): Promise<Post> {
     return request<Post>(`/posts/${id}`)
