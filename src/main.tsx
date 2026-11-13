@@ -46,6 +46,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path={`${APP_ROUTES.blog}/:id`} element={<PostDetail />} />
           <Route path={APP_ROUTES.space} element={<Space />} />
           <Route path={APP_ROUTES.tools} element={<Tools />} />
+          {/* 共享剪切板的阅读链接：/tools/clip/<code>，必须排在通用 :slug 之前 */}
+          <Route path={`${APP_ROUTES.tools}/clip/:code`} element={<Tools />} />
           <Route path={`${APP_ROUTES.tools}/:slug`} element={<Tools />} />
           <Route
             path={APP_ROUTES.admin}

@@ -64,20 +64,35 @@ const TOOLS: ToolMeta[] = [
       </svg>
     ),
   },
+  {
+    slug: 'clip',
+    label: '共享剪切板',
+    hint: '日志粘进来 · 24 小时短链',
+    detail: '把日志或一小段文本存到后端，生成一条 24 小时内谁都能读的链接；过期自动失效，也能随时撤销。',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+        <rect x="5" y="6" width="14" height="15" rx="2.2" />
+        <path d="M9 6V4.8c0-.5.4-.9.9-.9h4.2c.5 0 .9.4.9.9V6" />
+        <path d="M8.5 11.5h7M8.5 15h7" />
+      </svg>
+    ),
+  },
 ]
 
 const JsonTool = lazy(() => import('./JsonTool'))
 const SqlTool = lazy(() => import('./SqlTool'))
 const TimestampTool = lazy(() => import('./TimestampTool'))
 const RandomTool = lazy(() => import('./RandomTool'))
+const ClipTool = lazy(() => import('./ClipTool'))
 
 function findTool(slug: string | undefined): ToolMeta | undefined {
   return TOOLS.find((tool) => tool.slug === slug)
 }
 
 export default function Tools() {
-  const { slug } = useParams()
-  const tool = findTool(slug)
+  const { slug, code } = useParams()
+  // 阅读链接走 /tools/clip/<code> 这条独立路由，没有 :slug，这里补回工具身份
+  const tool = findTool(slug ?? (code ? 'clip' : undefined))
 
   // 首页：一堆中等大小的图标入口，点哪个就进哪个的整页
   if (!tool) {
@@ -85,7 +100,7 @@ export default function Tools() {
       <div className="tools-page">
         <header className="tools-head">
           <h1>工具箱</h1>
-          <p>都是本地计算，不发请求、不保存内容。</p>
+          <p>除共享剪切板外都在本地计算，不发请求、不保存内容；剪切板的内容存后端，24 小时后自动失效。</p>
         </header>
 
         <div className="tools-grid">
@@ -111,7 +126,7 @@ export default function Tools() {
           ← 工具箱
         </Link>
         <h1>{tool.label}</h1>
-        <p>{tool.detail}</p>
+        <p>{code ? '别人分享过来的一段内容，24 小时后自动失效。' : tool.detail}</p>
       </header>
 
       <Suspense fallback={<div className="tools-state">加载中…</div>}>
@@ -119,6 +134,7 @@ export default function Tools() {
         {tool.slug === 'sql' && <SqlTool />}
         {tool.slug === 'timestamp' && <TimestampTool />}
         {tool.slug === 'random' && <RandomTool />}
+        {tool.slug === 'clip' && <ClipTool code={code} />}
       </Suspense>
     </div>
   )

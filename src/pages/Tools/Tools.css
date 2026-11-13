@@ -31,7 +31,7 @@
 /* 入口：中等大小的图标 + 名字，一屏放得下，别挤成一排小链接 */
 .tools-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0.7rem;
   margin-top: 1.4rem;
 }
@@ -393,10 +393,10 @@
   }
 }
 
-/* 中等宽度放两列，别让四个入口里最后一个孤零零占一行 */
+/* 中等宽度放三列：五个入口排成 3 + 2，最后一行不会孤零零剩一个 */
 @media (min-width: 721px) and (max-width: 1000px) {
   .tools-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -735,5 +735,33 @@
   .pw-side {
     width: 100%;
     justify-content: space-between;
+  }
+}
+
+/* ===== 共享剪切板 ===== */
+
+.clip-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f2937;
+  overflow-wrap: anywhere;
+}
+
+/* 阅读态不需要编辑器那么高，但长日志仍然要能滚 */
+.clip-scroll {
+  min-height: 220px;
+  max-height: max(420px, calc(100vh - 420px));
+}
+
+.clip-scroll .tool-code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 720px) {
+  .clip-scroll {
+    min-height: 40vh;
+    max-height: none;
   }
 }
