@@ -2,9 +2,8 @@
   max-width: 920px;
   margin: 0 auto;
   padding: 2rem 1.5rem 3rem;
-  /* 同一行里的控件必须等高：输入框、自定义 Select、按钮各算各的会差到 8px */
-  --admin-control-h: 46px;
-  --admin-toolbar-control-h: 38px;
+  /* 后台所有单行控件共用这一个高度：输入框、自定义下拉、按钮 */
+  --admin-control-h: 40px;
 }
 .admin-header {
   margin-bottom: 1.5rem;
@@ -69,8 +68,15 @@
 /* 单行控件统一高度（textarea 保持自动伸展） */
 .admin-field input,
 .admin-field select,
-.admin-field .select-trigger {
+.admin-field .select-trigger,
+.admin-submit {
   height: var(--admin-control-h);
+}
+/* 定了高度就把纵向 padding / line-height 收到能容下文字的量，不然 40px 会裁字 */
+.admin-field input,
+.admin-field select {
+  padding: 0.45rem 0.75rem;
+  line-height: 1.4;
 }
 .admin-field input:focus,
 .admin-field textarea:focus,
@@ -176,9 +182,7 @@
   gap: 0.75rem;
   align-items: end;
 }
-.invite-field span {
-  font-size: 0.85rem;
-}
+/* 标签字号跟其它表单一致（.admin-field span 的 0.9rem），这里不再单独收窄 */
 .invite-submit {
   height: var(--admin-control-h);
   padding: 0 1.1rem;
@@ -373,7 +377,7 @@
 .user-search input,
 .user-filter select,
 .user-filter .select-trigger {
-  height: var(--admin-toolbar-control-h);
+  height: var(--admin-control-h);
 }
 .user-search input:focus,
 .user-filter select:focus {
@@ -785,6 +789,11 @@
   gap: 0.35rem;
   flex: 0 0 150px;
 }
+/* 工具栏标签跟用户页的 .user-search-label 同字号，否则两个 tab 标签一大一小 */
+.activity-field span {
+  color: #4b5563;
+  font-size: 0.8rem;
+}
 .activity-field-user {
   flex: 1 1 200px;
 }
@@ -809,7 +818,7 @@
 .activity-field input,
 .activity-field .select-trigger,
 .activity-actions .blog-button {
-  height: var(--admin-toolbar-control-h);
+  height: var(--admin-control-h);
 }
 .activity-field input:focus {
   outline: none;
