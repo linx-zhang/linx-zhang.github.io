@@ -1,0 +1,24 @@
+/* 触发器：Select 的尺寸在表单里合适，这里只补图标与按内容收窄 */
+.date-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.3rem;
+  width: auto;
+  white-space: nowrap;
+}
+
+.date-trigger svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: #9ca3af;
+}
+
+.date-trigger-value {
+  color: #1f2937;
+}
+
+.date-trigger-value.is-empty {
+  color: #9ca3af;
+}

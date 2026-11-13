@@ -333,46 +333,20 @@
   flex: 0 0 auto;
 }
 
-/* 原生日期输入只作为系统日历的锚点，不显示它自己的「年/月/日」空槽 */
-.space-due-native {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.space-due-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
+/* 日期触发器在输入区里应当窄：只占内容宽度，别和输入框抢地方 */
+.space-due .space-due-trigger {
+  width: auto;
   min-height: 38px;
   padding: 0 0.6rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
-  color: #9ca3af;
-  font: inherit;
   font-size: 0.8rem;
-  white-space: nowrap;
-  cursor: pointer;
 }
 
-.space-due-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-.space-due-btn:hover {
+.space-due .space-due-trigger:hover:not(:disabled) {
   border-color: #cbd2da;
-  color: #4b5563;
 }
 
-/* 选了日期就变成一条可读的状态，而不是三个空槽 */
-.space-due-btn.is-set {
-  border-color: #cbd2da;
+/* 选了日期就变成一条可读的状态，红字提示这条有截止时间 */
+.space-due .space-due-trigger .date-trigger-value:not(.is-empty) {
   color: #b91c1c;
 }
 
@@ -390,18 +364,6 @@
 
 .space-due-clear:hover {
   color: #4b5563;
-}
-
-.space-due input {
-  width: 7.4rem;
-  min-height: 34px;
-  padding: 0 0.3rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font: inherit;
-  font-size: 0.78rem;
-  color: #1f2937;
-  background: #fff;
 }
 
 .space-button {
@@ -466,7 +428,7 @@
     min-width: 0;
   }
 
-  .space-due-btn {
+  .space-due .space-due-trigger {
     min-width: 0;
   }
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
+import DatePicker from '@/components/DatePicker'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import { errorMessage } from '@/api/client'
 import { memoApi } from '@/api/memos'
@@ -63,22 +64,6 @@ export default function Space() {
     () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
   )
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const dateInputRef = useRef<HTMLInputElement>(null)
-
-  /** 拉起系统日历；老浏览器没有 showPicker 时退化为聚焦原生输入 */
-  const openPicker = () => {
-    const input = dateInputRef.current
-    if (!input) return
-    if (typeof input.showPicker === 'function') {
-      try {
-        input.showPicker()
-        return
-      } catch {
-        // 非用户手势触发时会抛 NotAllowedError，落到下面的聚焦
-      }
-    }
-    input.focus()
-  }
 
   useEffect(() => {
     if (!expanded) return
@@ -248,21 +233,24 @@ export default function Space() {
         </p>
       </header>
 
-      <nav className="space-quick" aria-label="快捷入口">
-        <Link to="/blog">
-          写文章<span>发到博客</span>
-        </Link>
-        {has('activity:read:any') && (
-          <Link to="/admin?tab=analytics">
-            分析<span>访客与停留</span>
+      {/* 快捷入口是给管理员的：普通用户看到「分析 / 邀请码」也进不去，不如不显示 */}
+      {user.role === 'admin' && (
+        <nav className="space-quick" aria-label="快捷入口">
+          <Link to="/blog">
+            写文章<span>发到博客</span>
           </Link>
-        )}
-        {has('invite_code:read:any') && (
-          <Link to="/admin?tab=invites">
-            邀请码<span>生成与查看</span>
-          </Link>
-        )}
-      </nav>
+          {has('activity:read:any') && (
+            <Link to="/admin?tab=analytics">
+              分析<span>访客与停留</span>
+            </Link>
+          )}
+          {has('invite_code:read:any') && (
+            <Link to="/admin?tab=invites">
+              邀请码<span>生成与查看</span>
+            </Link>
+          )}
+        </nav>
+      )}
 
       <div className="space-dock">
         {!expanded ? (
@@ -298,24 +286,18 @@ export default function Space() {
               {/* 原生 date 输入在中文环境里会露出「年/月/日」三个空槽，很怪：
                   把它藏起来，只用一个按钮显示状态，点按钮再拉起系统日历 */}
               <div className="space-due">
-                <input
-                  ref={dateInputRef}
-                  type="date"
-                  className="space-due-native"
-                  value={dueAt}
-                  aria-label="到期日"
-                  onChange={(event) => setDueAt(event.target.value)}
+                <DatePicker
+                  value={dueAt || null}
+                  onChange={(day) => setDueAt(day ?? '')}
+                  placeholder="到期日"
+                  ariaLabel="到期日"
+                  triggerClassName="space-due-trigger"
+                  icon={
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+                      <path d="M7 4v3M17 4v3M4 9h16M5 7h14v12H5z" />
+                    </svg>
+                  }
                 />
-                <button
-                  type="button"
-                  className={dueAt ? 'space-due-btn is-set' : 'space-due-btn'}
-                  onClick={openPicker}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-                    <path d="M7 4v3M17 4v3M4 9h16M5 7h14v12H5z" />
-                  </svg>
-                  {dueAt ? `${dueAt.slice(5)} 到期` : '到期日'}
-                </button>
                 {dueAt && (
                   <button
                     type="button"
