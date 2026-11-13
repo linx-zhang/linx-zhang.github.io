@@ -3,7 +3,7 @@
   margin: 0 auto;
   padding: 2rem 1.5rem 3rem;
   /* 后台所有单行控件共用这一个高度：输入框、自定义下拉、按钮 */
-  --admin-control-h: 40px;
+  --admin-control-h: 35px;
 }
 .admin-header {
   margin-bottom: 1.5rem;
