@@ -7,6 +7,7 @@ interface Converted {
   relative: string
   seconds: string
   millis: string
+  note: string
 }
 
 const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
@@ -40,20 +41,48 @@ function relativeText(date: Date): string {
   return `${Math.round(abs / (365 * day))} 年${suffix}`
 }
 
-function convert(raw: string): Converted {
+/** 纯数字时判断单位：10 位以内按秒、13 位按毫秒，11~12 位取更接近当下的那种 */
+function pickUnit(text: string): 'sec' | 'ms' {
+  const digits = text.replace('-', '').length
+  if (digits <= 10) return 'sec'
+  if (digits >= 13) return 'ms'
+  const value = Number(text)
+  const asSec = value * 1000
+  const asMs = value
+  const now = Date.now()
+  const gapSec = Math.abs(asSec - now)
+  const gapMs = Math.abs(asMs - now)
+  return gapSec <= gapMs ? 'sec' : 'ms'
+}
+
+function convert(raw: string, unit: 'auto' | 'sec' | 'ms'): Converted {
   const text = raw.trim()
   if (!text) throw new Error('先输入时间戳或日期')
 
   let date: Date
+  let note = ''
+  let alt = ''
   if (/^-?\d+$/.test(text)) {
     const value = Number(text)
-    // 10 位按秒，13 位按毫秒；其它长度按数值大小猜
-    const ms = Math.abs(value) >= 1e12 || text.replace('-', '').length >= 12 ? value : value * 1000
-    date = new Date(ms)
+    const digits = text.replace('-', '').length
+    const resolved = unit === 'auto' ? pickUnit(text) : unit
+    date = new Date(resolved === 'sec' ? value * 1000 : value)
+    note =
+      resolved === 'sec'
+        ? `按秒解读（${digits} 位数字）`
+        : `按毫秒解读（${digits} 位数字）`
+    // 11~12 位两种解读差几十年，别默默挑一个：把另一种也算出来摆在旁边
+    if (digits === 11 || digits === 12) {
+      const other = new Date(resolved === 'sec' ? value : value * 1000)
+      if (!Number.isNaN(other.getTime())) {
+        alt = `若按${resolved === 'sec' ? '毫秒' : '秒'}：${localText(other)}`
+      }
+    }
   } else {
     // 兼容 "2026-11-13 10:30" 这类不带时区的本地写法
     date = new Date(text.replace(' ', 'T'))
     if (Number.isNaN(date.getTime())) date = new Date(text)
+    note = '按日期解读'
   }
 
   if (Number.isNaN(date.getTime())) throw new Error('认不出这串内容，试试 1750000000 或 2026-11-13')
@@ -65,17 +94,19 @@ function convert(raw: string): Converted {
     relative: relativeText(date),
     seconds: String(Math.floor(date.getTime() / 1000)),
     millis: String(date.getTime()),
+    note: alt ? `${note} · ${alt}` : note,
   }
 }
 
 export default function TimestampTool() {
   const [raw, setRaw] = useState('')
+  const [unit, setUnit] = useState<'auto' | 'sec' | 'ms'>('auto')
   const [result, setResult] = useState<Converted | null>(null)
   const [error, setError] = useState('')
 
-  const run = (value: string) => {
+  const run = (value: string, mode: 'auto' | 'sec' | 'ms' = unit) => {
     try {
-      setResult(convert(value))
+      setResult(convert(value, mode))
       setError('')
     } catch (err) {
       setResult(null)
@@ -123,12 +154,32 @@ export default function TimestampTool() {
         <button type="submit" className="tool-button tool-button-primary">
           转换
         </button>
+        <label className="tool-inline">
+          单位
+          <select
+            className="tool-select"
+            value={unit}
+            onChange={(event) => {
+              const next = event.target.value === 'sec' ? 'sec' : event.target.value === 'ms' ? 'ms' : 'auto'
+              setUnit(next)
+              if (raw.trim() && /^-?\d+$/.test(raw.trim())) run(raw, next)
+            }}
+          >
+            <option value="auto">自动</option>
+            <option value="sec">秒</option>
+            <option value="ms">毫秒</option>
+          </select>
+        </label>
         <button type="button" className="tool-button" onClick={fillNow}>
           现在
         </button>
       </form>
 
       {error && <p className="tool-error">{error}</p>}
+
+      {result && (
+        <p className="tool-note">{result.note}</p>
+      )}
 
       {result && (
         <dl className="tool-rows">

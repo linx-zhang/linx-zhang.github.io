@@ -4,6 +4,11 @@
   padding: 2rem 1rem 3rem;
 }
 
+/* 工具页要独占，宽一点、矮一点，编辑器才有地方 */
+.tools-page.is-tool {
+  max-width: 1120px;
+}
+
 .tools-head h1 {
   margin: 0;
   font-size: 1.5rem;
@@ -17,38 +22,97 @@
   color: #6b7280;
 }
 
-/* 工具切换：一行三段，窄屏自动换行不挤压 */
-.tools-tabs {
+/* 入口：中等大小的图标 + 名字，一屏放得下，别挤成一排小链接 */
+.tools-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  margin: 1.3rem 0 1.1rem;
+  gap: 0.7rem;
+  margin-top: 1.4rem;
 }
 
-.tools-tab {
+.tool-tile {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.55rem 0.7rem;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 150px;
+  padding: 1.15rem 1.2rem;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #fff;
   color: #1f2937;
-  font-size: 0.85rem;
   text-decoration: none;
 }
 
-.tools-tab span {
-  font-size: 0.72rem;
+.tool-tile:hover {
+  border-color: #d1d5db;
+  background: #fbfbfc;
+}
+
+.tool-tile-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.tool-tile-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.tool-tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.tool-tile-text strong {
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.tool-tile-text span {
+  font-size: 0.78rem;
+  line-height: 1.5;
   color: #9ca3af;
 }
 
-.tools-tab:hover {
-  border-color: #d1d5db;
+/* 工具页：标题和返回在上，编辑器独占下面的空间 */
+.tool-head {
+  margin-bottom: 1rem;
 }
 
-.tools-tab.is-active {
-  border-color: #1f2937;
+.tool-back {
+  display: inline-block;
+  margin-bottom: 0.6rem;
+  color: #6b7280;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.tool-back:hover {
+  color: #1f2937;
+}
+
+.tool-head h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.tool-head p {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #6b7280;
 }
 
 .tool {
@@ -134,6 +198,12 @@
   color: #1f2937;
 }
 
+.tool-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
 .tool-error {
   margin: 0;
   padding: 0.5rem 0.7rem;
@@ -178,7 +248,7 @@
 }
 
 .tool-editor {
-  min-height: 320px;
+  min-height: 56vh;
   padding: 0.7rem;
   border: none;
   outline: none;
@@ -267,20 +337,33 @@
   text-align: center;
 }
 
-/* 窄屏：工具卡竖排成一列，输入输出上下堆叠 */
+/* 窄屏：入口排成一列，输入输出上下堆叠 */
 @media (max-width: 720px) {
   .tools-page {
     padding: 1.4rem 1rem 2.5rem;
   }
 
-  .tools-tabs {
+  .tools-grid {
     grid-template-columns: 1fr;
   }
 
-  .tools-tab {
+  .tool-tile {
     flex-direction: row;
-    align-items: baseline;
-    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.9rem;
+    min-height: 0;
+    padding: 0.85rem 0.9rem;
+  }
+
+  .tool-tile-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .tool-tile-icon svg {
+    width: 20px;
+    height: 20px;
   }
 
   .tool-split {
@@ -288,10 +371,17 @@
   }
 
   .tool-editor {
-    min-height: 180px;
+    min-height: 40vh;
   }
 
   .tool-copy {
     margin-left: 0;
+  }
+}
+
+/* 中等宽度放两列，别让四个入口里最后一个孤零零占一行 */
+@media (min-width: 721px) and (max-width: 1000px) {
+  .tools-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
