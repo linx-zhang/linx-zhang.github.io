@@ -2,7 +2,7 @@
 .space-page {
   max-width: 760px;
   margin: 0 auto;
-  padding: 1rem 1rem calc(7rem + env(safe-area-inset-bottom));
+  padding: 1rem 1rem calc(9rem + env(safe-area-inset-bottom));
   color: #1f2937;
 }
 
@@ -338,6 +338,32 @@
 
 .space-error {
   color: #b91c1c;
+}
+
+/* 窄屏把日期和保存折到第二行：一行塞三样会让输入框窄到看不清 */
+@media (max-width: 600px) {
+  .space-composer {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .space-composer textarea {
+    flex: 1 1 100%;
+  }
+
+  .space-due {
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .space-due input {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+  }
 }
 
 /* 状态与登录门 */

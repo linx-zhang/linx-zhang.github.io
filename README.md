@@ -11,12 +11,14 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /wiki/* : Docs 文档详情（多级 slug）
   - /blog : Blog 列表 + 页内写作面板
   - /blog/:id : PostDetail 文章详情与评论
-  - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；分区通过 ?tab=posts|invites|users|activity 深链（默认 posts）
+  - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；分区通过 ?tab=posts|invites|users|activity|analytics 深链（默认 posts）
+  - /space : 个人空间（备忘录 / 待办），未登录只显示页内登录门；导航「空间」项仅在登录后渲染
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
 - Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 对 401（以及未跳过时的 403）清 token 并广播该事件；管理接口传 skipForbiddenLogout 以展示后端 detail。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self。
 - User profile: users 有 nickname / first_name / last_name / avatar_url；展示名优先级 昵称 → 「名 姓」→ 邮箱前缀，已删除用户为「已注销」。GET /auth/me 与登录/注册响应带这四字段（无值为 null）；PATCH /auth/me 走 account:update:self，只接受这四字段（传 email/role 会 422），返回完整用户对象（含 permissions）；PATCH /admin/users/{id} 同时接受四字段与 email/role。
 - Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；src/components/ConfirmDialog + useConfirm；src/components/Modal 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
 - Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
+- Space memos: src/api/memos.ts 调 /memos（GET 列表 / GET /memos/summary 计数 / POST / PATCH / DELETE），全部 self-scoped，owner 由 token 决定。`due_at` 是本地日期 YYYY-MM-DD，只在列表里标红（今天到期 / 已过期），不发提醒；勾选完成写入 `done_at`，取消勾选后端清空它；删除是软删除（`deleted_at`）。列表按 offset 累加「加载更多」，计数单独走 summary 接口，列表本身不带 total。
 - Bundle: 仍然没有代码分割 / 懒加载，所有页面静态 import，单包输出（docs/assets/index-*.js）。
 - Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
 - Print Rule: 所有非打印 UI 加 className="no-print"，@media print 隐藏；简历页使用 A4 版式。
@@ -94,6 +96,7 @@ npm run lint
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:id" element={<PostDetail />} />
       <Route path="/admin" element={<RequirePermission permission="invite_code:read:any"><Admin /></RequirePermission>} />
+      <Route path="/space" element={<Space />} />
     </Route>
     <Route path="/profile" element={<Profile />} />
   </Routes>
@@ -102,7 +105,8 @@ npm run lint
 
 - 路由表直接写在 `src/main.tsx`，路径常量集中在 `src/routes.ts`；所有页面静态引入，**未做代码分割 / 懒加载**
 - `/wiki/*` 由 `Docs` 组件通过 `useParams()['*']` 解析多级 slug
-- `/admin` 的分区用查询参数深链：`?tab=posts`（默认）、`?tab=invites`、`?tab=users`、`?tab=activity`
+- `/admin` 的分区用查询参数深链：`?tab=posts`（默认）、`?tab=invites`、`?tab=users`、`?tab=activity`、`?tab=analytics`
+- `/space` 放在 `RootLayout` 内（沿用全站导航与页脚），未登录时只渲染页内登录门，不用 `RequirePermission` 踢回；导航「空间」项只在 `user` 存在时出现
 - `/profile` 不包裹 `RootLayout`，因此没有全站导航与页脚
 
 ---
