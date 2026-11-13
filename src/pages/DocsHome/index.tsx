@@ -73,9 +73,10 @@ export default function DocsHome() {
                     >
                       源文件
                     </a>
-                    <a className="doc-standalone" href={doc.href} target="_blank" rel="noreferrer">
-                      独立页 ↗
-                    </a>
+                    {/* md 与 html 都进站内全屏阅读，不再往外跳；要原文件就点左侧"源文件" */}
+                    <Link className="doc-standalone" to={`/wiki/${doc.slug}?full=1`}>
+                      全屏 ⤢
+                    </Link>
                   </div>
                 </div>
                 {/* 第二行：分类 · 类型 */}

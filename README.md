@@ -21,7 +21,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - Bundle: 仍然没有代码分割 / 懒加载，所有页面静态 import，单包输出（docs/assets/index-*.js）。
 - Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
 - Print Rule: 所有非打印 UI 加 className="no-print"，@media print 隐藏；简历页使用 A4 版式。
-- Markdown/HTML Loading: 文档不再经 import.meta.glob 内联进 bundle。构建期 `scripts/build-wiki.mjs` 把 `raw-docs` 下每篇文档产成一个独立静态页 `public/wiki/<slug>.html`（md 走 unified/remark/rehype 链渲染并内联 github-markdown-css + prism-one-light；html 原样保真，缺 `<html>` 的片段补壳，外链脚本改本地 `/wiki/vendor/`），同时产出 `public/wiki/index.json`。前端运行时 `fetch('/wiki/index.json')` 取清单，详情页 iframe 直连 `/wiki/<slug>.html`：普通文档由页面 `postMessage` 上报高度自适应，应用型页面固定 85vh。硬约定：html 文档禁止外链 CDN。
+- Markdown/HTML Loading: 文档不再经 import.meta.glob 内联进 bundle。构建期 `scripts/build-wiki.mjs` 把 `raw-docs` 下的 md 复制成 `public/wiki/<slug>.md`（运行时用 MarkdownView 渲染，不预渲染 HTML），html 原样保真产成 `public/wiki/<slug>.html`（缺 `<html>` 的片段补壳，外链脚本改本地 `/wiki/vendor/`），并产出 `public/wiki/index.json`。前端运行时 `fetch('/wiki/index.json')` 取清单：md 取源文本就地渲染、正文列居中，html 用 iframe 直连（应用型页面固定 85vh，片段式由 `postMessage` 上报高度自适应）。硬约定：html 文档禁止外链 CDN。
 -->
 
 # linx-zhang.github.io
@@ -38,7 +38,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **管理后台**：文章列表与批量删除、邀请码、用户管理（资料与账号分段的编辑弹窗、管理员重置密码：可手动指定或自动生成，并一次性展示生效密码）、活跃日志
 - **自定义基础组件**：Select、DateRangePicker、ConfirmDialog、Modal、Avatar 均为自研，未引入第三方 UI 库
 - **活跃采集**：登录后 60 秒心跳、路由级 `page_view`、离开时 `page_leave`（带停留时长，`fetch` + `keepalive` 携带 Bearer）
-- **静态文档知识库**：构建期把 `raw-docs` 下的 Markdown / HTML 各产成独立静态页（`/wiki/<slug>.html`），每篇可单独分享、可离线打开；站内列表读 `index.json`、详情页 iframe 直连静态页
+- **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki/<slug>.html`，站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
 - **GitHub 风格排版**：`github-markdown-css` + `react-markdown` + `prism-one-light`
 - **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
 - **GitHub Pages 部署**：产物固定输出到 `/docs`，`public/404.html` 兜底 SPA 深链刷新
@@ -58,7 +58,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 # 安装依赖
 npm install
 
-# 单独生成知识库静态页（产物进 public/wiki/，已在 .gitignore 中）
+# 单独生成知识库产物（md 副本 + html 静态页 + index.json，进 public/wiki/，已在 .gitignore 中）
 npm run wiki
 
 # 启动开发服务器（默认 http://localhost:5173；predev 会先跑一次 wiki）
@@ -74,7 +74,7 @@ npm run preview
 npm run lint
 ```
 
-> `npm run build` 实际执行 `tsc -b && vite build`。
+> `npm run build` 实际执行 `tsc -b && vite build`。构建走 `scripts/build-docs.mjs`：先建到 `docs_build`，校验通过再整目录替换 `docs/`。**构建前先停掉 `npm run dev`**——vite 的文件监听会锁住项目目录，导致目录替换报 `EPERM`。
 >
 > **注意**：新增或删除 `raw-docs/` 下的文件后，跑一次 `npm run wiki`（`dev` / `build` 会自动触发），再刷新浏览器。`public/wiki/` 是由源文件生成的，不要手工改。
 
@@ -172,7 +172,7 @@ linx-zhang.github.io/
 │  ├─ pages/
 │  │  ├─ Home/              # 门户首页
 │  │  ├─ DocsHome/          # 知识库分类总览
-│  │  ├─ Docs/              # 单篇文档（iframe 直连 /wiki/<slug>.html，自适应高度）
+│  │  ├─ Docs/              # 单篇文档（md 就地渲染 / html iframe 直连，支持全屏阅读）
 │  │  ├─ Blog/              # 列表 + 写作面板、详情 + 评论
 │  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ResetPasswordDialog / ActivityTab）
 │  │  └─ Profile/           # 独立简历页（PDF 导出）
@@ -180,48 +180,48 @@ linx-zhang.github.io/
 │     ├─ docs.ts            # 运行时读取 /wiki/index.json（不再 glob 内联）
 │     └─ useDocs.ts         # useDocList()：目录页 / 侧边栏 / 详情页共用的加载状态
 ├─ scripts/
-│  └─ build-wiki.mjs        # 构建期把 raw-docs 产成每篇独立静态页 + index.json
+│  ├─ build-wiki.mjs        # 构建期镜像 raw-docs（md → .md 副本、html → 静态页）+ index.json
+│  └─ build-docs.mjs        # 先建到 docs_build 再整目录替换 docs/，附带 wiki 入口复制
 ├─ raw-docs/                # 笔记源文件；仅 .md / .markdown / .html 参与构建
 ├─ public/                  # favicon.svg（取自 icons.svg 的 #documentation-icon）、icons.svg 图标 sprite、404.html（SPA 深链兜底）
-│  └─ wiki/                 # 生成物（gitignore）：<slug>.html、index.json、vendor/
+│  └─ wiki/                 # 生成物（gitignore）：<slug>.md、<slug>.html、index.json、vendor/
 ├─ .cache/wiki-vendor/      # 外链脚本的本地缓存（跨构建复用，gitignore）
 ├─ docs/                    # 构建产物，GitHub Pages 部署源
-└─ old/                     # 旧版站点源码，不参与当前构建
 ```
 
 ---
 
 ## 📝 文档渲染机制
 
-知识库从"全量内联进 bundle"改成了"每篇一个静态页 + 运行时读索引"，目的是让每篇文档都能独立寻址、独立分享、离线打开，同时减少对单一入口和第三方资源的依赖。
+知识库是"构建期只镜像源文件 + 运行时读索引渲染"，目的是减少构建产物体积，同时让 Markdown 的排版和博客保持同一套（不再为每篇 md 预渲染一份带内联 CSS 的 HTML）。
 
-### 1. 构建期：一页一文件
+### 1. 构建期：镜像 + 索引
 
 `scripts/build-wiki.mjs`（由 `predev` / `prebuild` 自动触发，也可 `npm run wiki` 单独跑）：
 
 - 扫描 `raw-docs/**/*.{md,markdown,html}`，`.py` 等附件不参与
-- **Markdown**：`unified + remark-parse + remark-gfm + remark-rehype(allowDangerousHtml) + rehype-raw + rehype-prism-plus + rehype-stringify`，与站内 `MarkdownView` 同一套插件，输出落到 `<main class="markdown-body">`，并把 `github-markdown-css` 与 `prism-one-light` 内联进页面，页面自带完整样式
-- **HTML**：原样保真拷贝；两种情况会处理——
+- **Markdown**：原样复制成 `public/wiki/<slug>.md`，**不再预渲染 HTML**；标题、摘要从源文本解析出来写进索引
+- **HTML**：仍产成 `public/wiki/<slug>.html`，原样保真拷贝；两种情况会处理——
   - 文件里没有 `<html>`（片段式文档）：补 `doctype/html/head/meta/title` 外壳，摘掉外链 `<link rel="stylesheet">`，套上同款排版样式
   - 引用了外链脚本（CDN）：构建期下载一次存到 `.cache/wiki-vendor/`，改写为 `/wiki/vendor/<file>` 本地路径
-- 每篇页面写入 `<title>`、`<meta name="description">`、OG 标题/描述，分享出去不再是一条裸链接
-- 产出 `public/wiki/index.json`：`slug / title / type / category / filePath / href / standalone`
+- 产出 `public/wiki/index.json`：`slug / title / type / category / filePath / href / standalone`（md 的 `href` 指向 `.md`，html 的指向 `.html`）
 
-### 2. 运行期：索引 + iframe
+### 2. 运行期：索引 + 分类型渲染
 
 - `src/utils/docs.ts` 的 `loadDocList()` 拉 `/wiki/index.json`（并发共用一次请求、成功后内存缓存），`src/utils/useDocs.ts` 的 `useDocList()` 提供加载/错误状态，`DocsHome`、`WikiLayout`、`Docs` 三处共用
-- 详情页 `<iframe src="/wiki/<slug>.html">`：不再用 `srcDoc`，相对资源可用、页面脚本可跑
-- 高度：普通文档在静态页里 `postMessage({ type: 'linx-wiki-height', slug, height })`，父页按 slug 匹配后撑满 iframe（页内不再出第二条滚动条）；应用型页面（`standalone: true`）固定 `85vh`、页内自己滚动
-- 目录列表保留「源文件 · md/html」链到 GitHub blob，并新增「独立页 ↗」直接打开静态页
+- **md**：`Docs` 页 `fetch('/wiki/<slug>.md')` 后交给 `src/components/MarkdownView` 渲染（按 slug 内存缓存，来回翻不重复请求），正文列 760px 居中
+- **html**：`<iframe src="/wiki/<slug>.html">` 直连；完整应用型页面（`standalone: true`）固定 `85vh` 页内自滚，片段式页面由页面 `postMessage({ type: 'linx-wiki-height' })` 上报高度撑满
+- 全屏阅读：详情页「全屏阅读」进入 `?full=1`，整屏白底、`Esc` 或「退出全屏」返回。md 收成 720px 居中窄栏；html 文档保留宽布局（最宽 1240px、iframe 铺满整屏高度），应用页也能直接全屏跑，不必跳出站外。目录列表里两种文档的行内操作都是「全屏」，要原文另点「源文件」。
 
 ### 3. 硬约定
 
 - **HTML 文档禁止外链 CDN**：字体、CSS、JS、图片一律相对路径或内联。构建脚本会把外链脚本本地化并给出提示，但源文件本身仍应遵守这条，否则镜像/断网时排版会崩
 - `public/wiki/` 是生成物，不要手改；改内容只改 `raw-docs/`
+- md 没有独立静态页，旧的 `/wiki/<slug>.html` 分享链接会失效，需要长期可分享的文档请用 html 形式
 
 ### 4. Markdown 在站内其它位置
 
-博客正文仍走 `src/components/MarkdownView`（`react-markdown` + `remark-frontmatter` + `rehype-prism-plus`），与知识库静态页共用同一套主题：`github-markdown-css` + `prism-one-light`。
+博客正文与知识库 md 都走 `src/components/MarkdownView`（`react-markdown` + `remark-frontmatter` + `rehype-prism-plus`），共用同一套主题：`github-markdown-css` + `prism-one-light`；每个代码块右上角自动挂「复制」按钮（复制失败时贴 `已复制`/`复制失败` 反馈，非 https 环境退回 `execCommand`）。
 
 ---
 

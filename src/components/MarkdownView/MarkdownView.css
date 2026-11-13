@@ -1,0 +1,43 @@
+/* Markdown 代码块右上角的复制按钮（由 MarkdownView 在渲染后注入） */
+.markdown-body pre {
+  position: relative;
+}
+
+.md-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  padding: 2px 8px;
+  border: 1px solid #e1e4e8;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #57606a;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.md-copy-btn:hover {
+  border-color: #c8ced6;
+  background: #fff;
+  color: #1f2937;
+}
+
+.md-copy-btn[data-copied='true'] {
+  border-color: #1a7f37;
+  color: #1a7f37;
+}
+
+.md-copy-btn:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: 1px;
+}
+
+@media print {
+  .md-copy-btn {
+    display: none;
+  }
+}

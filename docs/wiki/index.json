@@ -5,7 +5,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/merge-images-with-numpy.md",
-    "href": "/wiki/python/merge-images-with-numpy.html",
+    "href": "/wiki/python/merge-images-with-numpy.md",
     "standalone": false
   },
   {
@@ -23,7 +23,7 @@
     "type": "md",
     "category": "docs",
     "filePath": "/raw-docs/docs/site-setup.md",
-    "href": "/wiki/docs/site-setup.html",
+    "href": "/wiki/docs/site-setup.md",
     "standalone": false
   },
   {
@@ -32,7 +32,7 @@
     "type": "md",
     "category": "scripts",
     "filePath": "/raw-docs/scripts/build-site.md",
-    "href": "/wiki/scripts/build-site.html",
+    "href": "/wiki/scripts/build-site.md",
     "standalone": false
   },
   {
@@ -41,7 +41,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/cprofile-middleware.md",
-    "href": "/wiki/python/cprofile-middleware.html",
+    "href": "/wiki/python/cprofile-middleware.md",
     "standalone": false
   },
   {
@@ -50,7 +50,7 @@
     "type": "md",
     "category": "cpp",
     "filePath": "/raw-docs/cpp/compile-link.md",
-    "href": "/wiki/cpp/compile-link.html",
+    "href": "/wiki/cpp/compile-link.md",
     "standalone": false
   },
   {
@@ -59,7 +59,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/find-chinese-characters.md",
-    "href": "/wiki/python/find-chinese-characters.html",
+    "href": "/wiki/python/find-chinese-characters.md",
     "standalone": false
   },
   {
@@ -68,7 +68,7 @@
     "type": "md",
     "category": "golang",
     "filePath": "/raw-docs/golang/has-timestamp-safe-id.md",
-    "href": "/wiki/golang/has-timestamp-safe-id.html",
+    "href": "/wiki/golang/has-timestamp-safe-id.md",
     "standalone": false
   },
   {
@@ -77,7 +77,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/get-memory-size.md",
-    "href": "/wiki/python/get-memory-size.html",
+    "href": "/wiki/python/get-memory-size.md",
     "standalone": false
   },
   {
@@ -86,7 +86,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/algorithm/flatten-dict-paths.md",
-    "href": "/wiki/python/algorithm/flatten-dict-paths.html",
+    "href": "/wiki/python/algorithm/flatten-dict-paths.md",
     "standalone": false
   },
   {
@@ -95,7 +95,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/importlib.md",
-    "href": "/wiki/python/importlib.html",
+    "href": "/wiki/python/importlib.md",
     "standalone": false
   },
   {
@@ -104,7 +104,7 @@
     "type": "md",
     "category": "golang",
     "filePath": "/raw-docs/golang/lan-share.md",
-    "href": "/wiki/golang/lan-share.html",
+    "href": "/wiki/golang/lan-share.md",
     "standalone": false
   },
   {
@@ -113,7 +113,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/merge-images-with-pil.md",
-    "href": "/wiki/python/merge-images-with-pil.html",
+    "href": "/wiki/python/merge-images-with-pil.md",
     "standalone": false
   },
   {
@@ -122,7 +122,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/io-cpu-intensive-task.md",
-    "href": "/wiki/python/io-cpu-intensive-task.html",
+    "href": "/wiki/python/io-cpu-intensive-task.md",
     "standalone": false
   },
   {
@@ -131,7 +131,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/request-signing.md",
-    "href": "/wiki/python/request-signing.html",
+    "href": "/wiki/python/request-signing.md",
     "standalone": false
   },
   {
@@ -140,7 +140,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/stream-tar-directory.md",
-    "href": "/wiki/python/stream-tar-directory.html",
+    "href": "/wiki/python/stream-tar-directory.md",
     "standalone": false
   },
   {
@@ -149,7 +149,7 @@
     "type": "md",
     "category": "python",
     "filePath": "/raw-docs/python/devops/overview.md",
-    "href": "/wiki/python/devops/overview.html",
+    "href": "/wiki/python/devops/overview.md",
     "standalone": false
   },
   {

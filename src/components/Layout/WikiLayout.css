@@ -3,6 +3,11 @@
   min-height: calc(100vh - var(--root-header-height, 64px));
 }
 
+/* 侧栏宽度：正文右侧的镜像留白跟着它变，折叠后不会偏 */
+.wiki-layout:has(> .wiki-sidebar.closed) {
+  --wiki-gutter: 44px;
+}
+
 /* 侧栏固定 240px，只负责导航；右侧一列正文，避免多层容器叠加 */
 .wiki-sidebar {
   width: 240px;
@@ -157,7 +162,13 @@
 .wiki-main {
   flex: 1;
   padding: 28px 32px 56px;
+  /* 右侧补一条与侧栏等宽的留白，正文才能相对整屏居中，而不是相对"侧栏右侧那块"居中 */
+  padding-right: calc(var(--wiki-gutter, 240px) + 32px);
   min-width: 0; /* ✅ 主内容区 flex 防挤压溢出 */
+}
+/* 应用型文档（自带宽布局）不再补镜像留白，优先把宽度给内容 */
+.wiki-main:has(.doc-page--wide) {
+  padding-right: 32px;
 }
 .wiki-toolbar {
   margin-bottom: 16px;
@@ -176,10 +187,16 @@
 }
 .wiki-content {
   max-width: 860px;
+  /* 内容列在剩余空间里居中，不再贴着侧栏留一条窄栏 */
+  margin: 0 auto;
 }
 /* 应用型文档（自带宽布局）独占时放宽内容列，别把它挤在 860px 里 */
 .wiki-content:has(> .doc-page--wide) {
   max-width: 1120px;
+}
+/* md 正文页：内容列直接收到阅读宽度，避免"860 里再套 760"造成二次居中偏差 */
+.wiki-content:has(.doc-markdown) {
+  max-width: 760px;
 }
 .markdown-body {
   padding: 16px 0;
@@ -187,6 +204,12 @@
 @media print {
   .no-print {
     display: none !important;
+  }
+}
+/* 窄屏放不下镜像留白，退回只补左右对称的内边距，别把正文挤成窄条 */
+@media (max-width: 1200px) {
+  .wiki-main {
+    padding-right: 32px;
   }
 }
 @media (max-width:768px) {

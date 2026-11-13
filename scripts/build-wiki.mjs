@@ -1,5 +1,5 @@
-// 构建期把 raw-docs 里的每篇文档产成一个可独立寻址的静态页：
-//   md/markdown -> public/wiki/<slug>.html（github-markdown-css + prism 主题内联）
+// 构建期只做两件事：
+//   md/markdown -> public/wiki/<slug>.md（原样复制，站内运行时用 MarkdownView 渲染，不再预渲染 HTML）
 //   html        -> public/wiki/<slug>.html（原样保真；缺 <html> 的片段补壳；外链脚本改本地 vendor）
 // 同时产出 public/wiki/index.json 供站内列表运行时读取。
 //
@@ -7,13 +7,6 @@
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { unified } from 'unified'
-import remarkParse from 'remark-parse'
-import remarkGfm from 'remark-gfm'
-import remarkRehype from 'remark-rehype'
-import rehypeRaw from 'rehype-raw'
-import rehypePrismPlus from 'rehype-prism-plus'
-import rehypeStringify from 'rehype-stringify'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
 const SRC_DIR = path.join(ROOT, 'raw-docs')
@@ -74,14 +67,6 @@ const heightScript = (slug) => `
 })();
 </script>
 `
-
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkGfm)
-  .use(remarkRehype, { allowDangerousHtml: true })
-  .use(rehypeRaw)
-  .use(rehypePrismPlus, { ignoreMissing: true })
-  .use(rehypeStringify, { allowDangerousHtml: true })
 
 function escapeHtml(value) {
   return String(value)
@@ -217,18 +202,9 @@ async function vendorize(raw, warnings) {
 
 async function buildMarkdown(file, slug) {
   const raw = await fs.readFile(file, 'utf8')
-  const withoutFrontmatter = stripFrontmatter(raw)
-  const title = titleOfMarkdown(withoutFrontmatter) || slug.split('/').pop()
-  const description = summaryOf(withoutFrontmatter) || title
-  const body = String(await processor.process(withoutFrontmatter))
-  const css = await baseCss()
-  const html = pageShell({
-    title,
-    description,
-    body: `<main class="markdown-body">${body}</main>`,
-    script: heightScript(slug),
-  }).replace('</style>', `${css}\n</style>`)
-  return { html, title, description }
+  const title = titleOfMarkdown(stripFrontmatter(raw)) || slug.split('/').pop()
+  const description = summaryOf(raw) || title
+  return { markdown: raw, title, description }
 }
 
 async function buildHtmlDoc(file, slug, warnings) {
@@ -283,9 +259,9 @@ async function main() {
       ? await buildHtmlDoc(file, slug, warnings)
       : await buildMarkdown(file, slug)
 
-    const outFile = path.join(OUT_DIR, `${slug}.html`)
+    const outFile = path.join(OUT_DIR, `${slug}${isHtml ? '.html' : '.md'}`)
     await fs.mkdir(path.dirname(outFile), { recursive: true })
-    await fs.writeFile(outFile, built.html, 'utf8')
+    await fs.writeFile(outFile, isHtml ? built.html : built.markdown, 'utf8')
 
     entries.push({
       slug,
@@ -293,7 +269,8 @@ async function main() {
       type: isHtml ? 'html' : 'md',
       category: slug.includes('/') ? slug.split('/')[0] : '综合',
       filePath: `/${relative(ROOT, file)}`,
-      href: `/wiki/${slug}.html`,
+      // md 的 href 是运行时取来渲染的源文本；html 的是可独立打开的页面
+      href: `/wiki/${slug}${isHtml ? '.html' : '.md'}`,
       standalone: Boolean(built.standalone),
     })
   }
