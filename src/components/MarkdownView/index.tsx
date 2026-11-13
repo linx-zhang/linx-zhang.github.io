@@ -8,33 +8,12 @@ import type { CSSProperties, MouseEvent } from 'react'
 import 'github-markdown-css/github-markdown.css'
 import 'prism-themes/themes/prism-one-light.css'
 import './MarkdownView.css'
+import { copyText } from '@/utils/clipboard'
 
 interface MarkdownViewProps {
   content: string
   className?: string
   style?: CSSProperties
-}
-
-/** 非 https 或旧浏览器里 clipboard API 不可用，退回 textarea + execCommand */
-async function copyText(text: string) {
-  if (navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(text)
-      return true
-    } catch {
-      // 继续走下面的兜底
-    }
-  }
-  const holder = document.createElement('textarea')
-  holder.value = text
-  holder.setAttribute('readonly', '')
-  holder.style.position = 'fixed'
-  holder.style.top = '-1000px'
-  document.body.appendChild(holder)
-  holder.select()
-  const ok = document.execCommand('copy')
-  document.body.removeChild(holder)
-  return ok
 }
 
 /** 全站统一的 Markdown 渲染入口，避免 Docs 与博客使用不同插件配置 */

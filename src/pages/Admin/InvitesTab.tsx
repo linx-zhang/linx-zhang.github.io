@@ -6,6 +6,7 @@ import type { InviteCode, InviteRole } from '@/api/admin'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import Select from '@/components/Select'
 import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
+import { copyText } from '@/utils/clipboard'
 import { roleLabel } from './userRoles'
 
 function statusOf(invite: InviteCode): 'unused' | 'used' | 'expired' {
@@ -129,12 +130,9 @@ export default function InvitesTab() {
 
   const handleCopy = async (code: string) => {
     setCopyError('')
-    try {
-      await navigator.clipboard.writeText(code)
-      setCopiedCode(code)
-    } catch {
-      setCopyError('复制失败，请手动选择邀请码复制。')
-    }
+    const ok = await copyText(code)
+    if (ok) setCopiedCode(code)
+    else setCopyError('复制失败，请手动选择邀请码复制。')
   }
 
   const handleDelete = (code: string) => {

@@ -3,6 +3,7 @@ import { ApiError } from '@/api/client'
 import { adminApi } from '@/api/admin'
 import type { AdminUser, ResetPasswordResult } from '@/api/admin'
 import Modal from '@/components/Modal'
+import { copyText } from '@/utils/clipboard'
 
 export interface ResetPasswordDialogProps {
   user: AdminUser
@@ -60,12 +61,11 @@ export default function ResetPasswordDialog({
   const copy = async () => {
     if (!result) return
     const field = passwordRef.current
-    try {
-      if (!navigator.clipboard) throw new Error('clipboard unavailable')
-      await navigator.clipboard.writeText(result.password)
+    const ok = await copyText(result.password)
+    if (ok) {
       setCopied(true)
       setError('')
-    } catch {
+    } else {
       field?.focus()
       field?.select()
       setError('自动复制失败，已选中密码，请手动复制。')
