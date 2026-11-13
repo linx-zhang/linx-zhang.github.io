@@ -122,8 +122,9 @@ export const adminApi = {
     const search = new URLSearchParams()
     if (params.status) search.set('status', params.status)
     if (params.role) search.set('role', params.role)
-    search.set('limit', String(params.limit ?? 20))
-    search.set('offset', String(params.offset ?? 0))
+    // 分页默认值只在后端定义（limit 默认 20、上限 100）；这里不传就不发，避免两份默认值漂移
+    if (params.limit !== undefined) search.set('limit', String(params.limit))
+    if (params.offset !== undefined) search.set('offset', String(params.offset))
     return request<InviteCodePage>(`/admin/invite-codes?${search.toString()}`, {}, true, {
       skipForbiddenLogout: true,
     })
@@ -146,8 +147,8 @@ export const adminApi = {
     const search = new URLSearchParams()
     if (params.q) search.set('q', params.q)
     if (params.role) search.set('role', params.role)
-    search.set('limit', String(params.limit ?? 20))
-    search.set('offset', String(params.offset ?? 0))
+    if (params.limit !== undefined) search.set('limit', String(params.limit))
+    if (params.offset !== undefined) search.set('offset', String(params.offset))
     return request<AdminUserPage>(`/admin/users?${search.toString()}`, {}, true, {
       skipForbiddenLogout: true,
     })
@@ -183,8 +184,8 @@ export const adminApi = {
     if (params.type) search.set('type', params.type)
     if (params.from) search.set('from', params.from)
     if (params.to) search.set('to', params.to)
-    search.set('limit', String(params.limit ?? 20))
-    search.set('offset', String(params.offset ?? 0))
+    if (params.limit !== undefined) search.set('limit', String(params.limit))
+    if (params.offset !== undefined) search.set('offset', String(params.offset))
     return request<ActivityPage>(`/admin/activity?${search.toString()}`, {}, true, {
       skipForbiddenLogout: true,
     })

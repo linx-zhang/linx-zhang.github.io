@@ -222,7 +222,7 @@ export default function ActivityTab() {
       <div className="invite-list-head">
         <h2 className="admin-section-title">活跃日志</h2>
         <span className="invite-total">
-          {status === 'ready' ? `本页 ${items.length} 条` : ''}
+          {status === 'ready' ? `第 ${pageIndex + 1} 页 · ${items.length} 条` : ''}
         </span>
       </div>
 

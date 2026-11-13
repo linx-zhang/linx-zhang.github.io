@@ -265,6 +265,7 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 13. 分页列表统一返回 `{items, has_next}`：服务端取 `limit + 1` 条、丢掉多余那条、给 `has_next`（后端 `split_page()`）。前端**只发 `limit`**，不再自己请求 `limit+1` 再切片；`usePagedFetch` 与 `blogApi.listPosts` 都按这个形状。
 14. 「下一页」按钮只看 `has_next`，不要用 `total` 算：`total` 与当前页来自两条独立语句，并发写入时可能差一条（users / invite-codes 仍返回 `total`，但只用于「共 N 条 / 第 x 页」文案）。
 15. 改列表响应形状属于**前后端同批上线**的改动：先后端 deploy、再站点 push；中间几十秒线上列表会因形状不匹配报错，别只改一边就 push。
+16. 参数名只有 `limit` / `offset`；`page` / `page_size` 现在会被后端**直接 422**（`reject_legacy_paging()`），不再静默返回第一页。前端 `admin.ts` 也不再给 `limit` 兜 20，默认值只有后端一处真源。
 
 ---
 
