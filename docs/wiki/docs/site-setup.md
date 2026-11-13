@@ -40,4 +40,4 @@ This personal knowledge base is hosted for free via GitHub Pages. Here is the ge
 ### 3. Media & Links
 ![Avatar](https://github.com/linx-zhang/static/blob/main/icon/logo.jpg?raw=true)
 
-- Return to [Home / README](../README.md)
+- Return to [Home](/) or the [repository README](https://github.com/linx-zhang/linx-zhang.github.io#readme)
