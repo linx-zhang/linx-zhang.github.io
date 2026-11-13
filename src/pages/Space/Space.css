@@ -227,6 +227,66 @@
   text-decoration-color: #cbd2da;
 }
 
+/* 文字本身就是编辑入口：保持正文的样子，只加一点可点提示 */
+.space-memo-text-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: text;
+}
+
+.space-memo-text-button:hover {
+  color: #111827;
+}
+
+/* 就地编辑：勾选框让位，输入区占据整行 */
+.space-memo.is-editing {
+  display: block;
+}
+
+.space-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.space-edit-text {
+  width: 100%;
+  min-height: 4.4rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.space-edit-text:focus {
+  outline: none;
+  border-color: #1f2937;
+}
+
+.space-edit-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.space-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
 .space-memo-meta {
   display: flex;
   align-items: center;

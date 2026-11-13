@@ -59,6 +59,12 @@ export default function Space() {
   const [dueAt, setDueAt] = useState('')
   const [saving, setSaving] = useState(false)
   const [composeError, setComposeError] = useState('')
+  // 就地编辑已有条目：内容和到期日都能改，改完直接落库
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editBody, setEditBody] = useState('')
+  const [editDue, setEditDue] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState('')
   // 手机上先给一个「＋ 记一条」按钮，点开才是输入区；桌面上宽屏默认展开
   const [expanded, setExpanded] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches,
@@ -147,12 +153,49 @@ export default function Space() {
       setDueAt('')
       // 新建的条目在「已完成」里看不到，切回「全部」再刷新
       if (filter === 'done') setFilter('all')
+      // 清掉旧列表再刷新，这样重取期间会显示骨架，不会「点了保存像什么都没发生」
+      setItems([])
       setPageIndex(0)
       setReloadKey((key) => key + 1)
     } catch (err) {
       setComposeError(errorMessage(err))
     } finally {
       setSaving(false)
+    }
+  }
+
+  const startEdit = (memo: Memo) => {
+    setEditingId(memo.id)
+    setEditBody(memo.body)
+    setEditDue(memo.due_at ?? '')
+    setEditError('')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditError('')
+  }
+
+  const saveEdit = async (memo: Memo) => {
+    const text = editBody.trim()
+    if (!text) {
+      setEditError('内容不能为空')
+      return
+    }
+    if (text.length > 2000) {
+      setEditError('一条最多 2000 个字符')
+      return
+    }
+    setEditSaving(true)
+    try {
+      const updated = await memoApi.update(memo.id, { body: text, due_at: editDue || null })
+      setItems((prev) => prev.map((item) => (item.id === memo.id ? updated : item)))
+      setEditingId(null)
+      setReloadKey((key) => key + 1)
+    } catch (err) {
+      setEditError(errorMessage(err))
+    } finally {
+      setEditSaving(false)
     }
   }
 
@@ -392,6 +435,77 @@ export default function Space() {
         <div className="space-list">
           {items.map((memo) => {
             const due = memo.due_at ? dueMeta(memo.due_at) : null
+            const isEditing = editingId === memo.id
+            if (isEditing) {
+              return (
+                <article key={memo.id} className="space-memo is-editing">
+                  <div className="space-edit">
+                    <textarea
+                      className="space-edit-text"
+                      value={editBody}
+                      rows={3}
+                      maxLength={2000}
+                      autoFocus
+                      aria-label="修改备忘录"
+                      onChange={(event) => {
+                        setEditBody(event.target.value)
+                        setEditError('')
+                      }}
+                      onKeyDown={(event) => {
+                        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                          event.preventDefault()
+                          void saveEdit(memo)
+                        }
+                        if (event.key === 'Escape') {
+                          event.preventDefault()
+                          cancelEdit()
+                        }
+                      }}
+                    />
+                    <div className="space-edit-foot">
+                      <div className="space-due">
+                        <DatePicker
+                          value={editDue || null}
+                          onChange={(day) => setEditDue(day ?? '')}
+                          placeholder="到期日"
+                          ariaLabel="到期日"
+                          triggerClassName="space-due-trigger"
+                          icon={
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+                              <path d="M7 4v3M17 4v3M4 9h16M5 7h14v12H5z" />
+                            </svg>
+                          }
+                        />
+                        {editDue && (
+                          <button
+                            type="button"
+                            className="space-due-clear"
+                            aria-label="清除到期日"
+                            onClick={() => setEditDue('')}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-edit-actions">
+                        <button type="button" className="space-button" onClick={cancelEdit}>
+                          取消
+                        </button>
+                        <button
+                          type="button"
+                          className="space-button space-button-primary"
+                          disabled={editSaving || editBody.trim().length === 0}
+                          onClick={() => void saveEdit(memo)}
+                        >
+                          {editSaving ? '保存中…' : '保存'}
+                        </button>
+                      </div>
+                    </div>
+                    {editError && <p className="space-error">{editError}</p>}
+                  </div>
+                </article>
+              )
+            }
             return (
               <article key={memo.id} className={memo.done ? 'space-memo is-done' : 'space-memo'}>
                 <button
@@ -409,7 +523,14 @@ export default function Space() {
                 </button>
 
                 <div className="space-memo-main">
-                  <p className="space-memo-text">{memo.body}</p>
+                  <button
+                    type="button"
+                    className="space-memo-text space-memo-text-button"
+                    onClick={() => startEdit(memo)}
+                    title="点一下修改"
+                  >
+                    {memo.body}
+                  </button>
                   <p className="space-memo-meta">
                     {due && (
                       <span className={`space-tag space-tag-${due.tone}`}>{due.text}</span>
