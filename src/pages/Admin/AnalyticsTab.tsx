@@ -81,7 +81,6 @@ export default function AnalyticsTab() {
 
   useEffect(() => {
     let cancelled = false
-    setStatus('loading')
     adminApi
       .getAnalyticsSummary(days)
       .then((data) => {
@@ -126,7 +125,10 @@ export default function AnalyticsTab() {
                 option === days ? 'analytics-range-btn active' : 'analytics-range-btn'
               }
               aria-pressed={option === days}
-              onClick={() => setDays(option)}
+              onClick={() => {
+                setStatus('loading')
+                setDays(option)
+              }}
             >
               近 {option} 天
             </button>
@@ -145,7 +147,10 @@ export default function AnalyticsTab() {
           <button
             type="button"
             className="blog-button"
-            onClick={() => setReloadKey((key) => key + 1)}
+            onClick={() => {
+              setStatus('loading')
+              setReloadKey((key) => key + 1)
+            }}
           >
             重试
           </button>
