@@ -13,6 +13,7 @@ import Blog from '@/pages/Blog'
 import PostDetail from '@/pages/Blog/PostDetail'
 import Admin from '@/pages/Admin'
 import Space from '@/pages/Space'
+import Tools from '@/pages/Tools'
 import RequirePermission from '@/components/RequirePermission'
 import { APP_ROUTES, isKnownDeepLink } from '@/routes'
 
@@ -44,6 +45,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path={APP_ROUTES.blog} element={<Blog />} />
           <Route path={`${APP_ROUTES.blog}/:id`} element={<PostDetail />} />
           <Route path={APP_ROUTES.space} element={<Space />} />
+          <Route path={APP_ROUTES.tools} element={<Tools />} />
+          <Route path={`${APP_ROUTES.tools}/:slug`} element={<Tools />} />
           <Route
             path={APP_ROUTES.admin}
             element={

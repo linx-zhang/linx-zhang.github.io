@@ -209,13 +209,17 @@ export default function Space() {
   if (!user) {
     return (
       <div className="space-page">
-        <div className="space-gate">
+        <header className="space-header">
           <h1>个人空间</h1>
-          <p>登录后可以随手记备忘录和待办，只属于你自己。</p>
+          <p className="space-meta">{todayLabel()} · 未登录</p>
+        </header>
+        <div className="space-gate">
+          <p>登录后才可以记录和查看自己的备忘录与待办。</p>
           <button type="button" className="space-button space-button-primary" onClick={() => openLogin()}>
             登录
           </button>
         </div>
+        <p className="space-foot">只属于你的备忘录，别人看不到。</p>
       </div>
     )
   }

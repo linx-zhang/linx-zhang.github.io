@@ -4,6 +4,7 @@ export const APP_ROUTES = {
   blog: '/blog',
   profile: '/profile',
   space: '/space',
+  tools: '/tools',
   admin: '/admin',
 } as const
 
@@ -15,6 +16,8 @@ export function isKnownDeepLink(path: string): boolean {
     pathname.startsWith(`${APP_ROUTES.wiki}/`) ||
     pathname === APP_ROUTES.blog ||
     pathname.startsWith(`${APP_ROUTES.blog}/`) ||
+    pathname === APP_ROUTES.tools ||
+    pathname.startsWith(`${APP_ROUTES.tools}/`) ||
     pathname === APP_ROUTES.admin ||
     pathname === APP_ROUTES.profile ||
     pathname === APP_ROUTES.space

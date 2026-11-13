@@ -1,0 +1,297 @@
+.tools-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.tools-head h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.tools-head p {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* 工具切换：一行三段，窄屏自动换行不挤压 */
+.tools-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 1.3rem 0 1.1rem;
+}
+
+.tools-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #1f2937;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.tools-tab span {
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+.tools-tab:hover {
+  border-color: #d1d5db;
+}
+
+.tools-tab.is-active {
+  border-color: #1f2937;
+}
+
+.tool {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.tool-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tool-button {
+  min-height: 36px;
+  padding: 0 0.8rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tool-button:hover {
+  background: #f9fafb;
+}
+
+.tool-button-primary {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #fff;
+}
+
+.tool-button-primary:hover {
+  background: #111827;
+}
+
+.tool-button:disabled {
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  background: #fff;
+  cursor: default;
+}
+
+.tool-copy {
+  margin-left: auto;
+}
+
+.tool-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.tool-select {
+  min-height: 36px;
+  padding: 0 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.tool-input {
+  flex: 1 1 16rem;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 0.7rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  /* 16px：手机上聚焦不放大页面 */
+  font: inherit;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.tool-error {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.tool-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.tool-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.tool-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.tool-meta {
+  color: #9ca3af;
+}
+
+.tool-editor {
+  min-height: 320px;
+  padding: 0.7rem;
+  border: none;
+  outline: none;
+  resize: vertical;
+  /* 16px：手机上聚焦不放大页面；等宽字体便于对齐 JSON / SQL */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #1f2937;
+  background: #fff;
+}
+
+.tool-editor.is-output {
+  background: #fbfbfc;
+}
+
+.tool-rows {
+  margin: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.tool-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.55rem 0.75rem;
+  border-top: 1px solid #f3f4f6;
+  font-size: 0.85rem;
+}
+
+.tool-row:first-child {
+  border-top: none;
+}
+
+.tool-row dt {
+  flex: 0 0 5.2rem;
+  color: #6b7280;
+  font-size: 0.78rem;
+}
+
+.tool-row dd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-width: 0;
+  margin: 0;
+  flex: 1;
+}
+
+.tool-row dd code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  color: #1f2937;
+}
+
+.tool-mini {
+  flex: none;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.tool-mini:hover {
+  color: #1f2937;
+  border-color: #d1d5db;
+}
+
+.tools-state {
+  margin: 0;
+  padding: 2rem 1rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 10px;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* 窄屏：工具卡竖排成一列，输入输出上下堆叠 */
+@media (max-width: 720px) {
+  .tools-page {
+    padding: 1.4rem 1rem 2.5rem;
+  }
+
+  .tools-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .tools-tab {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .tool-split {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-editor {
+    min-height: 180px;
+  }
+
+  .tool-copy {
+    margin-left: 0;
+  }
+}

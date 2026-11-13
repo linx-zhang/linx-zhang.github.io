@@ -24,7 +24,8 @@
     "rehype-prism-plus": "^2.0.2",
     "rehype-raw": "^7.0.0",
     "remark-frontmatter": "^5.0.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "sql-formatter": "^15.9.0"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
