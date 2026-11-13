@@ -4,9 +4,15 @@
   padding: 2rem 1rem 3rem;
 }
 
-/* 工具页要独占，宽一点、矮一点，编辑器才有地方 */
+/* 工具页要独占：宽到接近整屏、编辑器吃满剩下的高度，不迁就手机 */
 .tools-page.is-tool {
-  max-width: 1120px;
+  max-width: 1360px;
+  width: 100%;
+  padding: 1.4rem 1.6rem 1.6rem;
+}
+
+.tools-page.is-tool .tool-head {
+  margin-bottom: 0.8rem;
 }
 
 .tools-head h1 {
@@ -219,7 +225,7 @@
 .tool-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.7rem;
+  gap: 0.9rem;
 }
 
 .tool-pane {
@@ -248,8 +254,9 @@
 }
 
 .tool-editor {
-  min-height: 56vh;
-  padding: 0.7rem;
+  /* 电脑上工具页吃满一屏：视口减去导航、标题、工具栏后的高度 */
+  min-height: max(340px, calc(100vh - 340px));
+  padding: 0.8rem;
   border: none;
   outline: none;
   resize: vertical;
