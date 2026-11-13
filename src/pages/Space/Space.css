@@ -226,6 +226,13 @@
   margin-top: 0.4rem;
 }
 
+.space-more:disabled {
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: default;
+  background: #fff;
+}
+
 /* 收起态的入口：整条都要像个按钮，别让人猜哪里能写 */
 .space-compose-trigger {
   display: flex;

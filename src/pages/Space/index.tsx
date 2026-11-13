@@ -364,6 +364,10 @@ export default function Space() {
         </div>
       )}
 
+      {status === 'loading' && items.length === 0 && (
+        <div className="space-state">加载中…</div>
+      )}
+
       {status !== 'error' && items.length === 0 && status === 'ready' && (
         <div className="space-state">
           {filtering ? '这里还没有条目。' : '还没有备忘录，点下面的「＋ 记一条」写第一条。'}
@@ -419,9 +423,10 @@ export default function Space() {
             <button
               type="button"
               className="space-button space-more"
+              disabled={status === 'loading'}
               onClick={() => setPageIndex((index) => index + 1)}
             >
-              加载更多
+              {status === 'loading' ? '加载中…' : '加载更多'}
             </button>
           )}
         </div>
