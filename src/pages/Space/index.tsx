@@ -365,7 +365,17 @@ export default function Space() {
       )}
 
       {status === 'loading' && items.length === 0 && (
-        <div className="space-state">加载中…</div>
+        <div className="space-list" aria-busy="true" aria-label="加载中">
+          {[0, 1, 2].map((row) => (
+            <article key={row} className="space-memo space-skeleton">
+              <span className="space-skeleton-box" />
+              <div className="space-skeleton-lines">
+                <span className="space-skeleton-line" />
+                <span className="space-skeleton-line is-short" />
+              </div>
+            </article>
+          ))}
+        </div>
       )}
 
       {status !== 'error' && items.length === 0 && status === 'ready' && (
