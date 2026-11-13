@@ -917,3 +917,236 @@
     flex: 1;
   }
 }
+
+/* --- 活动分析（/admin?tab=analytics） ------------------------------------- */
+
+.analytics-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.analytics-range {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+.analytics-range-btn {
+  height: var(--admin-control-h);
+  padding: 0 0.85rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #4b5563;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.analytics-range-btn.active {
+  background: #1f2937;
+  color: #fff;
+}
+.analytics-hint {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.analytics-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.analytics-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+.analytics-card-label {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+.analytics-card strong {
+  color: #111827;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* 柱图只靠高度表达数值，不引图表库 */
+.analytics-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  height: 168px;
+  padding: 0.75rem 0.9rem 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  overflow-x: auto;
+}
+.analytics-bar-slot {
+  display: flex;
+  flex: 1 0 28px;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  height: 100%;
+  min-width: 28px;
+}
+.analytics-bar-value {
+  color: #6b7280;
+  font-size: 0.7rem;
+}
+.analytics-bar {
+  width: 100%;
+  margin-top: auto;
+  border-radius: 4px 4px 0 0;
+  background: #1f2937;
+}
+.analytics-bar-date {
+  color: #9ca3af;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.analytics-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+.analytics-list-head,
+.analytics-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.5fr) 4.5rem 5.5rem 5.5rem;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.7rem 1rem;
+}
+.analytics-list-head {
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.analytics-row {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid #f3f4f6;
+  background: #fff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+.analytics-row:hover,
+.analytics-row.open {
+  background: #f9fafb;
+}
+.analytics-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analytics-badge {
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.72rem;
+}
+.analytics-network {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.analytics-network code {
+  color: #374151;
+  font-size: 0.82rem;
+}
+.analytics-network em {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analytics-paths {
+  padding: 0.5rem 1rem 0.9rem 2.4rem;
+  background: #fbfbfc;
+  border-top: 1px solid #f3f4f6;
+}
+.analytics-path-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4rem 5rem;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+  color: #4b5563;
+  font-size: 0.82rem;
+}
+.analytics-path-row code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analytics-paths-note {
+  margin: 0.5rem 0 0;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .analytics-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .analytics-list-head {
+    display: none;
+  }
+  .analytics-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+  /* 单列时表头没了，每行必须自带标签，否则一串数字不知道是什么 */
+  .analytics-row > span[data-label]:not(.analytics-identity) {
+    display: flex;
+    gap: 0.45rem;
+    color: #6b7280;
+    font-size: 0.8rem;
+  }
+  .analytics-row > span[data-label]:not(.analytics-identity)::before {
+    content: attr(data-label) "：";
+    min-width: 4.2rem;
+    color: #9ca3af;
+  }
+  .analytics-identity {
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+  .analytics-path-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.1rem;
+  }
+  .analytics-path-row span {
+    color: #6b7280;
+    font-size: 0.78rem;
+  }
+}

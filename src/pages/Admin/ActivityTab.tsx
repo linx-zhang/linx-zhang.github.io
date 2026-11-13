@@ -278,8 +278,12 @@ export default function ActivityTab() {
               <div className="activity-cell" data-label="时间">
                 {formatTime(item.created_at)}
               </div>
-              <div className="activity-cell activity-email" data-label="用户邮箱">
-                {item.user_email || `#${item.user_id}`}
+              <div className="activity-cell activity-email" data-label="用户">
+                {item.user_email
+                  ? item.user_email
+                  : item.user_id === null
+                    ? `匿名${item.ip ? ` · ${item.ip}` : ''}`
+                    : `#${item.user_id}`}
               </div>
               <div className="activity-cell" data-label="类型">
                 <span className="invite-badge">{typeLabel(item.type)}</span>

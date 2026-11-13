@@ -122,25 +122,38 @@ npm run lint
 
 ## 🧩 管理后台
 
-`/admin` 提供四个分区：
+`/admin` 提供五个分区：
 
 | tab | 内容 |
 | --- | --- |
 | `posts` | 文章纯列表、全选与单次 `POST /posts/batch-delete` 批量删除 |
 | `invites` | 邀请码创建、列表与删除 |
 | `users` | 用户搜索 / 角色筛选 / 分页；行内操作从左到右为「编辑」「重置密码」「删除」（危险操作固定行尾），角色下拉即时保存并支持失败回滚；「重置密码」先二次确认，可手动填写新密码（留空则由后端生成 16 位临时密码），成功后弹窗一次性展示生效的密码并可一键复制（关闭后无法再查看）；「编辑」弹窗只改资料与邮箱，保存只提交改动字段 |
-| `activity` | 按用户、类型、日期范围筛选活跃日志；日期范围使用自定义 `DateRangePicker`，按本地日界转 ISO |
+| `activity` | 按用户、类型、日期范围筛选活跃日志；日期范围使用自定义 `DateRangePicker`，按本地日界转 ISO；匿名行在用户列显示「匿名 · ip」 |
+| `analytics` | 活动分析监控页（`GET /admin/analytics/summary`）：今日新增用户 / 活跃用户 / 匿名访客 / 页面浏览四张数字卡，近 7 / 30 天每日浏览柱图（纯 div，不引图表库），访问者表（身份、IP·地区、浏览次数、停留时长、最近时间），点一行展开该身份停留最久的 8 个页面与口径说明 |
 
 ---
 
 ## 📈 活跃采集
 
-`src/activity/useActivityTracker.ts` 仅在登录后上报：
+`src/activity/useActivityTracker.ts` 登录后上报完整事件，未登录访客上报匿名子集（两套端点的口径见下表）：
 
 - `page_view`：路由变化时入队
 - `heartbeat`：页面可见时每 60 秒一次
 - `page_leave`：`visibilitychange` 进入 hidden 或 `pagehide` 时发送，带 `duration_ms`；同一隐藏周期只发一次（两个事件可能先后触发）
-- 事件先进内存队列、批量提交（单批最多 50 条）；离开时用 `fetch(url, { keepalive: true, headers: { Authorization: Bearer … } })`，不用 `sendBeacon`（无法附加认证头）
+- 事件先进内存队列、批量提交（登录单批最多 50 条、匿名最多 20 条）；离开时用 `fetch(url, { keepalive: true, headers: { Authorization: Bearer … } })`，不用 `sendBeacon`（无法附加认证头）
+
+两台端点的分工，改上报逻辑前先看这张表：
+
+| | 登录（`POST /activity`） | 匿名（`POST /activity/visitor`） |
+| --- | --- | --- |
+| 鉴权 | `activity:write:self` + Bearer token | 无 |
+| 事件 | `page_view` / `heartbeat` / `page_leave` | 只有 `page_view` / `page_leave`（禁 `heartbeat`，否则量级会盖过浏览） |
+| 路径 | 不限（含 `/admin`、`/profile`） | 只 `/`、`/blog*`、`/wiki*`（`services/visitor_paths.py` 的同一份 allow-list） |
+| 限流 | 每 user 10 秒 | 每 ip 30 秒（含 `page_leave` 的批次永远放行） |
+| 身份 | `user_id` | `user_id = NULL` + 请求时的 `ip/country/region/city` |
+
+匿名侧客户端还会自己排开批次（`VISITOR_WINDOW_MS = 30s`）：窗口内的 `page_view` 先攒在队列里，等 `page_leave` 一起发，因为服务端对含 leave 的批次无条件放行，这样不会有浏览被 429 静默丢掉。匿名在非公开页（如 `/profile`）完全不留痕。
 
 ---
 

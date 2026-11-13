@@ -91,13 +91,63 @@ export type ActivityType = 'page_view' | 'heartbeat' | 'page_leave'
 
 export interface ActivityItem {
   id: number
-  user_id: number
-  user_email: string
+  /** null = 匿名访客（无账号），此时只有 ip 能标识来源 */
+  user_id: number | null
+  user_email: string | null
   type: string
   path: string
   ts: number
   duration_ms: number | null
+  ip: string | null
+  country: string | null
   created_at: string
+}
+
+export interface AnalyticsToday {
+  new_users: number
+  active_users: number
+  anonymous_visitors: number
+  page_views: number
+}
+
+export interface AnalyticsDay {
+  /** 按 +8 小时分桶后的日期（YYYY-MM-DD） */
+  date: string
+  page_views: number
+  actors: number
+}
+
+export interface AnalyticsPath {
+  path: string
+  views: number
+  dwell_ms: number
+}
+
+/** 一个身份：已登录用户（u:<id>）或匿名访客（ip:<addr>） */
+export interface AnalyticsActor {
+  key: string
+  user_id: number | null
+  user_email: string | null
+  ip: string | null
+  country: string | null
+  region: string | null
+  city: string | null
+  page_views: number
+  /** page_leave 的 duration_ms 之和：观测到的停留，不是挂机时长 */
+  dwell_ms: number
+  last_seen: string
+  first_seen: string
+  paths: AnalyticsPath[]
+}
+
+export interface AnalyticsSummary {
+  days: number
+  timezone_offset_hours: number
+  today: AnalyticsToday
+  series: AnalyticsDay[]
+  actors: AnalyticsActor[]
+  /** 窗口内身份数超过单页上限 */
+  has_next: boolean
 }
 
 export interface ActivityPage {
@@ -187,6 +237,12 @@ export const adminApi = {
     if (params.limit !== undefined) search.set('limit', String(params.limit))
     if (params.offset !== undefined) search.set('offset', String(params.offset))
     return request<ActivityPage>(`/admin/activity?${search.toString()}`, {}, true, {
+      skipForbiddenLogout: true,
+    })
+  },
+  /** 活动分析汇总：今日数字 + 每日趋势 + 每个身份的停留明细（服务端缓存 60 秒） */
+  getAnalyticsSummary(days: number): Promise<AnalyticsSummary> {
+    return request<AnalyticsSummary>(`/admin/analytics/summary?days=${days}`, {}, true, {
       skipForbiddenLogout: true,
     })
   },

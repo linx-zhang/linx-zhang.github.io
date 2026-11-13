@@ -2,12 +2,13 @@ import { useSearchParams } from 'react-router-dom'
 import { usePermission } from '@/auth/usePermission'
 import RequirePermission from '@/components/RequirePermission'
 import ActivityTab from './ActivityTab'
+import AnalyticsTab from './AnalyticsTab'
 import PostsTab from './PostsTab'
 import InvitesTab from './InvitesTab'
 import UsersTab from './UsersTab'
 import './Admin.css'
 
-type AdminTab = 'posts' | 'invites' | 'users' | 'activity'
+type AdminTab = 'posts' | 'invites' | 'users' | 'activity' | 'analytics'
 
 export default function Admin() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -23,7 +24,9 @@ export default function Admin() {
         ? 'users'
         : rawTab === 'activity'
           ? 'activity'
-          : 'posts'
+          : rawTab === 'analytics'
+            ? 'analytics'
+            : 'posts'
 
   const switchTab = (next: AdminTab) => {
     setSearchParams(next === 'posts' ? {} : { tab: next })
@@ -77,6 +80,17 @@ export default function Admin() {
             日志
           </button>
         )}
+        {canReadActivity && (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'analytics'}
+            className={tab === 'analytics' ? 'admin-tab active' : 'admin-tab'}
+            onClick={() => switchTab('analytics')}
+          >
+            分析
+          </button>
+        )}
       </div>
 
       {tab === 'posts' && <PostsTab />}
@@ -89,6 +103,11 @@ export default function Admin() {
       {tab === 'activity' && (
         <RequirePermission permission="activity:read:any">
           <ActivityTab />
+        </RequirePermission>
+      )}
+      {tab === 'analytics' && (
+        <RequirePermission permission="activity:read:any">
+          <AnalyticsTab />
         </RequirePermission>
       )}
     </div>
