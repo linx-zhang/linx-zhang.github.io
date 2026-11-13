@@ -41,6 +41,7 @@ function ClipView({ code }: { code: string }) {
   const [clip, setClip] = useState<ClipShare | null>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [error, setError] = useState('')
+  const [rateLimited, setRateLimited] = useState(false)
   const { isCopied, copy } = useCopy()
 
   useEffect(() => {
@@ -55,11 +56,15 @@ function ClipView({ code }: { code: string }) {
       })
       .catch((err) => {
         if (cancelled) return
-        // 404 是「没有这段内容」这一业务结果，后端的 detail 是英文，这里换成可直接读的说明
+        // 404 是「没有这段内容」这一业务结果，429 是读得太频繁；后端 detail 是英文，这里换成可直接读的说明
+        const status = err instanceof ApiError ? err.status : 0
+        setRateLimited(status === 429)
         setError(
-          err instanceof ApiError && err.status === 404
+          status === 404
             ? '这条链接不存在，或者已经过期了。'
-            : errorMessage(err),
+            : status === 429
+              ? '打开得太频繁了，等一分钟再刷新试试。'
+              : errorMessage(err),
         )
         setStatus('error')
       })
@@ -75,8 +80,12 @@ function ClipView({ code }: { code: string }) {
       <div className="tool">
         <p className="tool-empty">
           {error || '这段内容不存在或已经过期。'}
-          <br />
-          共享链接的有效期是 24 小时，过期后无法找回。
+          {!rateLimited && (
+            <>
+              <br />
+              共享链接的有效期是 24 小时，过期后无法找回。
+            </>
+          )}
         </p>
         <div className="tool-bar">
           <Link to="/tools/clip" className="tool-button">

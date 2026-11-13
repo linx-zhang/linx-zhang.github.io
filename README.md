@@ -13,12 +13,14 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /blog/:id : PostDetail 文章详情与评论
   - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；分区通过 ?tab=posts|invites|users|activity|analytics 深链（默认 posts）
   - /space : 个人空间（备忘录 / 待办），未登录只显示页内登录门；导航「空间」项仅在登录后渲染
+  - /tools : 工具箱入口（5 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
 - Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 对 401（以及未跳过时的 403）清 token 并广播该事件；管理接口传 skipForbiddenLogout 以展示后端 detail。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self。
 - User profile: users 有 nickname / first_name / last_name / avatar_url；展示名优先级 昵称 → 「名 姓」→ 邮箱前缀，已删除用户为「已注销」。GET /auth/me 与登录/注册响应带这四字段（无值为 null）；PATCH /auth/me 走 account:update:self，只接受这四字段（传 email/role 会 422），返回完整用户对象（含 permissions）；PATCH /admin/users/{id} 同时接受四字段与 email/role。
 - Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；src/components/ConfirmDialog + useConfirm；src/components/Modal 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
 - Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
 - Space memos: src/api/memos.ts 调 /memos（GET 列表 / GET /memos/summary 计数 / POST / PATCH / DELETE），全部 self-scoped，owner 由 token 决定。`due_at` 是本地日期 YYYY-MM-DD，只在列表里标红（今天到期 / 已过期），不发提醒；勾选完成写入 `done_at`，取消勾选后端清空它；删除是软删除（`deleted_at`）。列表按 offset 累加「加载更多」，计数单独走 summary 接口，列表本身不带 total。
+- Tools: src/pages/Tools/index.tsx 是一张注册表（slug / 图标 / 标题 / 副标题 / hooks 自带的 Component），新增工具只需加一条 + 一条路由。JSON / SQL / 时间戳 / UUID+密码四个工具纯本地计算；共享剪切板走后端 src/api/clips.ts（POST /clips 生成 32 位 uuid4 短链、GET /clips/:code 免登录读、DELETE /clips/:code 撤销），内容存 D1 的 cache_entries（`clip:` 前缀、24h TTL），GET 有每 ip 60 次/分 + 每 code 120 次/分的独立预算（429 rate_limited）。复制反馈统一走 src/hooks/useCopy（工具按钮）与 src/utils/clipboard（Markdown 代码块、后台复制），不再各自写 navigator.clipboard。
 - Bundle: 仍然没有代码分割 / 懒加载，所有页面静态 import，单包输出（docs/assets/index-*.js）。
 - Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
 - Print Rule: 所有非打印 UI 加 className="no-print"，@media print 隐藏；简历页使用 A4 版式。
@@ -42,6 +44,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki/<slug>.html`，站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
 - **GitHub 风格排版**：`github-markdown-css` + `react-markdown` + `prism-one-light`
 - **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
+- **工具箱**：`/tools` 五张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v1/v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）
 - **GitHub Pages 部署**：产物固定输出到 `/docs`，`public/404.html` 兜底 SPA 深链刷新
 
 ---
@@ -97,6 +100,9 @@ npm run lint
       <Route path="/blog/:id" element={<PostDetail />} />
       <Route path="/admin" element={<RequirePermission permission="invite_code:read:any"><Admin /></RequirePermission>} />
       <Route path="/space" element={<Space />} />
+      <Route path="/tools" element={<Tools />} />
+      <Route path="/tools/clip/:code" element={<Tools />} />
+      <Route path="/tools/:slug" element={<Tools />} />
     </Route>
     <Route path="/profile" element={<Profile />} />
   </Routes>
@@ -161,6 +167,34 @@ npm run lint
 
 ---
 
+## 🧰 工具箱
+
+`/tools` 是入口页（五个中等图标卡），点任意一张进入独占整页的工具；`/tools/<slug>` 与 `/tools/clip/<code>` 共用同一个 `Tools` 组件，靠 `slug` / `code` 分派。
+
+| slug | 工具 | 数据来源 |
+| --- | --- | --- |
+| `json` | JSON 格式化 / 压缩 / 树形折叠 | 本地 |
+| `sql` | SQL 格式化 + 语法高亮 | 本地（自研分词，不引第三方库） |
+| `timestamp` | 时间戳与日期互转（10 位秒 / 13 位毫秒） | 本地 |
+| `random` | UUID（v1 / v4 / v7）与密码生成 | 本地（crypto） |
+| `clip` | 共享剪切板：贴日志生成免登录短链 | 后端 `/clips` + D1 cache |
+
+### 共享剪切板的接口约定
+
+- `POST /clips`：需登录，body `{ title?, body }`，返回 `{ code, title, body, created_at, expires_at }`；每用户 10 秒一条（429 + `Retry-After`）
+- `GET /clips/{code}`：免登录，`code` 与 `clip:<32 hex>` 一一对应，TTL 24 小时；非法码与已过期都回同一个 404，避免探测 key 空间；每 ip 60 次/分、每 code 120 次/分（429）
+- `DELETE /clips/{code}`：需登录，owner 或 admin 可撤销
+- 没有列表接口：code 就是唯一句柄，服务端不提供枚举；内容落在后端 `cache_entries` 表，靠 cron 清理过期行
+
+### 新增一个工具
+
+1. 在 `src/pages/Tools/` 写组件，导出 `ComponentType<{ code?: string }>`（纯阅读型工具用不到 `code` 也可以忽略）
+2. 在 `src/pages/Tools/index.tsx` 的注册表加一条（`slug / title / summary / icon / Component`）
+3. 路由不用动：`/tools/:slug` 已覆盖；需要独立阅读路径时才加一条显式路由
+4. 需要复制按钮时用 `useCopy()`，不要自己写 `navigator.clipboard`
+
+---
+
 ## 📁 目录结构
 
 ```text
@@ -171,7 +205,7 @@ linx-zhang.github.io/
 │  ├─ main.tsx              # 路由表、ReactDOM 挂载、404 路径恢复
 │  ├─ routes.ts             # 路由常量与深链判定
 │  ├─ activity/             # ActivityTracker + useActivityTracker（page_view / heartbeat / page_leave）
-│  ├─ api/                  # client.ts（fetch 封装 / token / ApiError）、auth.ts、blog.ts、admin.ts
+│  ├─ api/                  # client.ts（fetch 封装 / token / ApiError）、auth.ts、blog.ts、admin.ts、memos.ts、clips.ts
 │  ├─ auth/                 # AuthProvider、usePermission
 │  ├─ components/
 │  │  ├─ Layout/            # RootLayout 全站主壳、WikiLayout 知识库子壳
@@ -191,11 +225,16 @@ linx-zhang.github.io/
 │  │  ├─ DocsHome/          # 知识库分类总览
 │  │  ├─ Docs/              # 单篇文档（md 就地渲染 / html iframe 直连，支持全屏阅读）
 │  │  ├─ Blog/              # 列表 + 写作面板、详情 + 评论
-│  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ResetPasswordDialog / ActivityTab）
+│  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ResetPasswordDialog / ActivityTab / AnalyticsTab）
+│  │  ├─ Space/             # 个人空间（备忘录 / 待办 + 自绘日历）
+│  │  ├─ Tools/             # 工具箱：index.tsx 注册表 + JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool
 │  │  └─ Profile/           # 独立简历页（PDF 导出）
+│  ├─ hooks/
+│  │  └─ useCopy.ts         # 复制按钮统一反馈（copiedKey 区分同屏多个按钮）
 │  └─ utils/
 │     ├─ docs.ts            # 运行时读取 /wiki/index.json（不再 glob 内联）
-│     └─ useDocs.ts         # useDocList()：目录页 / 侧边栏 / 详情页共用的加载状态
+│     ├─ useDocs.ts         # useDocList()：目录页 / 侧边栏 / 详情页共用的加载状态
+│     └─ clipboard.ts       # copyText()：clipboard API + execCommand 兜底
 ├─ scripts/
 │  ├─ build-wiki.mjs        # 构建期镜像 raw-docs（md → .md 副本、html → 静态页）+ index.json
 │  └─ build-docs.mjs        # 先建到 docs_build 再整目录替换 docs/，附带 wiki 入口复制
@@ -283,6 +322,12 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 14. 「下一页」按钮只看 `has_next`，不要用 `total` 算：`total` 与当前页来自两条独立语句，并发写入时可能差一条（users / invite-codes 仍返回 `total`，但只用于「共 N 条 / 第 x 页」文案）。
 15. 改列表响应形状属于**前后端同批上线**的改动：先后端 deploy、再站点 push；中间几十秒线上列表会因形状不匹配报错，别只改一边就 push。
 16. 参数名只有 `limit` / `offset`；`page` / `page_size` 现在会被后端**直接 422**（`reject_legacy_paging()`），不再静默返回第一页。前端 `admin.ts` 也不再给 `limit` 兜 20，默认值只有后端一处真源。
+
+**工具箱**
+
+17. 新增工具只改两处：`src/pages/Tools/` 下的组件 + `Tools/index.tsx` 注册表；`/tools/:slug` 路由已经覆盖，别再写 if-链。
+18. 复制一律用 `useCopy()`（要按钮文案反馈）或 `utils/clipboard.copyText()`（只要写入结果），同屏有多个复制按钮时给每个按钮不同的 `key`，否则会一起变「已复制」。
+19. 共享剪切板这类免登录链接，凭据只能是随机码本身：不要往 URL 里塞 token，也不要加列表接口。
 
 ---
 
