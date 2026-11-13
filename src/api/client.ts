@@ -64,6 +64,12 @@ function errorFrom(status: number, body: unknown): ApiError {
 export interface RequestOptions {
   /** 管理接口的 403 应展示后端 detail，而不是直接清空登录态 */
   skipForbiddenLogout?: boolean
+  /**
+   * 登录/注册这类端点：401 是「这次提交的凭据不对」这一业务结果，不是 token 失效。
+   * 不跳过就会清掉本地 token 并广播 auth:unauthorized，登录框被自己的事件关掉，
+   * 用户看到的现象是「点登录 → 窗口消失 → 没有任何提示」。
+   */
+  skipAuthReset?: boolean
 }
 
 /**
@@ -85,7 +91,10 @@ export async function request<T>(
 
   const response = await fetch(`${API_BASE}${path}`, { ...init, headers })
 
-  if (response.status === 401 || (response.status === 403 && !options.skipForbiddenLogout)) {
+  if (
+    !options.skipAuthReset &&
+    (response.status === 401 || (response.status === 403 && !options.skipForbiddenLogout))
+  ) {
     clearToken()
     window.dispatchEvent(new Event('auth:unauthorized'))
   }

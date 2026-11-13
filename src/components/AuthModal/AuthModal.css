@@ -72,6 +72,19 @@
 .auth-field input:focus {
   border-color: #1f2937;
 }
+.auth-field input.invalid {
+  border-color: #fca5a5;
+  background: #fffdfd;
+}
+.auth-field input.invalid:focus {
+  border-color: #b91c1c;
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12);
+}
+.auth-field-error {
+  color: #b91c1c;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
 .auth-error {
   margin: 0;
   padding: 0.6rem 0.75rem;

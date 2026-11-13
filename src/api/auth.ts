@@ -45,16 +45,20 @@ export interface LoginPayload {
 
 export const authApi = {
   register(payload: RegisterPayload): Promise<TokenPayload> {
-    return request<TokenPayload>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
+    return request<TokenPayload>(
+      '/auth/register',
+      { method: 'POST', body: JSON.stringify(payload) },
+      false,
+      { skipAuthReset: true },
+    )
   },
   login(payload: LoginPayload): Promise<TokenPayload> {
-    return request<TokenPayload>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    })
+    return request<TokenPayload>(
+      '/auth/login',
+      { method: 'POST', body: JSON.stringify(payload) },
+      false,
+      { skipAuthReset: true },
+    )
   },
   me(): Promise<AuthUser> {
     return request<AuthUser>('/auth/me', {}, true)
