@@ -75,6 +75,7 @@ npm run lint
 ```
 
 > `npm run build` 实际执行 `tsc -b && vite build`。构建走 `scripts/build-docs.mjs`：先建到 `docs_build`，校验通过再整目录替换 `docs/`。**构建前先停掉 `npm run dev`**——vite 的文件监听会锁住项目目录，导致目录替换报 `EPERM`。
+> 构建脚本同时会写一个空的 `docs/.nojekyll`：GitHub Pages 默认跑 Jekyll，会把 `docs/wiki/**/*.md` 再渲染成同名 `.html`，导致 md 内容多出一份、URL 排版和站内不一致；关掉 Jekyll 后站点只发原始静态文件。
 >
 > **注意**：新增或删除 `raw-docs/` 下的文件后，跑一次 `npm run wiki`（`dev` / `build` 会自动触发），再刷新浏览器。`public/wiki/` 是由源文件生成的，不要手工改。
 
