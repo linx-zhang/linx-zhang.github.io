@@ -1,6 +1,8 @@
 .wiki-layout {
   display: flex;
   min-height: calc(100vh - var(--root-header-height, 64px));
+  /* 侧栏宽度只有一个来源：正文右侧的镜像留白跟着它变，展开/折叠都不会偏 */
+  --wiki-gutter: 280px;
 }
 
 /* 侧栏宽度：正文右侧的镜像留白跟着它变，折叠后不会偏 */
@@ -8,9 +10,9 @@
   --wiki-gutter: 44px;
 }
 
-/* 侧栏固定 240px，只负责导航；右侧一列正文，避免多层容器叠加 */
+/* 侧栏固定宽度，只负责导航；右侧一列正文，避免多层容器叠加 */
 .wiki-sidebar {
-  width: 240px;
+  width: var(--wiki-gutter, 280px);
   border-right: 1px solid #e5e7eb;
   padding: 18px 12px;
   transition: width 0.2s ease;
@@ -64,7 +66,7 @@
   gap: 2px;
 }
 .tree-group + .tree-group {
-  margin-top: 10px;
+  margin-top: 4px;
 }
 .tree-group-head {
   display: flex;
@@ -76,10 +78,11 @@
   background: none;
   cursor: pointer;
   border-radius: 4px;
-  /* 分组头 15px + 深色，明显高于子项 13px，一眼是"分类"而不是注释 */
-  font-size: 15px;
-  font-weight: 600;
-  color: #1f2937;
+  /* 分组头 16px / 700 + 深色，和子项 13px / 400 拉开层级，一眼是"分类"而不是注释 */
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #111827;
   text-align: left;
 }
 .tree-group-head:hover {
@@ -87,13 +90,20 @@
   color: #1f2937;
 }
 .tree-caret {
-  font-size: 10px;
+  /* 展开/收起箭头：10px 的 ▾ 太小，抬到 13px 并给固定宽度避免文字左右跳 */
+  flex-shrink: 0;
+  width: 13px;
+  font-size: 13px;
   line-height: 1;
-  color: #9ca3af;
-  transition: transform 0.15s ease;
+  text-align: center;
+  color: #6b7280;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 .tree-caret.is-collapsed {
   transform: rotate(-90deg);
+}
+.tree-group-head:hover .tree-caret {
+  color: #1f2937;
 }
 .tree-group-name {
   text-transform: lowercase;
@@ -107,7 +117,8 @@
 .tree-items {
   list-style: none;
   margin: 4px 0 0;
-  padding: 0 0 0 10px;
+  /* 子项缩进：左侧竖线是层级提示，缩进要明显到"一眼在分组下面" */
+  padding: 0 0 0 16px;
   border-left: 1px solid #f0f1f3;
 }
 .tree-items li {
@@ -115,7 +126,7 @@
 }
 .tree-items a {
   display: block;
-  padding: 4px 6px;
+  padding: 4px 8px;
   color: #4b5563;
   text-decoration: none;
   border-radius: 4px;
@@ -163,7 +174,7 @@
   flex: 1;
   padding: 28px 32px 56px;
   /* 右侧补一条与侧栏等宽的留白，正文才能相对整屏居中，而不是相对"侧栏右侧那块"居中 */
-  padding-right: calc(var(--wiki-gutter, 240px) + 32px);
+  padding-right: calc(var(--wiki-gutter, 280px) + 32px);
   min-width: 0; /* ✅ 主内容区 flex 防挤压溢出 */
 }
 /* 应用型文档（自带宽布局）不再补镜像留白，优先把宽度给内容 */

@@ -64,8 +64,11 @@
   width: 100%;
 }
 
-/* md 正文：README 式阅读宽度，左右留白对称，像常见文章站 */
+/* md 正文：README 式阅读宽度，左右留白对称，像常见文章站。
+   width:100% 必须有：纵向 flex 里只有 max-width + margin:auto 时元素会退化成
+   shrink-to-fit，纯代码文档（最长行只有几十字符）就会被缩成一根细条。 */
 .doc-markdown {
+  width: 100%;
   max-width: 760px;
   margin: 0 auto;
   padding: 0 0 48px;
@@ -98,6 +101,7 @@
 }
 
 .doc-fullscreen-shell .doc-markdown {
+  width: 100%;
   max-width: 720px;
   margin: 0 auto;
 }

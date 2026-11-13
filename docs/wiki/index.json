@@ -1,5 +1,14 @@
 [
   {
+    "slug": "cpp/compile-link",
+    "title": "静态库与动态库：编译、链接、加载三段到底发生了什么",
+    "type": "md",
+    "category": "cpp",
+    "filePath": "/raw-docs/cpp/compile-link.md",
+    "href": "/wiki/cpp/compile-link.md",
+    "standalone": false
+  },
+  {
     "slug": "python/merge-images-with-numpy",
     "title": "设置图片路径",
     "type": "md",
@@ -42,15 +51,6 @@
     "category": "python",
     "filePath": "/raw-docs/python/cprofile-middleware.md",
     "href": "/wiki/python/cprofile-middleware.md",
-    "standalone": false
-  },
-  {
-    "slug": "cpp/compile-link",
-    "title": "Dynamic Library & Static Library",
-    "type": "md",
-    "category": "cpp",
-    "filePath": "/raw-docs/cpp/compile-link.md",
-    "href": "/wiki/cpp/compile-link.md",
     "standalone": false
   },
   {
@@ -154,11 +154,11 @@
   },
   {
     "slug": "python/pyqt/windows-toolchain",
-    "title": "windows-toolchain",
-    "type": "html",
+    "title": "Windows 上做 PyQt 桌面应用的工具链",
+    "type": "md",
     "category": "python",
-    "filePath": "/raw-docs/python/pyqt/windows-toolchain.html",
-    "href": "/wiki/python/pyqt/windows-toolchain.html",
+    "filePath": "/raw-docs/python/pyqt/windows-toolchain.md",
+    "href": "/wiki/python/pyqt/windows-toolchain.md",
     "standalone": false
   }
 ]

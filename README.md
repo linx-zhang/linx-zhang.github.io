@@ -3,7 +3,7 @@
 You are a senior full-stack/frontend engineer maintaining this repository.
 - Repo: linx-zhang.github.io
 - Stack: Vite 8（Rolldown）+ React 19.3.1 + TypeScript（verbatimModuleSyntax）+ react-router-dom 7.18.5（BrowserRouter / Routes / Route 的 v6 风格 API）
-- Deployment: GitHub Pages from branch 'main', folder '/docs'（vite config: build.outDir = 'docs'、emptyOutDir = true、base = '/'）。SPA 深链刷新由 public/404.html 兜底：把原始路径写入 sessionStorage.spa-fallback-path 后回到根路径，src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复；.nojekyll 不需要。
+- Deployment: GitHub Pages from branch 'main', folder '/docs'（vite config: build.outDir = 'docs'、emptyOutDir = true、base = '/'）。SPA 深链刷新由 public/404.html 兜底：把原始路径写入 sessionStorage.spa-fallback-path 后回到根路径，src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复；`docs/.nojekyll` 由 `scripts/build-docs.mjs` 每次构建生成（关掉 GitHub Pages 的 Jekyll，否则 md 会被再渲染一份同名 html），不要手工删。
 - Backend: Cloudflare Python Worker + FastAPI + D1，base 常量在 src/api/auth.ts 的 AUTH_API_BASE。响应统一为 { code, detail, data }，前端 request<T>() 解包 data；错误抛 ApiError(status, code, detail)。
 - Core Routes（定义在 src/routes.ts 与 src/main.tsx）:
   - / : Home（RootLayout 内）
@@ -13,8 +13,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /blog/:id : PostDetail 文章详情与评论
   - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；分区通过 ?tab=posts|invites|users|activity 深链（默认 posts）
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
-- Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 对 401（以及未跳过时的 403）清 token 并广播该事件；管理接口传 skipForbiddenLogout 以展示后端 detail。
-- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self。
+- Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 对 401（以及未跳过时的 403）清 token 并广播该事件；管理接口传 skipForbiddenLogout 以展示后端 detail。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self。
 - User profile: users 有 nickname / first_name / last_name / avatar_url；展示名优先级 昵称 → 「名 姓」→ 邮箱前缀，已删除用户为「已注销」。GET /auth/me 与登录/注册响应带这四字段（无值为 null）；PATCH /auth/me 走 account:update:self，只接受这四字段（传 email/role 会 422），返回完整用户对象（含 permissions）；PATCH /admin/users/{id} 同时接受四字段与 email/role。
 - Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；src/components/ConfirmDialog + useConfirm；src/components/Modal 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
 - Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
@@ -116,7 +115,7 @@ npm run lint
 - 401（以及未跳过时的 403）由 `request()` 统一清 token 并广播 `auth:unauthorized`；管理接口传 `skipForbiddenLogout` 以展示后端错误详情
 - 后端权限码：`account:*`、`post:*`、`comment:*`、`invite_code:*`、`user:*`、`activity:*`（细分为 `*:own` / `*:any` / `*:self`）
 - 个人资料：`PATCH /auth/me`（权限 `account:update:self`）只接受 `nickname` / `first_name` / `last_name` / `avatar_url`，不能修改邮箱与角色；管理端 `PATCH /admin/users/{id}` 额外接受 `email` / `role`
-- 重置密码：`POST /admin/users/{id}/reset-password`（权限 `user:reset_password:any`，仅管理员可见按钮）可传 `{ password }` 指定新密码，留空则由后端生成 16 位临时密码；生效的密码只在响应的 `data.password` 出现一次（`data.generated` 区分来源）。同时写入 `password_changed_at`，重置前签发的 token 会立即 401，前端据 `auth:unauthorized` 退出登录
+- 重置密码：`POST /admin/users/{id}/reset-password`（权限 `user:reset_password:any`，仅管理员可见按钮）可传 `{ password }` 指定新密码，留空则由后端生成 16 位临时密码；生效的密码只在响应的 `data.password` 出现一次（`data.generated` 区分来源）。同时写入 `token_invalidated_at`（迁移 0009 由 `password_changed_at` 改名而来），重置前签发的 token 会立即 401，前端据 `auth:unauthorized` 退出登录
 - 展示名优先级：昵称 → 「名 姓」→ 邮箱前缀；已删除用户显示「已注销」。头像统一使用 `Avatar`：有 `avatar_url` 显示图片，加载失败回退首字母
 
 ---
@@ -233,6 +232,34 @@ linx-zhang.github.io/
 - 不引入第三方 UI 库；下拉、日期范围、弹窗、确认框均使用 `src/components/` 下的自研组件
 - 打印：所有不应出现在 PDF 中的 UI 统一加 `className="no-print"`，`Profile.css` 中使用 `@page { size: A4; margin: 15mm 16mm; }`；`.print-only` 元素仅在打印时显示
 
+### 维护清单（上下文重置后先读这一段）
+
+LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面这些是踩过的坑和必须遵守的流程，动手前先对一遍：
+
+**改知识库**
+
+1. 只在 `raw-docs/` 里写源文件，`public/wiki/` 是生成物；新增/删除后跑 `npm run wiki`（`dev`/`build` 会自动触发）。
+2. md 一律运行时渲染，**不要**再给 md 建期预渲染 HTML；只有「完整应用页」才用 `.html`（iframe 直连 + 全屏）。
+3. html 文档禁止外链 CDN；片段式 html 会被补壳，别手写 `<html>` 外壳。
+4. md 的 `href` 指向 `.md`，旧 `/wiki/<slug>.html` 分享链接失效——这是既有取舍，不是 bug。
+
+**发布**
+
+5. `npm run build` 前先停 `npm run dev`（vite 的文件监听会锁目录）。报 `EPERM: rename docs_build -> docs` 说明没停干净：停 dev → 若 `docs/` 已变成 `.docs-trash` 就把 `docs_build` 改回 `docs` → 删 `.docs-trash` → 重跑。
+6. 产物 `docs/` 入库，build 完直接 commit + push（push 即上线，不走 GitHub Actions）。
+7. `docs/.nojekyll` 必须由构建脚本生成，不能手写也不能删（原因见上节）。
+
+**验证线上**
+
+8. 探针只用 **GET**：`HEAD` 对已删除的路径也回 200，会得出错误结论。
+9. 看 `/wiki` 应返回约 600 字节 SPA 外壳；`/assets/index-*.js`、`/wiki/<slug>.md` 应 200。
+10. 直接访问 `/wiki/js/finance-simulator`（带不带 `?full=1`）会被 Pages 补成 `.html` 命中静态页、绕过 SPA；验证应用页要从站内点进去。
+
+**视觉改动**
+
+11. 侧栏宽度与正文居中留白共用 `--wiki-gutter`（定义在 `.wiki-layout`，折叠时 44px），改宽度只改这一处，别两头写死。
+12. 纯代码文档被缩窄的根因是「纵向 flex + `margin: auto` → shrink-to-fit」，`.doc-markdown` 必须同时有 `width: 100%` 和 `max-width: 760px`。
+
 ---
 
 ## 🌐 部署到 GitHub Pages
@@ -251,4 +278,4 @@ GitHub Pages 为纯静态托管，直接访问或刷新 `/wiki/xxx`、`/blog/xxx
 3. React Router 随后正常命中目标路由，用户不会停在 404 或白屏
 
 - 通过站内链接正常跳转时不会触发 404.html
-- `.nojekyll` 不需要提供：当前构建产物中没有以下划线开头的资源
+- `docs/.nojekyll` 必须存在，由构建脚本每次生成：GitHub Pages 默认跑 Jekyll，会把 `docs/wiki/**/*.md` 再渲染成同名 `.html`（症状是**已删除的路径仍然 GET 200、内容是渲染好的 HTML**）。它不在源码里手写，因为构建是「建到 `docs_build` 再整目录替换」，手写的那份下次 build 就没了。
