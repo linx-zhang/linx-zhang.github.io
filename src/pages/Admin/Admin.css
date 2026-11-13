@@ -2,6 +2,9 @@
   max-width: 920px;
   margin: 0 auto;
   padding: 2rem 1.5rem 3rem;
+  /* 同一行里的控件必须等高：输入框、自定义 Select、按钮各算各的会差到 8px */
+  --admin-control-h: 46px;
+  --admin-toolbar-control-h: 38px;
 }
 .admin-header {
   margin-bottom: 1.5rem;
@@ -62,6 +65,12 @@
   font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.6;
+}
+/* 单行控件统一高度（textarea 保持自动伸展） */
+.admin-field input,
+.admin-field select,
+.admin-field .select-trigger {
+  height: var(--admin-control-h);
 }
 .admin-field input:focus,
 .admin-field textarea:focus,
@@ -162,7 +171,8 @@
 }
 .invite-form {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr 0.8fr auto;
+  grid-template-columns:
+    minmax(0, 1.05fr) minmax(0, 0.55fr) minmax(0, 0.72fr) minmax(0, 1.4fr) auto;
   gap: 0.75rem;
   align-items: end;
 }
@@ -170,7 +180,8 @@
   font-size: 0.85rem;
 }
 .invite-submit {
-  height: 40px;
+  height: var(--admin-control-h);
+  padding: 0 1.1rem;
   white-space: nowrap;
 }
 .invite-list-head {
@@ -357,6 +368,12 @@
   font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+/* 工具栏一行里搜索框与角色下拉必须等高 */
+.user-search input,
+.user-filter select,
+.user-filter .select-trigger {
+  height: var(--admin-toolbar-control-h);
 }
 .user-search input:focus,
 .user-filter select:focus {
@@ -787,6 +804,12 @@
   font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+/* 活跃日志工具栏：输入框、类型下拉、查询/重置按钮同高 */
+.activity-field input,
+.activity-field .select-trigger,
+.activity-actions .blog-button {
+  height: var(--admin-toolbar-control-h);
 }
 .activity-field input:focus {
   outline: none;
