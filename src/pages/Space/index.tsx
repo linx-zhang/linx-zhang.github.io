@@ -522,23 +522,21 @@ export default function Space() {
                   </span>
                 </button>
 
-                <div className="space-memo-main">
-                  <button
-                    type="button"
-                    className="space-memo-text space-memo-text-button"
-                    onClick={() => startEdit(memo)}
-                    title="点一下修改"
-                  >
-                    {memo.body}
-                  </button>
-                  <p className="space-memo-meta">
+                <button
+                  type="button"
+                  className="space-memo-main"
+                  onClick={() => startEdit(memo)}
+                  title="点一下修改"
+                >
+                  <span className="space-memo-text">{memo.body}</span>
+                  <span className="space-memo-meta">
                     {due && (
                       <span className={`space-tag space-tag-${due.tone}`}>{due.text}</span>
                     )}
                     {memo.done && memo.done_at && <span>完成于 {formatDate(memo.done_at)}</span>}
                     {!memo.done && <span>{formatDate(memo.created_at)}</span>}
-                  </p>
-                </div>
+                  </span>
+                </button>
 
                 <button
                   type="button"

@@ -43,6 +43,7 @@ export default function JsonTool() {
   const [output, setOutput] = useState('')
   const [error, setError] = useState('')
   const [indent, setIndent] = useState(2)
+  const [copied, setCopied] = useState(false)
 
   const stats = useMemo(() => {
     if (!input.trim()) return ''
@@ -69,6 +70,8 @@ export default function JsonTool() {
     if (!output) return
     try {
       await navigator.clipboard.writeText(output)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1600)
     } catch {
       setError('浏览器不允许写剪贴板，手动选中输出区复制吧')
     }
@@ -95,8 +98,13 @@ export default function JsonTool() {
             <option value={1}>Tab</option>
           </select>
         </label>
-        <button type="button" className="tool-button tool-copy" onClick={copy} disabled={!output}>
-          复制结果
+        <button
+          type="button"
+          className={copied ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
+          onClick={copy}
+          disabled={!output}
+        >
+          {copied ? '已复制' : '复制结果'}
         </button>
       </div>
 

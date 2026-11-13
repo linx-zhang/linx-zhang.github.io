@@ -209,12 +209,22 @@
   color: #fff;
 }
 
+/* 整条都可点：正文与元信息合在一个按钮里，鼠标是文本光标，避免像普通按钮 */
 .space-memo-main {
+  display: block;
   flex: 1;
   min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: text;
 }
 
 .space-memo-text {
+  display: block;
   font-size: 0.95rem;
   line-height: 1.55;
   word-break: break-word;
@@ -225,23 +235,6 @@
   color: #6b7280;
   text-decoration: line-through;
   text-decoration-color: #cbd2da;
-}
-
-/* 文字本身就是编辑入口：保持正文的样子，只加一点可点提示 */
-.space-memo-text-button {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: text;
-}
-
-.space-memo-text-button:hover {
-  color: #111827;
 }
 
 /* 就地编辑：勾选框让位，输入区占据整行 */

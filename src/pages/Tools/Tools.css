@@ -171,6 +171,13 @@
   margin-left: auto;
 }
 
+/* 复制成功的即时反馈：按钮文字变了、边框压深一点，1.6s 后自动复原 */
+.tool-copy.is-copied,
+.tool-mini.is-copied {
+  border-color: #1f2937;
+  color: #1f2937;
+}
+
 .tool-inline {
   display: inline-flex;
   align-items: center;

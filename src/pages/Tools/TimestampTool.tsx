@@ -103,6 +103,7 @@ export default function TimestampTool() {
   const [unit, setUnit] = useState<'auto' | 'sec' | 'ms'>('auto')
   const [result, setResult] = useState<Converted | null>(null)
   const [error, setError] = useState('')
+  const [copiedKey, setCopiedKey] = useState('')
 
   const run = (value: string, mode: 'auto' | 'sec' | 'ms' = unit) => {
     try {
@@ -190,10 +191,18 @@ export default function TimestampTool() {
                 <code>{row.value}</code>
                 <button
                   type="button"
-                  className="tool-mini"
-                  onClick={() => navigator.clipboard.writeText(row.value).catch(() => {})}
+                  className={copiedKey === row.label ? 'tool-mini is-copied' : 'tool-mini'}
+                  onClick={() => {
+                    navigator.clipboard
+                      .writeText(row.value)
+                      .then(() => {
+                        setCopiedKey(row.label)
+                        window.setTimeout(() => setCopiedKey(''), 1600)
+                      })
+                      .catch(() => {})
+                  }}
                 >
-                  复制
+                  {copiedKey === row.label ? '已复制' : '复制'}
                 </button>
               </dd>
             </div>

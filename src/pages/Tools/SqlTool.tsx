@@ -15,6 +15,7 @@ export default function SqlTool() {
   const [error, setError] = useState('')
   const [language, setLanguage] = useState<string>('sql')
   const [keywordCase, setKeywordCase] = useState<'upper' | 'lower'>('upper')
+  const [copied, setCopied] = useState(false)
 
   const run = () => {
     setError('')
@@ -42,6 +43,8 @@ export default function SqlTool() {
     if (!output) return
     try {
       await navigator.clipboard.writeText(output)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1600)
     } catch {
       setError('浏览器不允许写剪贴板，手动选中输出区复制吧')
     }
@@ -78,8 +81,13 @@ export default function SqlTool() {
             <option value="lower">小写</option>
           </select>
         </label>
-        <button type="button" className="tool-button tool-copy" onClick={copy} disabled={!output}>
-          复制结果
+        <button
+          type="button"
+          className={copied ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
+          onClick={copy}
+          disabled={!output}
+        >
+          {copied ? '已复制' : '复制结果'}
         </button>
       </div>
 

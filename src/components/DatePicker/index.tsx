@@ -165,7 +165,7 @@ export default function DatePicker({
       <button
         ref={triggerRef}
         type="button"
-        className={[triggerClassName, 'date-trigger', open ? 'select-trigger-open' : '']
+        className={['select-trigger', triggerClassName, 'date-trigger', open ? 'select-trigger-open' : '']
           .filter(Boolean)
           .join(' ')}
         disabled={disabled}
