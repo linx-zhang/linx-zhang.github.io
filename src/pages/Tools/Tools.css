@@ -68,6 +68,7 @@
 }
 
 .tool-tile-icon svg {
+  display: block;
   width: 26px;
   height: 26px;
 }

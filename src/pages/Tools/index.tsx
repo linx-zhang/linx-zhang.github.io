@@ -19,11 +19,33 @@ interface ToolMeta {
   Component: ComponentType<{ code?: string }>
 }
 
+/**
+ * 所有工具图标共用这一个外壳：同一套 viewBox / 描边宽度 / 端点圆角。
+ * 图标「参差不齐」多半不是尺寸问题，而是每个 svg 自己写了一份描边参数、各自的
+ * 光学尺寸和重心也不一样；外壳统一后，只要把图形收进同样的 16 单位光学方框就行。
+ */
+function ToolIcon({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  )
+}
+
+// 图形统一收在 12×12 为中心、约 14–16 单位见方的光学方框里（见 ToolIcon 注释）
 const untilIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
-    <path d="M12 7v5l3 2" />
-  </svg>
+  <ToolIcon>
+    <circle cx="12" cy="12" r="6.8" />
+    <path d="M12 8.6v3.6l2.4 1.5" />
+  </ToolIcon>
 )
 
 const TOOLS: ToolMeta[] = [
@@ -34,10 +56,10 @@ const TOOLS: ToolMeta[] = [
     hint: '格式化 / 压缩 / 报错定位',
     detail: '粘贴一段 JSON，整理成缩进结构；格式错了会指出多出或少了哪个符号。',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-        <path d="M9 3c-2 0-3 1-3 3v3c0 1.5-1 2-2 2 1 0 2 .5 2 2v4c0 2 1 3 3 3" />
-        <path d="M15 3c2 0 3 1 3 3v3c0 1.5 1 2 2 2-1 0-2 .5-2 2v4c0 2-1 3-3 3" />
-      </svg>
+      <ToolIcon>
+        <path d="M9.6 5c-1.5 0-2.3.9-2.3 2.2v2.4c0 1.1-.8 1.9-1.9 2.4 1.1.5 1.9 1.3 1.9 2.4v2.4c0 1.3.8 2.2 2.3 2.2" />
+        <path d="M14.4 5c1.5 0 2.3.9 2.3 2.2v2.4c0 1.1.8 1.9 1.9 2.4-1.1.5-1.9 1.3-1.9 2.4v2.4c0 1.3-.8 2.2-2.3 2.2" />
+      </ToolIcon>
     ),
   },
   {
@@ -47,10 +69,11 @@ const TOOLS: ToolMeta[] = [
     hint: '按子句换行、关键字大写',
     detail: '一长串 SQL 拆成一行一个子句；可选 MySQL / PostgreSQL 等方言。',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-        <path d="M12 3c4.5 0 7 1.3 7 2.8v12.4c0 1.5-2.5 2.8-7 2.8s-7-1.3-7-2.8V5.8C5 4.3 7.5 3 12 3Z" />
-        <path d="M5 6h14M5 11h14M5 16h14" />
-      </svg>
+      <ToolIcon>
+        <ellipse cx="12" cy="6.8" rx="6" ry="2.2" />
+        <path d="M6 6.8v10.2c0 1.2 2.7 2.3 6 2.3s6-1.1 6-2.3V6.8" />
+        <path d="M6 11.6c0 1.2 2.7 2.3 6 2.3s6-1.1 6-2.3" />
+      </ToolIcon>
     ),
   },
   {
@@ -68,12 +91,12 @@ const TOOLS: ToolMeta[] = [
     hint: 'v4 / v7 · 可选字符集',
     detail: '生成 UUID（v4 随机、v7 时间有序）和随机密码，字符集自选，可排除 0/O、1/l/I 这类易混字符。',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-        <rect x="4.5" y="10" width="15" height="10.5" rx="2.4" />
-        <path d="M8 10V7.2a4 4 0 0 1 8 0V10" />
-        <circle cx="12" cy="15" r="1.5" />
-        <path d="M12 16.5v1.9" />
-      </svg>
+      <ToolIcon>
+        <rect x="6.5" y="10.2" width="11" height="9.2" rx="2" />
+        <path d="M9 10.2V8a3 3 0 0 1 6 0v2.2" />
+        <circle cx="12" cy="14.4" r="1.2" />
+        <path d="M12 15.4v1.4" />
+      </ToolIcon>
     ),
   },
   {
@@ -83,11 +106,11 @@ const TOOLS: ToolMeta[] = [
     hint: '日志粘进来 · 24 小时短链',
     detail: '把日志或一小段文本存到后端，生成一条 24 小时内谁都能读的链接；过期自动失效，也能随时撤销。',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-        <rect x="5" y="6" width="14" height="15" rx="2.2" />
-        <path d="M9 6V4.8c0-.5.4-.9.9-.9h4.2c.5 0 .9.4.9.9V6" />
-        <path d="M8.5 11.5h7M8.5 15h7" />
-      </svg>
+      <ToolIcon>
+        <rect x="6.7" y="6.4" width="10.6" height="13" rx="2" />
+        <path d="M9.6 6.4V5.3c0-.5.4-.9.9-.9h3c.5 0 .9.4.9.9v1.1" />
+        <path d="M9.2 11.2h5.6M9.2 14.6h5.6" />
+      </ToolIcon>
     ),
   },
 ]
