@@ -150,6 +150,14 @@
   background: #f9fafb;
 }
 
+/* Link 当按钮用时：a 默认是行内元素，min-height 与上下 padding 不生效，会比旁边的按钮矮 */
+a.tool-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .tool-button-primary {
   border-color: #1f2937;
   background: #1f2937;
@@ -165,6 +173,11 @@
   color: #9ca3af;
   background: #fff;
   cursor: default;
+}
+
+/* 一组按钮推到行尾：左侧留说明文字，右侧是操作 */
+.tool-bar-end {
+  margin-left: auto;
 }
 
 .tool-copy {

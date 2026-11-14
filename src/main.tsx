@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './styles/layers.css'
+import './styles/shared.css'
 
 import ErrorBoundary from '@/components/ErrorBoundary'
 import RouteFallback from '@/components/RouteFallback'

@@ -202,23 +202,8 @@
   color: #6b7280;
   font-size: 0.85rem;
 }
-.blog-button {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  background: #fff;
-  color: #1f2937;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-.blog-button:hover:not(:disabled) {
-  background: #f9fafb;
-}
-.blog-button:disabled {
-  color: #9ca3af;
-  cursor: not-allowed;
-  background: #f9fafb;
-}
+/* .blog-button / a.blog-button / .comment-submit / .comment-error 是博客与后台共用的控件，
+   规则已移到 src/styles/shared.css（懒加载路由不能各自持有别人的样式） */
 .blog-state p {
   margin: 0 0 0.75rem;
 }
@@ -229,10 +214,6 @@
   display: flex;
   justify-content: center;
   gap: 0.75rem;
-}
-a.blog-button {
-  display: inline-block;
-  text-decoration: none;
 }
 .post-detail {
   padding: 1.75rem;
@@ -432,11 +413,7 @@ a.blog-button {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.comment-error {
-  margin: 0.75rem 0 0;
-  color: #b91c1c;
-  font-size: 0.9rem;
-}
+/* .comment-error 同样移到 src/styles/shared.css */
 .comment-form {
   margin-top: 1.25rem;
 }
@@ -478,21 +455,7 @@ a.blog-button {
   color: #9ca3af;
   font-size: 0.8rem;
 }
-.comment-submit {
-  background: #1f2937;
-  border-color: #1f2937;
-  color: #fff;
-  font-weight: 500;
-}
-.comment-submit:hover:not(:disabled) {
-  background: #111827;
-  border-color: #111827;
-}
-.comment-submit:disabled {
-  background: #e5e7eb;
-  border-color: #e5e7eb;
-  color: #9ca3af;
-}
+/* .comment-submit 移到 src/styles/shared.css */
 .comment-login {
   display: flex;
   align-items: center;

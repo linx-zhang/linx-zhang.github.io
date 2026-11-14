@@ -1,0 +1,54 @@
+/*
+ * 跨页面共用的控件样式：博客与后台都直接复用同样的按钮与错误提示。
+ * Blog 页是懒加载路由，这些规则若留在 Blog.css，先进入 /admin 时按钮会没有样式；
+ * 所以这一类「多页共用」的规则统一放这里，由 main.tsx 随主包加载。
+ */
+
+.blog-button {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2937;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.blog-button:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.blog-button:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
+
+a.blog-button {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.comment-submit {
+  background: #1f2937;
+  border-color: #1f2937;
+  color: #fff;
+  font-weight: 500;
+}
+
+.comment-submit:hover:not(:disabled) {
+  background: #111827;
+  border-color: #111827;
+}
+
+.comment-submit:disabled {
+  background: #e5e7eb;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+}
+
+.comment-error {
+  margin: 0.75rem 0 0;
+  color: #b91c1c;
+  font-size: 0.9rem;
+}

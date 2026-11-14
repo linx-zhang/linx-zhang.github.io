@@ -134,7 +134,7 @@ function ClipView({ code }: { code: string }) {
         <span className="tool-inline">
           创建于 {formatTimestamp(clip.created_at)} · 有效期至 {formatTimestamp(clip.expires_at)}
         </span>
-        <Link to="/tools/clip" className="tool-button">
+        <Link to="/tools/clip" className="tool-button tool-bar-end">
           分享新内容
         </Link>
         <CopyButton
