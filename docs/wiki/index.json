@@ -36,15 +36,6 @@
     "standalone": true
   },
   {
-    "slug": "scripts/build-site",
-    "title": "build-site",
-    "type": "md",
-    "category": "scripts",
-    "filePath": "/raw-docs/scripts/build-site.md",
-    "href": "/wiki/scripts/build-site.md",
-    "standalone": false
-  },
-  {
     "slug": "python/cprofile-middleware",
     "title": "cprofile-middleware",
     "type": "md",

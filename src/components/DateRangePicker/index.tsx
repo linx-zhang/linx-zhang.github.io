@@ -82,7 +82,7 @@ export default function DateRangePicker({
   useEffect(() => {
     if (!open) return
     const node = panelRef.current?.querySelector<HTMLButtonElement>(`[data-day="${focusDay}"]`)
-    node?.focus()
+    node?.focus({ preventScroll: true })
   }, [open, focusDay, viewMonth, panelRef])
 
   const pickDay = (day: string) => {

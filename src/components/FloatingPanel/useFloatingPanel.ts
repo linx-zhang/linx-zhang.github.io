@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 
 export interface FloatingPanelPosition {
@@ -42,7 +42,7 @@ export function useFloatingPanel({
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
-  const computePosition = (): FloatingPanelPosition | null => {
+  const computePosition = useCallback((): FloatingPanelPosition | null => {
     const trigger = triggerRef.current
     if (!trigger) return null
     const rect = trigger.getBoundingClientRect()
@@ -62,7 +62,7 @@ export function useFloatingPanel({
     }
 
     return { top, left, width }
-  }
+  }, [estimateHeight, minWidth, maxWidth])
 
   const openPanel = () => {
     setPosition(computePosition())
@@ -84,16 +84,33 @@ export function useFloatingPanel({
       if (panelRef.current?.contains(target)) return
       setOpen(false)
     }
-    const onViewportChange = () => setOpen(false)
+    const onResize = () => setOpen(false)
+    /**
+     * 滚动时只重算位置，不关闭。
+     * 之前这里是「任何滚动都关」，于是点开面板的瞬间只要页面动了一下
+     * （聚焦面板里的日期按钮、软键盘弹出、外层容器回弹都会触发），
+     * 面板就被自己关掉，看起来像「点了没反应」。
+     * 触发器滚出视口时才收起来，避免面板悬空。
+     */
+    const onScroll = () => {
+      const trigger = triggerRef.current
+      if (!trigger) return
+      const rect = trigger.getBoundingClientRect()
+      if (rect.bottom < 0 || rect.top > window.innerHeight) {
+        setOpen(false)
+        return
+      }
+      setPosition(computePosition())
+    }
     document.addEventListener('mousedown', onPointerDown)
-    window.addEventListener('resize', onViewportChange)
-    window.addEventListener('scroll', onViewportChange, true)
+    window.addEventListener('resize', onResize)
+    window.addEventListener('scroll', onScroll, true)
     return () => {
       document.removeEventListener('mousedown', onPointerDown)
-      window.removeEventListener('resize', onViewportChange)
-      window.removeEventListener('scroll', onViewportChange, true)
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('scroll', onScroll, true)
     }
-  }, [open])
+  }, [open, computePosition])
 
   return { open, position, triggerRef, panelRef, openPanel, closePanel, togglePanel }
 }

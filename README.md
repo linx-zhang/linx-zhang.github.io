@@ -4,7 +4,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - Repo: linx-zhang.github.io
 - Stack: Vite 8（Rolldown）+ React 19.3.1 + TypeScript（verbatimModuleSyntax）+ react-router-dom 7.18.5（BrowserRouter / Routes / Route 的 v6 风格 API）
 - Deployment: GitHub Pages from branch 'main', folder '/docs'（vite config: build.outDir = 'docs'、emptyOutDir = true、base = '/'）。SPA 深链刷新由 public/404.html 兜底：把原始路径写入 sessionStorage.spa-fallback-path 后回到根路径，src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复；`docs/.nojekyll` 由 `scripts/build-docs.mjs` 每次构建生成（关掉 GitHub Pages 的 Jekyll，否则 md 会被再渲染一份同名 html），不要手工删。
-- Backend: Cloudflare Python Worker + FastAPI + D1，base 常量在 src/api/auth.ts 的 AUTH_API_BASE。响应统一为 { code, detail, data }，前端 request<T>() 解包 data；错误抛 ApiError(status, code, detail)。
+- Backend: Cloudflare Python Worker + FastAPI + D1，base 常量在 `src/api/client.ts` 的 `API_BASE`（硬编码，不读环境变量）。响应统一为 { code, detail, data }，前端 request<T>() 解包 data；错误抛 ApiError(status, code, detail)。
 - Core Routes（定义在 src/routes.ts 与 src/main.tsx）:
   - / : Home（RootLayout 内）
   - /wiki : DocsHome（RootLayout -> WikiLayout）
@@ -17,11 +17,12 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
 - Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 对 401（以及未跳过时的 403）清 token 并广播该事件；管理接口传 skipForbiddenLogout 以展示后端 detail。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self。
 - User profile: users 有 nickname / first_name / last_name / avatar_url；展示名优先级 昵称 → 「名 姓」→ 邮箱前缀，已删除用户为「已注销」。GET /auth/me 与登录/注册响应带这四字段（无值为 null）；PATCH /auth/me 走 account:update:self，只接受这四字段（传 email/role 会 422），返回完整用户对象（含 permissions）；PATCH /admin/users/{id} 同时接受四字段与 email/role。
-- Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；src/components/ConfirmDialog + useConfirm；src/components/Modal 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
+- Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；DatePicker 单日选择；src/components/ConfirmDialog + useConfirm；src/components/Modal / DialogShell 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/MarkdownEditor 写作面板（工具栏命令在 commands.ts）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission、ListState、RouteFallback、ErrorBoundary。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
+- Shared CSS: 跨页共用的控件样式（.blog-button / .comment-submit / .comment-error 等）统一放 src/styles/shared.css 并由 src/main.tsx 引入，跟随主包加载——懒加载页面（Blog）的 CSS 不会在别的页面加载，控件样式写进页面 CSS 会导致 /admin 这类页面出现无样式裸文字按钮。
 - Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
 - Space memos: src/api/memos.ts 调 /memos（GET 列表 / GET /memos/summary 计数 / POST / PATCH / DELETE），全部 self-scoped，owner 由 token 决定。`due_at` 是本地日期 YYYY-MM-DD，只在列表里标红（今天到期 / 已过期），不发提醒；勾选完成写入 `done_at`，取消勾选后端清空它；删除是软删除（`deleted_at`）。列表按 offset 累加「加载更多」，计数单独走 summary 接口，列表本身不带 total。
 - Tools: src/pages/Tools/index.tsx 是一张注册表（slug / 图标 / 标题 / 副标题 / hooks 自带的 Component），新增工具只需加一条 + 一条路由。JSON / SQL / 时间戳 / UUID+密码四个工具纯本地计算；共享剪切板走后端 src/api/clips.ts（POST /clips 生成 32 位 uuid4 短链、GET /clips/:code 免登录读、DELETE /clips/:code 撤销），内容存 D1 的 cache_entries（`clip:` 前缀、24h TTL），GET 有每 ip 60 次/分 + 每 code 120 次/分的独立预算（429 rate_limited）。复制反馈统一走 src/hooks/useCopy（工具按钮）与 src/utils/clipboard（Markdown 代码块、后台复制），不再各自写 navigator.clipboard。
-- Bundle: 仍然没有代码分割 / 懒加载，所有页面静态 import，单包输出（docs/assets/index-*.js）。
+- Bundle: 分包做在「重依赖」上，而不是按页面铺开。页面级只懒加载三个把 react-markdown / Prism / rehype 带进来的页面（Docs / Blog / PostDetail）；工具箱的五个工具组件各自 `lazy()`（JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool），写作面板里的 MarkdownView 也是懒加载。Home、DocsHome、Space、Admin、Tools 入口、Profile 仍在主包（`docs/assets/index-*.js`），切常用页不闪占位。
 - Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
 - Print Rule: 所有非打印 UI 加 className="no-print"，@media print 隐藏；简历页使用 A4 版式。
 - Markdown/HTML Loading: 文档不再经 import.meta.glob 内联进 bundle。构建期 `scripts/build-wiki.mjs` 把 `raw-docs` 下的 md 复制成 `public/wiki/<slug>.md`（运行时用 MarkdownView 渲染，不预渲染 HTML），html 原样保真产成 `public/wiki/<slug>.html`（缺 `<html>` 的片段补壳，外链脚本改本地 `/wiki/vendor/`），并产出 `public/wiki/index.json`。前端运行时 `fetch('/wiki/index.json')` 取清单：md 取源文本就地渲染、正文列居中，html 用 iframe 直连（应用型页面固定 85vh，片段式由 `postMessage` 上报高度自适应）。硬约定：html 文档禁止外链 CDN。
@@ -109,7 +110,7 @@ npm run lint
 </BrowserRouter>
 ```
 
-- 路由表直接写在 `src/main.tsx`，路径常量集中在 `src/routes.ts`；所有页面静态引入，**未做代码分割 / 懒加载**
+- 路由表直接写在 `src/main.tsx`，路径常量集中在 `src/routes.ts`；**Docs / Blog / PostDetail 是 `lazy()` 按需加载**（外面套 `Suspense` + `RouteFallback`），工具箱的每个工具组件也在 `Tools/index.tsx` 里各自 `lazy()`，其余页面静态引入
 - `/wiki/*` 由 `Docs` 组件通过 `useParams()['*']` 解析多级 slug
 - `/admin` 的分区用查询参数深链：`?tab=posts`（默认）、`?tab=invites`、`?tab=users`、`?tab=activity`、`?tab=analytics`
 - `/space` 放在 `RootLayout` 内（沿用全站导航与页脚），未登录时只渲染页内登录门，不用 `RequirePermission` 踢回；导航「空间」项只在 `user` 存在时出现
@@ -174,7 +175,7 @@ npm run lint
 | slug | 工具 | 数据来源 |
 | --- | --- | --- |
 | `json` | JSON 格式化 / 压缩 / 树形折叠 | 本地 |
-| `sql` | SQL 格式化 + 语法高亮 | 本地（自研分词，不引第三方库） |
+| `sql` | SQL 格式化 + 语法高亮 | 本地（`sql-formatter` 负责排版，`highlight.ts` 自研分词上色，不引 UI / 编辑器库） |
 | `timestamp` | 时间戳与日期互转（10 位秒 / 13 位毫秒） | 本地 |
 | `random` | UUID（v1 / v4 / v7）与密码生成 | 本地（crypto） |
 | `clip` | 共享剪切板：贴日志生成免登录短链 | 后端 `/clips` + D1 cache |
@@ -202,24 +203,32 @@ linx-zhang.github.io/
 ├─ index.html               # Vite 入口，挂载 /src/main.tsx
 ├─ vite.config.ts           # base / outDir 构建配置
 ├─ src/
-│  ├─ main.tsx              # 路由表、ReactDOM 挂载、404 路径恢复
+│  ├─ main.tsx              # 路由表、懒加载分包、ReactDOM 挂载、404 路径恢复
 │  ├─ routes.ts             # 路由常量与深链判定
+│  ├─ constants.ts          # 前后端契约常量（分页大小、各字段长度上限、批量上限、心跳间隔）
+│  ├─ types.ts              # 跨模块共用的类型
 │  ├─ activity/             # ActivityTracker + useActivityTracker（page_view / heartbeat / page_leave）
-│  ├─ api/                  # client.ts（fetch 封装 / token / ApiError）、auth.ts、blog.ts、admin.ts、memos.ts、clips.ts
+│  ├─ api/                  # client.ts（fetch 封装 / token / ApiError）、errors.ts（错误文案）、auth.ts、blog.ts、admin.ts、memos.ts、clips.ts
 │  ├─ auth/                 # AuthProvider、usePermission
 │  ├─ components/
 │  │  ├─ Layout/            # RootLayout 全站主壳、WikiLayout 知识库子壳
 │  │  ├─ Select/            # 自定义下拉（浮层逻辑见 FloatingPanel）
 │  │  ├─ DateRangePicker/   # 自定义日期范围（单月日历 + 快捷项 + 键盘）
+│  │  ├─ DatePicker/        # 单日选择（空间「到期日」等，复用同一套浮层逻辑）
 │  │  ├─ FloatingPanel/     # useFloatingPanel：定位 / 翻转 / 点击外部与 resize+scroll 关闭
 │  │  ├─ Modal/             # 通用弹窗（Escape / 遮罩关闭）
+│  │  ├─ DialogShell/       # 弹窗外壳（标题 / 内容 / 底部按钮的统一布局）
 │  │  ├─ ConfirmDialog/     # useConfirm() 返回 { confirm, dialog }
 │  │  ├─ Avatar/            # 头像与 displayName / initialOf
 │  │  ├─ AuthMenu/          # 顶栏账号下拉（个人资料、退出登录）
 │  │  ├─ ProfileDialog/     # 个人资料弹窗
 │  │  ├─ AuthModal/         # 登录 / 注册弹窗
 │  │  ├─ RequirePermission/ # 权限守卫
-│  │  └─ MarkdownView/      # Markdown 渲染
+│  │  ├─ MarkdownView/      # Markdown 渲染（知识库 md + 博客正文共用）
+│  │  ├─ MarkdownEditor/    # 写作面板：工具栏命令（commands.ts）+ 实时预览
+│  │  ├─ ListState/         # 列表加载 / 空 / 错误 / missing 的统一状态块
+│  │  ├─ RouteFallback/     # 懒加载页面的 Suspense 占位
+│  │  └─ ErrorBoundary/     # 全局错误边界，单页崩溃不白屏
 │  ├─ pages/
 │  │  ├─ Home/              # 门户首页
 │  │  ├─ DocsHome/          # 知识库分类总览
@@ -230,14 +239,24 @@ linx-zhang.github.io/
 │  │  ├─ Tools/             # 工具箱：index.tsx 注册表 + JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool
 │  │  └─ Profile/           # 独立简历页（PDF 导出）
 │  ├─ hooks/
-│  │  └─ useCopy.ts         # 复制按钮统一反馈（copiedKey 区分同屏多个按钮）
+│  │  ├─ useCopy.ts         # 复制按钮统一反馈（copiedKey 区分同屏多个按钮）
+│  │  ├─ useResource.ts     # 单次请求的状态机（loading / ready / error / missing）
+│  │  ├─ usePagedList.ts    # 分页列表（limit / offset + has_next）
+│  │  └─ useInfiniteList.ts # 累加式「加载更多」列表
+│  ├─ styles/
+│  │  ├─ layers.css         # 层级（z-index）变量
+│  │  └─ shared.css         # 跨页共用控件（.blog-button / .comment-submit / .comment-error 等，随主包加载）
 │  └─ utils/
 │     ├─ docs.ts            # 运行时读取 /wiki/index.json（不再 glob 内联）
 │     ├─ useDocs.ts         # useDocList()：目录页 / 侧边栏 / 详情页共用的加载状态
-│     └─ clipboard.ts       # copyText()：clipboard API + execCommand 兜底
+│     ├─ clipboard.ts       # copyText()：clipboard API + execCommand 兜底
+│     ├─ format.ts          # 日期 / 文本格式化
+│     ├─ calendar.ts        # 自绘日历的日期计算
+│     └─ markdownEdit.ts    # 写作面板的文本编辑命令实现
 ├─ scripts/
 │  ├─ build-wiki.mjs        # 构建期镜像 raw-docs（md → .md 副本、html → 静态页）+ index.json
-│  └─ build-docs.mjs        # 先建到 docs_build 再整目录替换 docs/，附带 wiki 入口复制
+│  ├─ build-docs.mjs        # 先建到 docs_build 再整目录替换 docs/，附带 wiki 入口复制
+│  └─ postbuild-wiki-index.mjs # 把 SPA 入口复制成 docs/wiki/index.html，否则 /wiki 会被 Pages 命中 wiki/index.json
 ├─ raw-docs/                # 笔记源文件；仅 .md / .markdown / .html 参与构建
 ├─ public/                  # favicon.svg（取自 icons.svg 的 #documentation-icon）、icons.svg 图标 sprite、404.html（SPA 深链兜底）
 │  └─ wiki/                 # 生成物（gitignore）：<slug>.md、<slug>.html、index.json、vendor/
@@ -318,7 +337,7 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 
 **数据接口**
 
-13. 分页列表统一返回 `{items, has_next}`：服务端取 `limit + 1` 条、丢掉多余那条、给 `has_next`（后端 `split_page()`）。前端**只发 `limit`**，不再自己请求 `limit+1` 再切片；`usePagedFetch` 与 `blogApi.listPosts` 都按这个形状。
+13. 分页列表统一返回 `{items, has_next}`：服务端取 `limit + 1` 条、丢掉多余那条、给 `has_next`（后端 `split_page()`）。前端**只发 `limit`**，不再自己请求 `limit+1` 再切片；`src/hooks/usePagedList.ts`、`useInfiniteList.ts` 与 `blogApi.listPosts` 都按这个形状。
 14. 「下一页」按钮只看 `has_next`，不要用 `total` 算：`total` 与当前页来自两条独立语句，并发写入时可能差一条（users / invite-codes 仍返回 `total`，但只用于「共 N 条 / 第 x 页」文案）。
 15. 改列表响应形状属于**前后端同批上线**的改动：先后端 deploy、再站点 push；中间几十秒线上列表会因形状不匹配报错，别只改一边就 push。
 16. 参数名只有 `limit` / `offset`；`page` / `page_size` 现在会被后端**直接 422**（`reject_legacy_paging()`），不再静默返回第一页。前端 `admin.ts` 也不再给 `limit` 兜 20，默认值只有后端一处真源。

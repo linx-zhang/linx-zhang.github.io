@@ -45,7 +45,7 @@ export default function Admin() {
     <div className="admin-page">
       <header className="admin-header">
         <h1>管理后台</h1>
-        <p>管理文章、邀请码、用户与活跃日志。</p>
+        <p>管理文章、邀请码、用户、活跃日志与访问分析。</p>
       </header>
 
       <div className="admin-tabs" role="tablist" aria-label="管理分区">

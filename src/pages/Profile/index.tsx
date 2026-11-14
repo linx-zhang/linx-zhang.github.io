@@ -99,9 +99,9 @@ export default function Profile() {
           <div className="proj-item">
             <h3>个人技术知识库（当前站点）</h3>
             <ul>
-              <li>GitHub Pages 静态知识库，Python脚本自动扫描目录生成导航菜单；</li>
-              <li>按主题沉淀编译原理、C/C++、Python、中间件、数据库笔记；</li>
-              <li>配套自动化构建脚本，一键编译React Profile页面、同步产物、更新导航。</li>
+              <li>Vite + React + TypeScript 构建的单页站点，GitHub Pages 托管，Cloudflare Worker + D1 提供账号、文章与数据接口；</li>
+              <li>知识库源文件集中在 raw-docs，构建期镜像成 /wiki 静态产物、运行时读索引渲染，md 与 html 两类文档分开处理；</li>
+              <li>按主题沉淀编译原理、C/C++、Python、中间件、数据库笔记；另有博客评论、工具箱与可导出 PDF 的简历页。</li>
             </ul>
           </div>
         </section>

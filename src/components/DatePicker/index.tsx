@@ -72,7 +72,8 @@ export default function DatePicker({
   useEffect(() => {
     if (!open) return
     const node = panelRef.current?.querySelector<HTMLButtonElement>(`[data-day="${focusDay}"]`)
-    node?.focus()
+    // preventScroll：面板本来就贴着触发器算出位置，聚焦不应再带着页面跳一下
+    node?.focus({ preventScroll: true })
   }, [open, focusDay, viewMonth, panelRef])
 
   const pick = (day: string | null) => {
