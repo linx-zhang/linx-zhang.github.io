@@ -38,6 +38,18 @@
   white-space: nowrap;
   cursor: pointer;
 }
+/* 写作面板展开时，右上角是「全屏写 + 收起」，和「写文章」同一个高度基准 */
+.blog-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+.blog-header-actions .blog-button {
+  padding: 0.42rem 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
 .blog-write:hover {
   background: #111827;
   border-color: #111827;

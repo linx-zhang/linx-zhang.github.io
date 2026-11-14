@@ -184,16 +184,38 @@ export default function Blog() {
           <h1>博客</h1>
           <p>记录技术实践与日常思考。</p>
         </div>
-        <button
-          type="button"
-          className={composerOpen ? 'blog-write blog-write-active' : 'blog-write'}
-          aria-expanded={user ? composerOpen : undefined}
-          aria-haspopup={user ? undefined : 'dialog'}
-          title={user ? undefined : '登录后可写文章'}
-          onClick={toggleComposer}
-        >
-          {composerOpen ? '收起' : '写文章'}
-        </button>
+        {composerOpen ? (
+          <div className="blog-header-actions">
+            {!fullscreen && (
+              <button
+                type="button"
+                className="blog-button"
+                onClick={() => setFullscreen(true)}
+                title="整屏写，左写右预览"
+              >
+                全屏写
+              </button>
+            )}
+            <button
+              type="button"
+              className="blog-write blog-write-active"
+              aria-expanded
+              onClick={toggleComposer}
+            >
+              收起
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="blog-write"
+            aria-haspopup={user ? undefined : 'dialog'}
+            title={user ? undefined : '登录后可写文章'}
+            onClick={toggleComposer}
+          >
+            写文章
+          </button>
+        )}
       </header>
 
       {/* 写作面板展开时收起筛选栏：两块表单挤在一起，输入焦点会打架 */}
@@ -290,19 +312,9 @@ export default function Blog() {
                 </button>
               </>
             ) : (
-              <>
-                <button
-                  type="button"
-                  className="blog-button"
-                  onClick={() => setFullscreen(true)}
-                  title="在独立的全屏面板里写，左写右看"
-                >
-                  全屏写
-                </button>
-                <button type="button" className="blog-button" disabled={publishing} onClick={closeComposer}>
-                  收起
-                </button>
-              </>
+              <button type="button" className="blog-button" disabled={publishing} onClick={closeComposer}>
+                收起
+              </button>
             )}
             <button
               type="submit"
