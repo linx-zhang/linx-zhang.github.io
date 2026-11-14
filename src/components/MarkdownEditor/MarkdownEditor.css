@@ -1,0 +1,207 @@
+/* 写作编辑器：工具条 + 文本域 + 实时预览。
+   配色沿用博客既有卡片（#e5e7eb 边线 / #1f2937 正文 / #f9fafb 弱底），不引入新变量以免视觉漂移。 */
+
+.md-editor,
+.md-editor * {
+  /* 站点全局 reset 里有 border-box，这里再声明一次：组件被嵌进任何容器都不该撑出横滑条 */
+  box-sizing: border-box;
+}
+
+.md-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.md-editor-label {
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.md-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.35rem 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px 8px 0 0;
+  background: #fafafa;
+}
+
+.md-editor-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.1rem;
+  height: 2rem;
+  padding: 0 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-family: inherit;
+  font-size: 0.82rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.md-editor-tool:hover:not(:disabled) {
+  border-color: #e5e7eb;
+  background: #fff;
+}
+
+.md-editor-tool:focus-visible {
+  outline: none;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.08);
+}
+
+.md-editor-tool:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.md-editor-tool code,
+.md-editor-glyph-link {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+}
+
+.md-editor-glyph-link {
+  text-decoration: underline;
+}
+
+/* 预览开关只在窄屏出现：宽屏两栏同显，不需要切换 */
+.md-editor-tool-preview {
+  display: none;
+  margin-left: auto;
+  text-decoration: underline;
+}
+
+.md-editor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border: 1px solid #e5e7eb;
+  border-radius: 0 0 8px 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.md-editor-input {
+  width: 100%;
+  min-height: 320px;
+  padding: 0.75rem;
+  border: none;
+  background: #fff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.md-editor-input:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 1px #9ca3af;
+}
+
+.md-editor-input:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.md-editor-preview {
+  display: none;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 320px;
+  border-left: 1px solid #e5e7eb;
+  background: #fcfcfc;
+}
+
+.md-editor-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-bottom: 1px solid #eef0f3;
+  color: #6b7280;
+  font-size: 0.78rem;
+}
+
+.md-editor-preview-pending {
+  color: #9ca3af;
+}
+
+.md-editor-preview-body {
+  flex: 1;
+  max-height: 560px;
+  padding: 0.9rem 1rem;
+  overflow: auto;
+}
+
+.md-editor-preview-empty {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.86rem;
+}
+
+/* 预览区不再叠一层页面级标题样式：正文排版交给 MarkdownView 的 .markdown-body */
+.md-editor-markdown {
+  font-size: 0.92rem;
+}
+
+.md-editor-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: #9ca3af;
+  font-size: 0.78rem;
+}
+
+.md-editor-tip {
+  text-align: right;
+}
+
+@media (min-width: 1024px) {
+  .md-editor-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .md-editor-preview {
+    display: flex;
+  }
+
+  .md-editor-tool-preview {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .md-editor-tool-preview {
+    display: inline-flex;
+  }
+
+  /* 窄屏：默认只看编辑区；点「预览」把编辑区换成预览，避免两者挤成半屏 */
+  .md-editor[data-preview='on'] .md-editor-input {
+    display: none;
+  }
+
+  .md-editor[data-preview='on'] .md-editor-preview {
+    display: flex;
+    border-left: none;
+  }
+
+  .md-editor-input,
+  .md-editor-preview {
+    min-height: 240px;
+  }
+
+  .md-editor-tip {
+    text-align: left;
+  }
+}

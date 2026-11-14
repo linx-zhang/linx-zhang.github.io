@@ -5,6 +5,7 @@ import { errorMessage } from '@/api/errors'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
+import MarkdownEditor from '@/components/MarkdownEditor'
 import { usePagedList } from '@/hooks/usePagedList'
 import { POST_TITLE_MAX } from '@/constants'
 import { formatTimestamp } from '@/utils/format'
@@ -108,8 +109,8 @@ export default function Blog() {
     setComposerOpen((open) => !open)
   }
 
-  const handlePublish = async (event: FormEvent) => {
-    event.preventDefault()
+  /** 发布：表单提交与「Ctrl/⌘ + Enter」共用，校验逻辑只有这一处 */
+  const publishPost = async () => {
     setComposeError('')
     const trimmedTitle = title.trim()
     if (trimmedTitle.length === 0) {
@@ -133,6 +134,11 @@ export default function Blog() {
     } finally {
       setPublishing(false)
     }
+  }
+
+  const handlePublish = (event: FormEvent) => {
+    event.preventDefault()
+    void publishPost()
   }
 
   return (
@@ -206,19 +212,17 @@ export default function Blog() {
               }}
             />
           </label>
-          <label className="blog-composer-field">
-            <span>正文（Markdown）</span>
-            <textarea
-              value={bodyMd}
-              rows={12}
-              placeholder="支持 Markdown，发布后使用与知识库相同的渲染方式。"
-              disabled={publishing}
-              onChange={(event) => {
-                setBodyMd(event.target.value)
-                setComposeError('')
-              }}
-            />
-          </label>
+          <MarkdownEditor
+            label="正文（Markdown）"
+            value={bodyMd}
+            placeholder="支持 Markdown，左侧边写边看右侧预览；工具栏可插入链接、列表等常用结构。"
+            disabled={publishing}
+            onSubmitShortcut={() => void publishPost()}
+            onChange={(next) => {
+              setBodyMd(next)
+              setComposeError('')
+            }}
+          />
           {composeError && <p className="comment-error">{composeError}</p>}
           <div className="blog-composer-actions">
             <button

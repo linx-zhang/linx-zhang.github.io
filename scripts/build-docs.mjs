@@ -24,6 +24,30 @@ function check(relPath) {
   return full;
 }
 
+/** 同步小睡：脚本是顺序执行的，这里不需要异步重排 */
+const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+/**
+ * 目录重命名的重试封装。
+ * Windows 上只要还有进程（dev server 的 watcher、杀毒扫描）开着目录里的文件，
+ * rename 就会抛 EPERM/EBUSY；等它松手比让构建整体失败更划算。
+ */
+function renameWithRetry(from, to, attempts = 10) {
+  let lastError;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      renameSync(from, to);
+      return;
+    } catch (error) {
+      const retryable = ['EPERM', 'EBUSY', 'EACCES', 'ENOTEMPTY'].includes(error.code);
+      if (!retryable) throw error;
+      lastError = error;
+      sleep(150 * (attempt + 1));
+    }
+  }
+  throw lastError;
+}
+
 try {
   run([join('scripts', 'build-wiki.mjs')]);
   run([
@@ -51,8 +75,28 @@ try {
   console.log('  ✓ docs/.nojekyll');
 
   if (existsSync(TRASH)) rmSync(TRASH, { recursive: true, force: true });
-  if (existsSync(TARGET)) renameSync(TARGET, TRASH);
-  renameSync(STAGE, TARGET);
+
+  // dev server 开着时它 watch 着 docs/，目录重命名会偶发 EPERM；
+  // 所以每一次替换都带重试，并且「旧目录已挪走、新目录没接上」时一定还原，
+  // 绝不让仓库停在没有 docs/ 的状态（docs/ 是提交进仓的产物）。
+  let movedOld = false;
+  if (existsSync(TARGET)) {
+    renameWithRetry(TARGET, TRASH);
+    movedOld = true;
+  }
+  try {
+    renameWithRetry(STAGE, TARGET);
+  } catch (error) {
+    if (movedOld) {
+      try {
+        renameWithRetry(TRASH, TARGET);
+        console.warn('  ! 新产物就位失败，已还原上一版 docs/');
+      } catch {
+        console.warn('  ! 新产物就位失败，旧产物留在 .docs-trash，需手工恢复');
+      }
+    }
+    throw error;
+  }
   try {
     rmSync(TRASH, { recursive: true, force: true });
   } catch {
