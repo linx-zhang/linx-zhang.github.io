@@ -249,12 +249,24 @@ export default function Space() {
         </p>
       </header>
 
-      {/* 空间只留作者自己的动作：发码、看访问量都是管理动作，放后台，别混进来 */}
-      {has('post:create:any') && (
+      {/* 快捷入口三个：写文章是作者动作，用户与分析按权限码出现，不按角色名 */}
+      {(has('post:create:any') || has('user:read:any') || has('activity:read:any')) && (
         <nav className="space-quick" aria-label="快捷入口">
-          <Link to="/blog">
-            写文章<span>发到博客</span>
-          </Link>
+          {has('post:create:any') && (
+            <Link to="/blog">
+              写文章<span>发到博客</span>
+            </Link>
+          )}
+          {has('user:read:any') && (
+            <Link to="/admin?tab=users">
+              用户<span>账号与邀请码</span>
+            </Link>
+          )}
+          {has('activity:read:any') && (
+            <Link to="/admin?tab=analytics">
+              分析<span>访客与停留</span>
+            </Link>
+          )}
         </nav>
       )}
 

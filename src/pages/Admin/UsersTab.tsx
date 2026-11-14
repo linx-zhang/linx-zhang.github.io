@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { errorMessage } from '@/api/errors'
 import { adminApi } from '@/api/admin'
 import type { AdminUser, UserRole } from '@/api/admin'
@@ -11,7 +12,6 @@ import Select from '@/components/Select'
 import ListState from '@/components/ListState'
 import { usePagedList } from '@/hooks/usePagedList'
 import Pager from './Pager'
-import InvitesTab from './InvitesTab'
 import { PAGE_SIZE } from '@/constants'
 import ResetPasswordDialog from './ResetPasswordDialog'
 import UserEditDialog from './UserEditDialog'
@@ -175,7 +175,15 @@ export default function UsersTab() {
 
       <div className="invite-list-head">
         <h2 className="admin-section-title">用户</h2>
-        <span className="invite-total">共 {total ?? 0} 人</span>
+        <div className="user-head-aside">
+          <span className="invite-total">共 {total ?? 0} 人</span>
+          {/* 邀请码是独立分区：这里只留入口，不在用户页里塞整块管理界面 */}
+          {canInvite && (
+            <Link className="user-invite-entry" to="/admin?tab=invites">
+              邀请码<span aria-hidden="true">→</span>
+            </Link>
+          )}
+        </div>
       </div>
 
       <ListState
@@ -289,13 +297,6 @@ export default function UsersTab() {
           totalPages={totalPages}
           disabled={status === 'loading'}
         />
-      )}
-
-      {/* 邀请码 = 怎么造出用户，和用户列表同一屏；没有权限的人整块不渲染 */}
-      {canInvite && (
-        <div className="admin-invite-block">
-          <InvitesTab />
-        </div>
       )}
 
       {editingUser && (

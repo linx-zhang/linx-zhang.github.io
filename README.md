@@ -11,7 +11,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /wiki/* : Docs 文档详情（多级 slug）
   - /blog : Blog 列表 + 页内写作面板
   - /blog/:id : PostDetail 文章详情与评论
-  - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；分区通过 ?tab=posts|users|activity|analytics 深链（默认 posts，旧的 ?tab=invites 会落到 users）
+  - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；tab 条通过 ?tab=posts|users|activity|analytics 深链（默认 posts），邀请码是独立分区 ?tab=invites，不占 tab 条，入口在用户页标题行
   - /space : 个人空间（备忘录 / 待办），未登录只显示页内登录门；导航「空间」项仅在登录后渲染
   - /tools : 工具箱入口（5 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
@@ -39,7 +39,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **分层路由**：`RootLayout` 提供全站导航、账号菜单与页脚；`WikiLayout` 提供知识库侧边栏；`/profile` 是脱离布局的独立页面
 - **账号体系**：登录 / 注册（邀请码）、权限码驱动的菜单与操作按钮、个人资料弹窗（昵称 / 名 / 姓 / 头像，保存后顶栏即时更新）
 - **博客**：文章列表、详情、Markdown 渲染、评论与回复、页内写作面板
-- **管理后台**：文章列表与批量删除、用户管理（资料与账号分段的编辑弹窗、管理员重置密码：可手动指定或自动生成，并一次性展示生效密码）、用户页底部的邀请码区、活跃日志、访问分析
+- **管理后台**：文章列表与批量删除、用户管理（资料与账号分段的编辑弹窗、管理员重置密码：可手动指定或自动生成，并一次性展示生效密码）、邀请码（独立分区，入口在用户页标题行）、活跃日志、访问分析
 - **自定义基础组件**：Select、DateRangePicker、ConfirmDialog、Modal、Avatar 均为自研，未引入第三方 UI 库
 - **活跃采集**：登录后 60 秒心跳、路由级 `page_view`、离开时 `page_leave`（带停留时长，`fetch` + `keepalive` 携带 Bearer）
 - **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki/<slug>.html`，站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
@@ -112,7 +112,7 @@ npm run lint
 
 - 路由表直接写在 `src/main.tsx`，路径常量集中在 `src/routes.ts`；**Docs / Blog / PostDetail 是 `lazy()` 按需加载**（外面套 `Suspense` + `RouteFallback`），工具箱的每个工具组件也在 `Tools/index.tsx` 里各自 `lazy()`，其余页面静态引入
 - `/wiki/*` 由 `Docs` 组件通过 `useParams()['*']` 解析多级 slug
-- `/admin` 的分区用查询参数深链：`?tab=posts`（默认）、`?tab=users`、`?tab=activity`、`?tab=analytics`；邀请码不再是独立分区，收在用户页底部（`?tab=invites` 会重定向到用户页）
+- `/admin` 的 tab 条用查询参数深链：`?tab=posts`（默认）、`?tab=users`、`?tab=activity`、`?tab=analytics`；邀请码是独立分区 `?tab=invites`，不占 tab 条，入口在用户页标题行「邀请码 →」，从邀请码页可「← 返回用户管理」
 - `/space` 放在 `RootLayout` 内（沿用全站导航与页脚），未登录时只渲染页内登录门，不用 `RequirePermission` 踢回；导航「空间」项只在 `user` 存在时出现
 - `/profile` 不包裹 `RootLayout`，因此没有全站导航与页脚
 
@@ -133,12 +133,13 @@ npm run lint
 
 ## 🧩 管理后台
 
-`/admin` 提供四个分区（`tab` 自上而下按「内容 → 人 → 观测」排）：
+`/admin` 的 tab 条是四个分区（内容 → 人 → 观测），另有不占 tab 条的邀请码分区：
 
 | tab | 内容 |
 | --- | --- |
 | `posts` | 文章纯列表、全选与单次 `POST /posts/batch-delete` 批量删除 |
-| `users` | 用户搜索 / 角色筛选 / 分页；行内操作从左到右为「编辑」「重置密码」「删除」（危险操作固定行尾），角色下拉即时保存并支持失败回滚；「重置密码」先二次确认，可手动填写新密码（留空则由后端生成 16 位临时密码），成功后弹窗一次性展示生效的密码并可一键复制（关闭后无法再查看）；「编辑」弹窗只改资料与邮箱，保存只提交改动字段。页面底部是邀请码区（创建、列表、撤销），与用户列表同屏，因为邀请码本质是「怎么造出用户」 |
+| `users` | 用户搜索 / 角色筛选 / 分页；行内操作从左到右为「编辑」「重置密码」「删除」（危险操作固定行尾），角色下拉即时保存并支持失败回滚；「重置密码」先二次确认，可手动填写新密码（留空则由后端生成 16 位临时密码），成功后弹窗一次性展示生效的密码并可一键复制（关闭后无法再查看）；「编辑」弹窗只改资料与邮箱，保存只提交改动字段。标题行右侧是「邀请码 →」入口 |
+| `invites` | 独立分区：邀请码创建、列表与撤销；不进 tab 条，只从用户页入口进入，页顶有「← 返回用户管理」 |
 | `activity` | 按用户、类型、日期范围筛选活跃日志；日期范围使用自定义 `DateRangePicker`，按本地日界转 ISO；匿名行在用户列显示「匿名 · ip」 |
 | `analytics` | 活动分析监控页（`GET /admin/analytics/summary`）：今日新增用户 / 活跃用户 / 匿名访客 / 页面浏览四张数字卡，近 7 / 30 天每日浏览柱图（纯 div，不引图表库），访问者表（身份、IP·地区、浏览次数、停留时长、最近时间），点一行展开该身份停留最久的 8 个页面与口径说明 |
 

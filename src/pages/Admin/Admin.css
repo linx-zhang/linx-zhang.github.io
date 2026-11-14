@@ -175,11 +175,39 @@
   flex-direction: column;
   gap: 1rem;
 }
-/* 邀请码收进用户页：一条分隔线把它和用户列表分开，不再单独占一格 tab */
-.admin-invite-block {
-  margin-top: 0.6rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+/* 邀请码是独立分区：用户页标题行右侧只放一个入口按钮 */
+.user-head-aside {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.user-invite-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: var(--admin-control-h);
+  padding: 0 0.65rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #1f2937;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.user-invite-entry:hover {
+  background: #f9fafb;
+}
+/* 独立分区没有对应 tab，给一条回用户页的退路 */
+.admin-back-link {
+  margin-bottom: 1rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #4b5563;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.admin-back-link:hover {
+  color: #1f2937;
 }
 .invite-form {
   display: grid;

@@ -20,7 +20,7 @@
 
 /* 快捷入口：几格都用 flex，只有 1-3 个时也不会留下空列 */
 .space-quick {
-  display: inline-flex;
+  display: flex;
   margin-top: 1rem;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -28,10 +28,9 @@
   background: #fff;
 }
 
-/* 只剩一个入口时不要拉满整行：按内容收窄，像一个入口卡而不是一条空面板 */
+/* 三个入口等分整条，和后台 tab 条同一套「一格一格」的读法 */
 .space-quick a {
-  flex: 0 0 auto;
-  min-width: 9.5rem;
+  flex: 1 1 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
