@@ -4,6 +4,14 @@
  * 所以这一类「多页共用」的规则统一放这里，由 main.tsx 随主包加载。
  */
 
+/*
+ * 根滚动条永久占位：列表从「短（无滚动条）」切到「长（有滚动条）」时，
+ * 居中容器不会被滚动条宽度推着左右抖（筛选、翻页、空态来回切最容易看见）。
+ */
+html {
+  scrollbar-gutter: stable;
+}
+
 .blog-button {
   padding: 0.4rem 0.9rem;
   border: 1px solid #e5e7eb;
