@@ -249,24 +249,12 @@ export default function Space() {
         </p>
       </header>
 
-      {/* 快捷入口按权限码显示，而不是按角色名：权限才是后端真正校验的东西 */}
-      {(has('post:create:any') || has('activity:read:any') || has('invite_code:read:any')) && (
+      {/* 空间只留作者自己的动作：发码、看访问量都是管理动作，放后台，别混进来 */}
+      {has('post:create:any') && (
         <nav className="space-quick" aria-label="快捷入口">
-          {has('post:create:any') && (
-            <Link to="/blog">
-              写文章<span>发到博客</span>
-            </Link>
-          )}
-          {has('activity:read:any') && (
-            <Link to="/admin?tab=analytics">
-              分析<span>访客与停留</span>
-            </Link>
-          )}
-          {has('invite_code:read:any') && (
-            <Link to="/admin?tab=invites">
-              邀请码<span>生成与查看</span>
-            </Link>
-          )}
+          <Link to="/blog">
+            写文章<span>发到博客</span>
+          </Link>
         </nav>
       )}
 

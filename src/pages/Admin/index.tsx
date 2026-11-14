@@ -5,11 +5,10 @@ import RequirePermission from '@/components/RequirePermission'
 import ActivityTab from './ActivityTab'
 import AnalyticsTab from './AnalyticsTab'
 import PostsTab from './PostsTab'
-import InvitesTab from './InvitesTab'
 import UsersTab from './UsersTab'
 import './Admin.css'
 
-type AdminTab = 'posts' | 'invites' | 'users' | 'activity' | 'analytics'
+type AdminTab = 'posts' | 'users' | 'activity' | 'analytics'
 
 interface TabDef {
   key: AdminTab
@@ -19,20 +18,25 @@ interface TabDef {
   panel: ReactNode
 }
 
-/** 一张表描述全部分区：新增 tab 只加一行，不再改四处嵌套三元与权限判断 */
+/**
+ * 一张表描述全部分区：新增 tab 只加一行，不再改四处嵌套三元与权限判断。
+ * 邀请码不再单独占一格，收进「用户」页底部（怎么造出用户，和用户列表同一屏）。
+ */
 const TABS: TabDef[] = [
   { key: 'posts', label: '文章', panel: <PostsTab /> },
-  { key: 'invites', label: '邀请码', panel: <InvitesTab /> },
   { key: 'users', label: '用户', permission: 'user:read:any', panel: <UsersTab /> },
   { key: 'activity', label: '日志', permission: 'activity:read:any', panel: <ActivityTab /> },
   { key: 'analytics', label: '分析', permission: 'activity:read:any', panel: <AnalyticsTab /> },
 ]
 
+/** 旧链接（?tab=invites）落到用户页，避免书签与外部引用变成白屏 */
+const TAB_ALIASES: Record<string, AdminTab> = { invites: 'users' }
+
 export default function Admin() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { has } = usePermission()
 
-  const rawTab = searchParams.get('tab')
+  const rawTab = TAB_ALIASES[searchParams.get('tab') ?? ''] ?? searchParams.get('tab')
   // 未知 tab 落到第一项：URL 手改错了也不会白屏
   const active = TABS.find((item) => item.key === rawTab) ?? TABS[0]
   const visible = TABS.filter((item) => !item.permission || has(item.permission))
@@ -45,7 +49,7 @@ export default function Admin() {
     <div className="admin-page">
       <header className="admin-header">
         <h1>管理后台</h1>
-        <p>管理文章、邀请码、用户、活跃日志与访问分析。</p>
+        <p>管理文章、用户与邀请码、活跃日志与访问分析。</p>
       </header>
 
       <div className="admin-tabs" role="tablist" aria-label="管理分区">

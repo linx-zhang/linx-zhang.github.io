@@ -175,6 +175,12 @@
   flex-direction: column;
   gap: 1rem;
 }
+/* 邀请码收进用户页：一条分隔线把它和用户列表分开，不再单独占一格 tab */
+.admin-invite-block {
+  margin-top: 0.6rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
 .invite-form {
   display: grid;
   grid-template-columns:

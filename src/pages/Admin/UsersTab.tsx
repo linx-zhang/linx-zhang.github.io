@@ -11,6 +11,7 @@ import Select from '@/components/Select'
 import ListState from '@/components/ListState'
 import { usePagedList } from '@/hooks/usePagedList'
 import Pager from './Pager'
+import InvitesTab from './InvitesTab'
 import { PAGE_SIZE } from '@/constants'
 import ResetPasswordDialog from './ResetPasswordDialog'
 import UserEditDialog from './UserEditDialog'
@@ -36,6 +37,7 @@ export default function UsersTab() {
   const canUpdate = has('user:update:any')
   const canDelete = has('user:delete:any')
   const canResetPassword = has('user:reset_password:any')
+  const canInvite = has('invite_code:read:any')
   const showActions = canUpdate || canDelete || canResetPassword
 
   const [query, setQuery] = useState('')
@@ -287,6 +289,13 @@ export default function UsersTab() {
           totalPages={totalPages}
           disabled={status === 'loading'}
         />
+      )}
+
+      {/* 邀请码 = 怎么造出用户，和用户列表同一屏；没有权限的人整块不渲染 */}
+      {canInvite && (
+        <div className="admin-invite-block">
+          <InvitesTab />
+        </div>
       )}
 
       {editingUser && (
