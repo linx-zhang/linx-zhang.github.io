@@ -40,7 +40,10 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+  /* 分两段：图标钉在顶部，说明文字往下排。
+     这里绝不能 center：说明文字换行变高后整块内容会被垂直居中，
+     图标就被往上顶，一行说明和两行说明的卡片图标高度就不齐了。 */
+  justify-content: flex-start;
   gap: 0.75rem;
   min-height: 150px;
   padding: 1.15rem 1.2rem;
