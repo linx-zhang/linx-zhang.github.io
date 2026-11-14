@@ -47,6 +47,8 @@ export interface PostFilters {
   q?: string
   /** 作者模糊搜索：邮箱、昵称或「名 姓」 */
   author?: string
+  /** 精确作者 id：列表页「我的」开关用它，不和模糊作者搜索混用 */
+  authorId?: number
 }
 
 export interface PostNeighborRef {
@@ -71,6 +73,7 @@ function postFilterParams(filters: PostFilters): URLSearchParams {
   if (q) params.set('q', q)
   const author = filters.author?.trim()
   if (author) params.set('author', author)
+  if (filters.authorId !== undefined) params.set('author_id', String(filters.authorId))
   return params
 }
 

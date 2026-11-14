@@ -35,6 +35,10 @@ export default function Blog() {
   const pageIndex = Number.isFinite(rawPage) && rawPage > 1 ? rawPage - 1 : 0
   const q = searchParams.get('q') ?? ''
   const author = searchParams.get('author') ?? ''
+  // 「我的」开关：URL 只存意图（mine=1），真正用于查询的 author_id 由当前登录用户决定，
+  // 这样把列表地址分享出去也不会带上别人的 id；登出后 mine 自动失效。
+  const mine = searchParams.get('mine') === '1' && Boolean(user?.id)
+  const authorId = mine && user ? user.id : undefined
   // 详情页靠这个 state 知道「该回哪一页」——不进 URL，也就不会被分享出去
   const fromHere = location.pathname + location.search
 
@@ -50,8 +54,8 @@ export default function Blog() {
     error,
     retry,
   } = usePagedList<Post>(
-    (limit, offset) => blogApi.listPosts(limit, offset, { q, author }),
-    { page: pageIndex, deps: [q, author] },
+    (limit, offset) => blogApi.listPosts(limit, offset, { q, author, authorId }),
+    { page: pageIndex, deps: [q, author, authorId] },
   )
 
   // 记住当前列表地址，详情页的「返回列表」用它，而不是硬回第一页
@@ -81,6 +85,7 @@ export default function Blog() {
     const nextAuthor = authorInput.trim()
     if (nextQ) params.set('q', nextQ)
     if (nextAuthor) params.set('author', nextAuthor)
+    if (mine) params.set('mine', '1')
     // 换筛选条件时回到第 1 页，避免停在已不存在的页码上
     setSearchParams(params, { replace: true })
   }
@@ -91,13 +96,28 @@ export default function Blog() {
     setSearchParams(new URLSearchParams(), { replace: true })
   }
 
-  const filtering = q.trim().length > 0 || author.trim().length > 0
+  /** 「我的」是开关而不是输入项：点了立刻重取，不受标题/作者输入框里未提交的内容影响 */
+  const toggleMine = () => {
+    const params = new URLSearchParams(searchParams)
+    if (mine) params.delete('mine')
+    else params.set('mine', '1')
+    params.delete('page')
+    setSearchParams(params, { replace: true })
+  }
+
+  const filtering = q.trim().length > 0 || author.trim().length > 0 || mine
 
   const [composerOpen, setComposerOpen] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
   const [title, setTitle] = useState('')
   const [bodyMd, setBodyMd] = useState('')
   const [publishing, setPublishing] = useState(false)
   const [composeError, setComposeError] = useState('')
+
+  const closeComposer = () => {
+    setFullscreen(false)
+    setComposerOpen(false)
+  }
 
   const toggleComposer = () => {
     setComposeError('')
@@ -106,8 +126,24 @@ export default function Blog() {
       openLogin(() => setComposerOpen(true))
       return
     }
-    setComposerOpen((open) => !open)
+    if (composerOpen) closeComposer()
+    else setComposerOpen(true)
   }
+
+  // 全屏写作时锁住页面滚动、Esc 退出：面板本身撑满视口，下面那一页不该还能滚
+  useEffect(() => {
+    if (!fullscreen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFullscreen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [fullscreen])
 
   /** 发布：表单提交与「Ctrl/⌘ + Enter」共用，校验逻辑只有这一处 */
   const publishPost = async () => {
@@ -184,6 +220,17 @@ export default function Blog() {
             />
           </label>
           <div className="blog-filter-actions">
+            {user && (
+              <button
+                type="button"
+                className="blog-button blog-filter-mine"
+                aria-pressed={mine}
+                title={mine ? '正在只看自己写的文章' : '只看自己写的文章'}
+                onClick={toggleMine}
+              >
+                我的
+              </button>
+            )}
             <button type="submit" className="blog-button">
               筛选
             </button>
@@ -197,7 +244,12 @@ export default function Blog() {
       )}
 
       {user && composerOpen && (
-        <form className="blog-composer" onSubmit={handlePublish} noValidate>
+        <form
+          className={fullscreen ? 'blog-composer blog-composer-full' : 'blog-composer'}
+          onSubmit={handlePublish}
+          noValidate
+          aria-label="写文章"
+        >
           <label className="blog-composer-field">
             <span>标题</span>
             <input
@@ -205,6 +257,7 @@ export default function Blog() {
               value={title}
               maxLength={POST_TITLE_MAX}
               placeholder="文章标题"
+              aria-label="标题"
               disabled={publishing}
               onChange={(event) => {
                 setTitle(event.target.value)
@@ -225,14 +278,32 @@ export default function Blog() {
           />
           {composeError && <p className="comment-error">{composeError}</p>}
           <div className="blog-composer-actions">
-            <button
-              type="button"
-              className="blog-button"
-              disabled={publishing}
-              onClick={() => setComposerOpen(false)}
-            >
-              收起
-            </button>
+            {fullscreen ? (
+              <>
+                <span className="blog-fullscreen-hint">Esc 退出全屏</span>
+                <button
+                  type="button"
+                  className="blog-button"
+                  onClick={() => setFullscreen(false)}
+                >
+                  退出全屏
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="blog-button"
+                  onClick={() => setFullscreen(true)}
+                  title="在独立的全屏面板里写，左写右看"
+                >
+                  全屏写
+                </button>
+                <button type="button" className="blog-button" disabled={publishing} onClick={closeComposer}>
+                  收起
+                </button>
+              </>
+            )}
             <button
               type="submit"
               className="blog-button comment-submit"
@@ -257,7 +328,7 @@ export default function Blog() {
 
       {status === 'ready' && items.length === 0 && (
         <div className="blog-state">
-          <p>{filtering ? '没有匹配的文章。' : pageIndex > 0 ? '这一页没有文章了。' : '还没有文章。'}</p>
+          <p>{filtering ? (mine && !q.trim() && !author.trim() ? '你还没有写过文章。' : '没有匹配的文章。') : pageIndex > 0 ? '这一页没有文章了。' : '还没有文章。'}</p>
           {pageIndex > 0 && (
             <button type="button" className="blog-button" onClick={() => goToPage(0)}>
               回到第 1 页

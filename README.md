@@ -38,7 +38,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 
 - **分层路由**：`RootLayout` 提供全站导航、账号菜单与页脚；`WikiLayout` 提供知识库侧边栏；`/profile` 是脱离布局的独立页面
 - **账号体系**：登录 / 注册（邀请码）、权限码驱动的菜单与操作按钮、个人资料弹窗（昵称 / 名 / 姓 / 头像，保存后顶栏即时更新）
-- **博客**：文章列表、详情、Markdown 渲染、评论与回复、页内写作面板
+- **博客**：文章列表（标题 / 作者模糊筛选、「我的」开关按 `author_id` 精确过滤，条件全部进 URL）、详情、Markdown 渲染、评论与回复、页内写作面板（可切全屏：左写右预览、底部操作条常驻、Esc 退出）
 - **管理后台**：文章列表与批量删除、用户管理（资料与账号分段的编辑弹窗、管理员重置密码：可手动指定或自动生成，并一次性展示生效密码）、邀请码（独立分区，入口在用户页标题行）、活跃日志、访问分析
 - **自定义基础组件**：Select、DateRangePicker、ConfirmDialog、Modal、Avatar 均为自研，未引入第三方 UI 库
 - **活跃采集**：登录后 60 秒心跳、路由级 `page_view`、离开时 `page_leave`（带停留时长，`fetch` + `keepalive` 携带 Bearer）

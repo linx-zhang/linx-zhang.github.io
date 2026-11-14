@@ -103,6 +103,48 @@
   justify-content: flex-end;
   gap: 0.6rem;
 }
+/* 全屏写作：面板升为覆盖视口的独立工作区。标题留在最上，正文与预览各占一列、
+   各自滚动，底部操作条常驻——长文不用翻回页尾找发布按钮。只覆盖布局，不动编辑器内部观感。 */
+.blog-composer-full {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  margin: 0;
+  padding: 1rem clamp(1rem, 4vw, 2.5rem) 1.15rem;
+  border: none;
+  border-radius: 0;
+  background: #fff;
+  overflow: hidden;
+}
+.blog-composer-full .md-editor {
+  flex: 1;
+  min-height: 0;
+}
+.blog-composer-full .md-editor-body {
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+}
+.blog-composer-full .md-editor-input {
+  height: 100%;
+  min-height: 0;
+  resize: none;
+}
+.blog-composer-full .md-editor-preview {
+  min-height: 0;
+}
+.blog-composer-full .md-editor-preview-body {
+  max-height: none;
+}
+.blog-composer-full .blog-composer-actions {
+  align-items: center;
+  flex: 0 0 auto;
+}
+.blog-fullscreen-hint {
+  margin-right: auto;
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
 .blog-filters {
   display: flex;
   flex-wrap: wrap;
@@ -143,6 +185,16 @@
 .blog-filter-actions {
   display: flex;
   gap: 0.5rem;
+}
+/* 「我的」是个开关：按下态反色填充，和「筛选」「清除」这类动作按钮区分开 */
+.blog-filter-mine[aria-pressed='true'] {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #fff;
+}
+.blog-filter-mine[aria-pressed='true']:hover:not(:disabled) {
+  border-color: #111827;
+  background: #111827;
 }
 .blog-list {
   display: flex;
@@ -484,6 +536,9 @@
   }
   .blog-composer {
     padding: 1rem;
+  }
+  .blog-composer-full {
+    padding: 0.75rem 0.9rem 1rem;
   }
   .blog-composer-field textarea {
     min-height: 180px;

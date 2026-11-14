@@ -37,13 +37,18 @@ function listUrl(from: unknown): string {
   return typeof from === 'string' && from.startsWith('/blog') ? from : storedListUrl()
 }
 
-/** 从列表地址里取筛选条件——详情页据此按同一份结果顺序翻上一篇/下一篇 */
-function filtersOf(url: string): { q: string; author: string } {
+/** 从列表地址里取筛选条件——详情页据此按同一份结果顺序翻上一篇/下一篇。
+ * `mine=1` 只表达「只看我的」，具体 id 由当前登录用户补上，和列表页同一套口径。 */
+function filtersOf(url: string): { q: string; author: string; mine: boolean } {
   try {
     const params = new URLSearchParams(url.split('?')[1] ?? '')
-    return { q: params.get('q') ?? '', author: params.get('author') ?? '' }
+    return {
+      q: params.get('q') ?? '',
+      author: params.get('author') ?? '',
+      mine: params.get('mine') === '1',
+    }
   } catch {
-    return { q: '', author: '' }
+    return { q: '', author: '', mine: false }
   }
 }
 
@@ -55,11 +60,18 @@ export default function PostDetail() {
   const location = useLocation()
   const fromState = (location.state as { from?: unknown } | null)?.from
   const backToList = listUrl(fromState)
-  const listFilters = filtersOf(backToList)
 
   const { user, openLogin } = useAuth()
   const { has } = usePermission()
   const { confirm, dialog } = useConfirm()
+
+  // 列表页带来的筛选条件；「我的」只带意图，author_id 由当前登录用户补齐
+  const listFilterIntent = filtersOf(backToList)
+  const listFilters = {
+    q: listFilterIntent.q,
+    author: listFilterIntent.author,
+    authorId: listFilterIntent.mine && user ? user.id : undefined,
+  }
 
   // 正文：404 视为「文章不存在」，其余错误给重试
   const postQuery = useResource<Post>(() => blogApi.getPost(postId), [postId], {
@@ -72,7 +84,7 @@ export default function PostDetail() {
   // 上一篇 / 下一篇：拿不到就整块不展示（silent，不弹错误）
   const neighbors = useResource<PostNeighbors>(
     () => blogApi.getNeighbors(postId, listFilters),
-    [postId, listFilters.q, listFilters.author],
+    [postId, listFilters.q, listFilters.author, listFilters.authorId],
     { enabled: validId, silent: true },
   ).data
 
