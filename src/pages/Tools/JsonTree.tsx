@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
 
 interface JsonTreeProps {
   value: unknown
@@ -11,6 +12,11 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 const isBranch = (value: unknown): value is Record<string, unknown> | unknown[] =>
   Array.isArray(value) || isObject(value)
+
+/** 每层缩进 */
+const INDENT = 14
+/** 折叠箭头占的宽度：行内容统一从这里开始，换行后也保持对齐 */
+const ARROW = 18
 
 function hint(value: unknown): string {
   if (Array.isArray(value)) return `${value.length} 项`
@@ -34,6 +40,16 @@ export default function JsonTree({ value, defaultCollapsed }: JsonTreeProps) {
 
   const toggle = (path: string) => setOverrides((prev) => ({ ...prev, [path]: !isOpen(path) }))
 
+  /**
+   * 每行都是块级行 + 悬挂缩进：内容从「缩进 + 箭头宽度」开始，
+   * 长字符串换行后仍与上一行内容对齐，不会掉到行首。
+   */
+  const rowStyle = (depth: number, hasArrow: boolean): CSSProperties => ({
+    paddingLeft: depth * INDENT + ARROW,
+    // 有箭头时把首行整体左移，让箭头落在缩进起点、正文仍从箭头右侧开始
+    textIndent: hasArrow ? -ARROW : undefined,
+  })
+
   /** prefix 是父级给的 `"key":` 或数组下标；tail 是行尾逗号 */
   const renderNode = (
     item: unknown,
@@ -49,7 +65,7 @@ export default function JsonTree({ value, defaultCollapsed }: JsonTreeProps) {
 
     if (!isBranch(item)) {
       return (
-        <div className="json-row" style={{ paddingLeft: depth * 14 }}>
+        <div className="json-row" style={rowStyle(depth, false)}>
           {prefixNode}
           <Primitive item={item} />
           <span className="json-tail">{tail}</span>
@@ -66,7 +82,7 @@ export default function JsonTree({ value, defaultCollapsed }: JsonTreeProps) {
 
     if (entries.length === 0) {
       return (
-        <div className="json-row" style={{ paddingLeft: depth * 14 }}>
+        <div className="json-row" style={rowStyle(depth, false)}>
           {prefixNode}
           <span className="json-bracket">
             {openBracket}
@@ -79,7 +95,7 @@ export default function JsonTree({ value, defaultCollapsed }: JsonTreeProps) {
 
     return (
       <>
-        <div className="json-row" style={{ paddingLeft: depth * 14 }}>
+        <div className="json-row" style={rowStyle(depth, true)}>
           <button
             type="button"
             className="json-arrow"
@@ -119,7 +135,7 @@ export default function JsonTree({ value, defaultCollapsed }: JsonTreeProps) {
           })}
 
         {open && (
-          <div className="json-row" style={{ paddingLeft: depth * 14 }}>
+          <div className="json-row" style={rowStyle(depth, false)}>
             <span className="json-bracket">{closeBracket}</span>
             <span className="json-tail">{tail}</span>
           </div>

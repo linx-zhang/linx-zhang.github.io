@@ -37,6 +37,37 @@ function CopyButton({
   )
 }
 
+/** 链接条：生成成功后和「返回编辑」时都要用它，链接、复制、撤销只写一处 */
+function LinkBar({
+  share,
+  copied,
+  onCopy,
+  revoking,
+  onRevoke,
+}: {
+  share: ClipShare
+  copied: boolean
+  onCopy: () => void
+  revoking: boolean
+  onRevoke: () => void
+}) {
+  const url = shareUrl(share.code)
+  return (
+    <div className="tool-bar">
+      <input className="tool-input" value={url} readOnly onFocus={(event) => event.target.select()} />
+      <CopyButton label="复制链接" copiedLabel="已复制" copied={copied} onClick={onCopy} primary />
+      <button
+        type="button"
+        className="tool-button tool-copy"
+        onClick={onRevoke}
+        disabled={revoking}
+      >
+        {revoking ? '撤销中…' : '撤销这条链接'}
+      </button>
+    </div>
+  )
+}
+
 /** 阅读态：别人拿到链接看到的就是这一屏，只有内容和几个时间 */
 function ClipView({ code }: { code: string }) {
   const [clip, setClip] = useState<ClipShare | null>(null)
@@ -103,6 +134,9 @@ function ClipView({ code }: { code: string }) {
         <span className="tool-inline">
           创建于 {formatTimestamp(clip.created_at)} · 有效期至 {formatTimestamp(clip.expires_at)}
         </span>
+        <Link to="/tools/clip" className="tool-button">
+          分享新内容
+        </Link>
         <CopyButton
           label="复制全文"
           copiedLabel="已复制"
@@ -139,6 +173,8 @@ function ClipComposer() {
   const [error, setError] = useState('')
   const [created, setCreated] = useState<ClipShare | null>(null)
   const [revoking, setRevoking] = useState(false)
+  // 生成成功后可以「再分享一条」回到编辑区；上一条链接保持有效并常驻在上方
+  const [editing, setEditing] = useState(false)
   const { isCopied, copy } = useCopy()
 
   const stats = useMemo(
@@ -156,6 +192,7 @@ function ClipComposer() {
     try {
       const share = await clipApi.create({ title: title.trim(), body })
       setCreated(share)
+      setEditing(false)
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -171,6 +208,7 @@ function ClipComposer() {
       await clipApi.revoke(created.code)
       // 内容留在编辑区，想再生成一条时不用重新粘贴
       setCreated(null)
+      setEditing(false)
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -200,8 +238,7 @@ function ClipComposer() {
     )
   }
 
-  if (created) {
-    const url = shareUrl(created.code)
+  if (created && !editing) {
     return (
       <div className="tool">
         <div className="tool-block">
@@ -211,27 +248,19 @@ function ClipComposer() {
               {`24 小时内有效，到期时间 ${formatTimestamp(created.expires_at)}。谁拿到链接都能看，不需要登录；随时可以在下面撤销。`}
             </p>
           </div>
-          <div className="tool-bar">
-            <input className="tool-input" value={url} readOnly onFocus={(e) => e.target.select()} />
-            <CopyButton
-              label="复制链接"
-              copiedLabel="已复制"
-              copied={isCopied()}
-              onClick={() => void copy(url)}
-              primary
-            />
-          </div>
+          <LinkBar
+            share={created}
+            copied={isCopied()}
+            onCopy={() => void copy(shareUrl(created.code))}
+            revoking={revoking}
+            onRevoke={revoke}
+          />
           <div className="tool-bar">
             <span className="tool-inline">
               {created.title || '未命名'} · {created.body.length} 字符
             </span>
-            <button
-              type="button"
-              className="tool-button tool-copy"
-              onClick={revoke}
-              disabled={revoking}
-            >
-              {revoking ? '撤销中…' : '撤销这条链接'}
+            <button type="button" className="tool-button" onClick={() => setEditing(true)}>
+              再分享一条
             </button>
           </div>
           {error && <p className="tool-error">{error}</p>}
@@ -242,6 +271,23 @@ function ClipComposer() {
 
   return (
     <div className="tool">
+      {/* 回到编辑区后，上一条链接仍然有效：留一条常驻入口，不用为了改内容先撤销 */}
+      {created && (
+        <div className="tool-block">
+          <div className="tool-block-head">
+            <h2>上一条链接仍然有效</h2>
+            <p>继续编辑或再生成一条都不会影响它；想让它立刻失效就点撤销。</p>
+          </div>
+          <LinkBar
+            share={created}
+            copied={isCopied()}
+            onCopy={() => void copy(shareUrl(created.code))}
+            revoking={revoking}
+            onRevoke={revoke}
+          />
+        </div>
+      )}
+
       <div className="tool-bar">
         <input
           className="tool-input"

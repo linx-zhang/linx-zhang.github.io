@@ -499,25 +499,29 @@
 }
 
 .json-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.28rem;
+  /* 块级行 + 悬挂缩进（缩进与 text-indent 由组件按层级算）：长值换行后仍对齐正文列 */
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.json-row.is-toggle {
-  cursor: default;
+/* 同一行内的片段用间距分开，不再依赖 flex gap */
+.json-row > span + span,
+.json-row > span + button {
+  margin-left: 0.3rem;
 }
 
 .json-arrow {
-  flex: none;
-  width: 1rem;
+  display: inline-block;
+  width: 18px;
   padding: 0;
   border: none;
   background: none;
   color: #9ca3af;
   font: inherit;
   font-size: 0.75rem;
-  line-height: 1.7;
+  line-height: inherit;
+  vertical-align: baseline;
   cursor: pointer;
 }
 
