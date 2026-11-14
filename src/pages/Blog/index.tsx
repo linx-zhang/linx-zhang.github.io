@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { errorMessage } from '@/api/client'
+import { errorMessage } from '@/api/errors'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
-import type { PagedStatus } from '@/hooks/usePagedFetch'
-import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
+import { usePagedList } from '@/hooks/usePagedList'
+import { POST_TITLE_MAX } from '@/constants'
+import { formatTimestamp } from '@/utils/format'
 import './Blog.css'
 
 function textSummary(markdown: string): string {
@@ -40,37 +41,17 @@ export default function Blog() {
   const [qInput, setQInput] = useState(q)
   const [authorInput, setAuthorInput] = useState(author)
 
-  const [items, setItems] = useState<Post[]>([])
-  const [hasNext, setHasNext] = useState(false)
-  const [status, setStatus] = useState<PagedStatus>('loading')
-  const [error, setError] = useState('')
-  const [reloadKey, setReloadKey] = useState(0)
-
-  useEffect(() => {
-    let cancelled = false
-    blogApi
-      .listPosts(PAGE_SIZE, pageIndex * PAGE_SIZE, { q, author })
-      .then((page) => {
-        if (cancelled) return
-        setItems(page.items)
-        setHasNext(page.has_next)
-        setError('')
-        setStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setError(errorMessage(err))
-        setStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [pageIndex, q, author, reloadKey])
-
-  const beginLoading = () => {
-    setStatus('loading')
-    setError('')
-  }
+  // 页码受控于 URL；筛选条件进 deps，变化即重取当前页
+  const {
+    items,
+    hasNext,
+    status,
+    error,
+    retry,
+  } = usePagedList<Post>(
+    (limit, offset) => blogApi.listPosts(limit, offset, { q, author }),
+    { page: pageIndex, deps: [q, author] },
+  )
 
   // 记住当前列表地址，详情页的「返回列表」用它，而不是硬回第一页
   useEffect(() => {
@@ -78,8 +59,8 @@ export default function Blog() {
     sessionStorage.setItem('blog_list_url', query ? `/blog?${query}` : '/blog')
   }, [searchParams])
 
-  const goToPage = (nextIndex: number) => {
-    beginLoading()
+  /** 换页只改 URL 里的 page，筛选参数原样保留 */
+  const writePageToUrl = (nextIndex: number) => {
     const params = new URLSearchParams(searchParams)
     if (nextIndex > 0) params.set('page', String(nextIndex + 1))
     else params.delete('page')
@@ -87,9 +68,13 @@ export default function Blog() {
     window.scrollTo({ top: 0 })
   }
 
+  // 受控模式：翻页就是改 URL，hook 跟着 page 重取，不需要再单独通知它
+  const goToPage = (nextIndex: number) => {
+    writePageToUrl(nextIndex)
+  }
+
   const applyFilters = (event: FormEvent) => {
     event.preventDefault()
-    beginLoading()
     const params = new URLSearchParams()
     const nextQ = qInput.trim()
     const nextAuthor = authorInput.trim()
@@ -102,13 +87,7 @@ export default function Blog() {
   const clearFilters = () => {
     setQInput('')
     setAuthorInput('')
-    beginLoading()
     setSearchParams(new URLSearchParams(), { replace: true })
-  }
-
-  const retry = () => {
-    beginLoading()
-    setReloadKey((key) => key + 1)
   }
 
   const filtering = q.trim().length > 0 || author.trim().length > 0
@@ -137,8 +116,8 @@ export default function Blog() {
       setComposeError('标题不能为空')
       return
     }
-    if (trimmedTitle.length > 200) {
-      setComposeError('标题不能超过 200 个字符')
+    if (trimmedTitle.length > POST_TITLE_MAX) {
+      setComposeError(`标题不能超过 ${POST_TITLE_MAX} 个字符`)
       return
     }
     if (bodyMd.trim().length === 0) {
@@ -218,7 +197,7 @@ export default function Blog() {
             <input
               type="text"
               value={title}
-              maxLength={200}
+              maxLength={POST_TITLE_MAX}
               placeholder="文章标题"
               disabled={publishing}
               onChange={(event) => {

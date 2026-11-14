@@ -1,0 +1,27 @@
+.error-boundary {
+  margin: 24px auto;
+  max-width: 560px;
+  padding: 24px;
+  border: 1px solid #e3e6ea;
+  border-radius: 10px;
+  background: #fff;
+  color: #1f2937;
+}
+
+.error-boundary h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.error-boundary p {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #4b5563;
+}
+
+.error-boundary-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

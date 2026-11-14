@@ -1,4 +1,6 @@
 import { request } from '@/api/client'
+import { parseServerTimestamp } from '@/utils/format'
+import type { Page } from '@/types'
 
 /** 后端 InviteCodeCreateIn.role 仅接受 internal / admin（不是 user） */
 export type InviteRole = 'internal' | 'admin'
@@ -16,11 +18,16 @@ export interface InviteCode {
   used_by_email?: string | null
 }
 
-export interface InviteCodePage {
-  items: InviteCode[]
-  /** 服务端多取一条判断；「共 N 个」仍来自 total */
-  has_next: boolean
-  total: number
+/** 邀请码列表：分页形状 + total */
+export type InviteCodePage = Page<InviteCode> & { total: number }
+
+/** 邀请码状态由数据推导：已用 → 已过期 → 未使用。放这里，避免各页面各写一份时间解析 */
+export function inviteStatus(invite: InviteCode): InviteStatus {
+  if (invite.used_at) return 'used'
+  if (!invite.expires_at) return 'unused'
+  const expires = parseServerTimestamp(invite.expires_at)
+  if (!expires) return 'unused'
+  return expires.getTime() <= Date.now() ? 'expired' : 'unused'
 }
 
 export interface CreateInvitePayload {
@@ -53,12 +60,8 @@ export interface AdminUser {
   avatar_url?: string | null
 }
 
-export interface AdminUserPage {
-  items: AdminUser[]
-  /** 服务端多取一条判断；「共 N 条」仍来自 total */
-  has_next: boolean
-  total: number
-}
+/** 用户列表：分页形状 + total */
+export type AdminUserPage = Page<AdminUser> & { total: number }
 
 export interface UserListParams {
   q?: string
@@ -150,11 +153,8 @@ export interface AnalyticsSummary {
   has_next: boolean
 }
 
-export interface ActivityPage {
-  items: ActivityItem[]
-  /** 后端不返回 total（activity_events 是唯一无界表，每次翻页再 COUNT 不值），用 limit+1 探测 */
-  has_next: boolean
-}
+/** 活跃日志：后端不返回 total（activity_events 是唯一无界表，每次翻页再 COUNT 不值），用 limit+1 探测 */
+export type ActivityPage = Page<ActivityItem>
 
 export interface ActivityListParams {
   /** 后端只支持按用户 ID 过滤，邮箱需先解析为 ID */
@@ -167,83 +167,84 @@ export interface ActivityListParams {
   offset?: number
 }
 
+/** 需要登录的管理端点：统一 withAuth=true */
+function adminRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return request<T>(path, init, true)
+}
+
+/** 把可选参数拼成查询串：undefined 不出现，空串会被调用方提前过滤 */
+function toSearch(params: Record<string, string | number | undefined>): string {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') search.set(key, String(value))
+  }
+  const query = search.toString()
+  return query ? `?${query}` : ''
+}
+
 export const adminApi = {
   listInviteCodes(params: InviteListParams = {}): Promise<InviteCodePage> {
-    const search = new URLSearchParams()
-    if (params.status) search.set('status', params.status)
-    if (params.role) search.set('role', params.role)
     // 分页默认值只在后端定义（limit 默认 20、上限 100）；这里不传就不发，避免两份默认值漂移
-    if (params.limit !== undefined) search.set('limit', String(params.limit))
-    if (params.offset !== undefined) search.set('offset', String(params.offset))
-    return request<InviteCodePage>(`/admin/invite-codes?${search.toString()}`, {}, true, {
-      skipForbiddenLogout: true,
-    })
+    return adminRequest<InviteCodePage>(
+      `/admin/invite-codes${toSearch({
+        status: params.status,
+        role: params.role,
+        limit: params.limit,
+        offset: params.offset,
+      })}`,
+    )
   },
   createInviteCodes(payload: CreateInvitePayload): Promise<InviteCode[]> {
-    return request<InviteCode[]>('/admin/invite-codes', {
+    return adminRequest<InviteCode[]>('/admin/invite-codes', {
       method: 'POST',
       body: JSON.stringify(payload),
-    }, true, { skipForbiddenLogout: true })
+    })
   },
   deleteInviteCode(code: string): Promise<{ code: string }> {
-    return request<{ code: string }>(
-      `/admin/invite-codes/${encodeURIComponent(code)}`,
-      { method: 'DELETE' },
-      true,
-      { skipForbiddenLogout: true },
-    )
+    return adminRequest<{ code: string }>(`/admin/invite-codes/${encodeURIComponent(code)}`, {
+      method: 'DELETE',
+    })
   },
   listUsers(params: UserListParams = {}): Promise<AdminUserPage> {
-    const search = new URLSearchParams()
-    if (params.q) search.set('q', params.q)
-    if (params.role) search.set('role', params.role)
-    if (params.limit !== undefined) search.set('limit', String(params.limit))
-    if (params.offset !== undefined) search.set('offset', String(params.offset))
-    return request<AdminUserPage>(`/admin/users?${search.toString()}`, {}, true, {
-      skipForbiddenLogout: true,
-    })
-  },
-  updateUser(id: number, payload: UpdateUserPayload): Promise<AdminUser> {
-    return request<AdminUser>(
-      `/admin/users/${id}`,
-      { method: 'PATCH', body: JSON.stringify(payload) },
-      true,
-      { skipForbiddenLogout: true },
+    return adminRequest<AdminUserPage>(
+      `/admin/users${toSearch({
+        q: params.q,
+        role: params.role,
+        limit: params.limit,
+        offset: params.offset,
+      })}`,
     )
   },
-  deleteUser(id: number): Promise<unknown> {
-    return request<unknown>(`/admin/users/${id}`, { method: 'DELETE' }, true, {
-      skipForbiddenLogout: true,
+  updateUser(id: number, payload: UpdateUserPayload): Promise<AdminUser> {
+    return adminRequest<AdminUser>(`/admin/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
     })
+  },
+  deleteUser(id: number): Promise<unknown> {
+    return adminRequest<unknown>(`/admin/users/${id}`, { method: 'DELETE' })
   },
   /** 重置密码：可指定新密码，留空则由后端生成；同时使该用户已登录的会话失效 */
   resetUserPassword(id: number, password?: string): Promise<ResetPasswordResult> {
-    return request<ResetPasswordResult>(
-      `/admin/users/${id}/reset-password`,
-      {
-        method: 'POST',
-        body: JSON.stringify(password ? { password } : {}),
-      },
-      true,
-      { skipForbiddenLogout: true },
-    )
+    return adminRequest<ResetPasswordResult>(`/admin/users/${id}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify(password ? { password } : {}),
+    })
   },
   listActivity(params: ActivityListParams = {}): Promise<ActivityPage> {
-    const search = new URLSearchParams()
-    if (params.user_id !== undefined) search.set('user_id', String(params.user_id))
-    if (params.type) search.set('type', params.type)
-    if (params.from) search.set('from', params.from)
-    if (params.to) search.set('to', params.to)
-    if (params.limit !== undefined) search.set('limit', String(params.limit))
-    if (params.offset !== undefined) search.set('offset', String(params.offset))
-    return request<ActivityPage>(`/admin/activity?${search.toString()}`, {}, true, {
-      skipForbiddenLogout: true,
-    })
+    return adminRequest<ActivityPage>(
+      `/admin/activity${toSearch({
+        user_id: params.user_id,
+        type: params.type,
+        from: params.from,
+        to: params.to,
+        limit: params.limit,
+        offset: params.offset,
+      })}`,
+    )
   },
   /** 活动分析汇总：今日数字 + 每日趋势 + 每个身份的停留明细（服务端缓存 60 秒） */
   getAnalyticsSummary(days: number): Promise<AnalyticsSummary> {
-    return request<AnalyticsSummary>(`/admin/analytics/summary?days=${days}`, {}, true, {
-      skipForbiddenLogout: true,
-    })
+    return adminRequest<AnalyticsSummary>(`/admin/analytics/summary?days=${days}`)
   },
 }

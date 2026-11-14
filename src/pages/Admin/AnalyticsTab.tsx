@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { errorMessage } from '@/api/client'
+import { useCallback, useMemo, useState } from 'react'
 import { adminApi } from '@/api/admin'
 import type { AnalyticsActor, AnalyticsSummary } from '@/api/admin'
+import ListState from '@/components/ListState'
+import { useResource } from '@/hooks/useResource'
 import { parseServerTimestamp } from '@/utils/format'
 
 const DAY_OPTIONS = [7, 30] as const
@@ -73,30 +74,13 @@ function TrendBars({ summary }: { summary: AnalyticsSummary }) {
 
 export default function AnalyticsTab() {
   const [days, setDays] = useState<number>(DAY_OPTIONS[0])
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [error, setError] = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
-  const [reloadKey, setReloadKey] = useState(0)
 
-  useEffect(() => {
-    let cancelled = false
-    adminApi
-      .getAnalyticsSummary(days)
-      .then((data) => {
-        if (cancelled) return
-        setSummary(data)
-        setStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setError(errorMessage(err))
-        setStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [days, reloadKey])
+  const summaryQuery = useResource<AnalyticsSummary>(
+    () => adminApi.getAnalyticsSummary(days),
+    [days],
+  )
+  const summary = summaryQuery.data
 
   const toggle = useCallback((key: string) => {
     setExpanded((current) => (current === key ? null : key))
@@ -125,10 +109,7 @@ export default function AnalyticsTab() {
                 option === days ? 'analytics-range-btn active' : 'analytics-range-btn'
               }
               aria-pressed={option === days}
-              onClick={() => {
-                setStatus('loading')
-                setDays(option)
-              }}
+              onClick={() => setDays(option)}
             >
               近 {option} 天
             </button>
@@ -139,25 +120,14 @@ export default function AnalyticsTab() {
         </span>
       </div>
 
-      {status === 'loading' && <div className="user-empty">加载中…</div>}
+      <ListState
+        status={summaryQuery.status}
+        error={summaryQuery.error}
+        onRetry={summaryQuery.reload}
+        missingText="统计接口尚未部署，请等待后端上线后重试。"
+      />
 
-      {status === 'error' && (
-        <div className="user-empty">
-          <p>{error}</p>
-          <button
-            type="button"
-            className="blog-button"
-            onClick={() => {
-              setStatus('loading')
-              setReloadKey((key) => key + 1)
-            }}
-          >
-            重试
-          </button>
-        </div>
-      )}
-
-      {status === 'ready' && summary && (
+      {summaryQuery.status === 'ready' && summary && (
         <>
           <div className="analytics-cards">
             <div className="analytics-card">

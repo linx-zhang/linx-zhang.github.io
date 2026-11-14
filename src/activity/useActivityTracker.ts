@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { API_BASE, getStoredToken } from '@/api/client'
 import { useAuth } from '@/auth/AuthProvider'
+import { ACTIVITY_MAX_BATCH, ACTIVITY_MAX_VISITOR_BATCH, ACTIVITY_HEARTBEAT_MS, ACTIVITY_VISITOR_WINDOW_MS } from '@/constants'
 
 export type ActivityType = 'page_view' | 'heartbeat' | 'page_leave'
 
@@ -15,22 +16,13 @@ export interface ActivityEvent {
 const ACTIVITY_URL = `${API_BASE}/activity`
 // 匿名访客走独立端点：不需要登录，服务端按 IP 限流并补 ip/地区
 const VISITOR_URL = `${API_BASE}/activity/visitor`
-const MAX_BATCH = 50
-// 匿名端点单批上限更小（后端 20），少发一次总比被 422 丢掉好
-const MAX_VISITOR_BATCH = 20
 const MAX_QUEUED = 200
-const HEARTBEAT_INTERVAL_MS = 60_000
 const FLUSH_DELAY_MS = 300
 const MAX_PATH_LENGTH = 512
 
 // 匿名只公开内容页：和 pages function 的 allow-list 保持一致，
 // 这样后台/个人页的访问不会以匿名身份进表
 const PUBLIC_PATH_ROOTS = ['/blog', '/wiki']
-
-// 匿名端点的服务端限流窗口（与后端 VISITOR_RATE_LIMIT_SECONDS 一致）：
-// 客户端自己排开批次，免得多发的 page_view 被 429 丢掉
-const VISITOR_WINDOW_MS = 30_000
-
 // 事件先入内存队列，批量提交；模块级状态保证路由切换不会重建队列。
 let queue: ActivityEvent[] = []
 let flushTimer: number | null = null
@@ -71,13 +63,13 @@ async function flushQueue(): Promise<void> {
     // 匿名批次要等窗口过期再发：提前发的 page_view 会被服务端 429 丢掉，
     // 攒到下一次 page_leave 一起发就必然会入库（含 leave 的批次总是放行）
     const waited = Date.now() - lastVisitorPostAt
-    if (lastVisitorPostAt !== 0 && waited < VISITOR_WINDOW_MS) {
-      scheduleFlush(VISITOR_WINDOW_MS - waited)
+    if (lastVisitorPostAt !== 0 && waited < ACTIVITY_VISITOR_WINDOW_MS) {
+      scheduleFlush(ACTIVITY_VISITOR_WINDOW_MS - waited)
       return
     }
     lastVisitorPostAt = Date.now()
   }
-  const batch = queue.splice(0, token ? MAX_BATCH : MAX_VISITOR_BATCH)
+  const batch = queue.splice(0, token ? ACTIVITY_MAX_BATCH : ACTIVITY_MAX_VISITOR_BATCH)
   inFlight = true
   try {
     await fetch(token ? ACTIVITY_URL : VISITOR_URL, {
@@ -101,7 +93,7 @@ function enqueue(event: ActivityEvent): void {
   if (!token && (event.type === 'heartbeat' || !isPublicPath(event.path))) return
   queue.push(event)
   if (queue.length > MAX_QUEUED) queue = queue.slice(queue.length - MAX_QUEUED)
-  if (queue.length >= MAX_BATCH) {
+  if (queue.length >= ACTIVITY_MAX_BATCH) {
     clearFlushTimer()
     void flushQueue()
     return
@@ -116,7 +108,7 @@ function enqueue(event: ActivityEvent): void {
 function flushWithKeepalive(events: ActivityEvent[]): void {
   if (events.length === 0) return
   const token = getStoredToken()
-  const limit = token ? MAX_BATCH : MAX_VISITOR_BATCH
+  const limit = token ? ACTIVITY_MAX_BATCH : ACTIVITY_MAX_VISITOR_BATCH
   if (!token) lastVisitorPostAt = Date.now()
   void fetch(token ? ACTIVITY_URL : VISITOR_URL, {
     method: 'POST',
@@ -140,7 +132,7 @@ function reportPageLeave(path: string, durationMs: number, ts: number): void {
   }
   const pending = queue
   queue = []
-  const limit = token ? MAX_BATCH : MAX_VISITOR_BATCH
+  const limit = token ? ACTIVITY_MAX_BATCH : ACTIVITY_MAX_VISITOR_BATCH
   const events = [...pending.slice(0, limit - 1), {
     type: 'page_leave' as ActivityType,
     path,
@@ -179,7 +171,7 @@ export function useActivityTracker(): void {
     const timer = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return
       enqueue({ type: 'heartbeat', path: pathRef.current || currentPath(), ts: Date.now() })
-    }, HEARTBEAT_INTERVAL_MS)
+    }, ACTIVITY_HEARTBEAT_MS)
     return () => window.clearInterval(timer)
   }, [userId])
 

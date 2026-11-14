@@ -65,17 +65,10 @@ export const authApi = {
   },
   /** 退出登录：让服务端立刻作废这个账号已签发的 token */
   logout(): Promise<{ id: number }> {
-    return request<{ id: number }>('/auth/logout', { method: 'POST' }, true, {
-      skipForbiddenLogout: true,
-    })
+    return request<{ id: number }>('/auth/logout', { method: 'POST' }, true)
   },
   /** 更新自己的资料：返回完整用户对象（含 permissions） */
   updateMyProfile(payload: UpdateProfilePayload): Promise<AuthUser> {
-    return request<AuthUser>(
-      '/auth/me',
-      { method: 'PATCH', body: JSON.stringify(payload) },
-      true,
-      { skipForbiddenLogout: true },
-    )
+    return request<AuthUser>('/auth/me', { method: 'PATCH', body: JSON.stringify(payload) }, true)
   },
 }

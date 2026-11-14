@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useFloatingPanel } from '@/components/FloatingPanel/useFloatingPanel'
+import {
+  WEEKDAYS,
+  addDays,
+  addMonths,
+  dayNumber,
+  isOutsideMonth,
+  monthGrid,
+  startOfMonth,
+  today as todayDay,
+} from '@/utils/calendar'
 // 日历面板沿用 DateRangePicker 的样式，触发器沿用 Select，两处不必各写一套
 import '@/components/Select/Select.css'
 import '@/components/DateRangePicker/DateRangePicker.css'
@@ -19,43 +29,8 @@ export interface DatePickerProps {
   icon?: React.ReactNode
 }
 
-const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
 const PANEL_MIN_WIDTH = 280
 const PANEL_ESTIMATE_HEIGHT = 356
-
-const pad = (value: number) => String(value).padStart(2, '0')
-
-function toDay(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
-
-/** 统一取本地中午，避免夏令时切换导致跨日偏移 */
-function parseDay(day: string): Date {
-  const [year, month, date] = day.split('-').map(Number)
-  return new Date(year, month - 1, date, 12)
-}
-
-function addDays(day: string, delta: number): string {
-  const date = parseDay(day)
-  date.setDate(date.getDate() + delta)
-  return toDay(date)
-}
-
-function startOfMonth(day: string): Date {
-  const date = parseDay(day)
-  return new Date(date.getFullYear(), date.getMonth(), 1, 12)
-}
-
-function addMonths(month: Date, delta: number): Date {
-  return new Date(month.getFullYear(), month.getMonth() + delta, 1, 12)
-}
-
-/** 固定 42 格（6 行），首格为所在周的周日 */
-function monthGrid(month: Date): string[] {
-  const first = new Date(month.getFullYear(), month.getMonth(), 1, 12)
-  const start = addDays(toDay(first), -first.getDay())
-  return Array.from({ length: 42 }, (_, index) => addDays(start, index))
-}
 
 /**
  * 单日选择：全站自绘日历，不走浏览器的原生 date 控件。
@@ -70,7 +45,7 @@ export default function DatePicker({
   triggerClassName,
   icon,
 }: DatePickerProps) {
-  const [today] = useState(() => toDay(new Date()))
+  const [today] = useState(() => todayDay())
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(value ?? today))
   const [focusDay, setFocusDay] = useState(() => value ?? today)
 
@@ -243,7 +218,7 @@ export default function DatePicker({
 
             <div className="date-grid" role="grid" aria-label="日期">
               {days.map((day) => {
-                const outside = parseDay(day).getMonth() !== viewMonth.getMonth()
+                const outside = isOutsideMonth(day, viewMonth)
                 const classes = ['date-day']
                 if (outside) classes.push('date-day-outside')
                 if (day === today) classes.push('date-day-today')
@@ -261,7 +236,7 @@ export default function DatePicker({
                     onClick={() => pick(day)}
                     onFocus={() => setFocusDay(day)}
                   >
-                    {parseDay(day).getDate()}
+                    {dayNumber(day)}
                   </button>
                 )
               })}

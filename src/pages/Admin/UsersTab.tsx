@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { errorMessage } from '@/api/client'
+import { errorMessage } from '@/api/errors'
 import { adminApi } from '@/api/admin'
 import type { AdminUser, UserRole } from '@/api/admin'
 import { useAuth } from '@/auth/AuthProvider'
@@ -8,10 +8,14 @@ import Avatar from '@/components/Avatar'
 import { displayName } from '@/components/Avatar/avatarText'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import Select from '@/components/Select'
+import ListState from '@/components/ListState'
+import { usePagedList } from '@/hooks/usePagedList'
+import Pager from './Pager'
+import { PAGE_SIZE } from '@/constants'
 import ResetPasswordDialog from './ResetPasswordDialog'
 import UserEditDialog from './UserEditDialog'
 import { FILTER_OPTIONS, ROLE_OPTIONS, roleLabel } from './userRoles'
-import { PAGE_SIZE, formatDate, formatTimestamp, parseServerTimestamp } from '@/utils/format'
+import { formatDate, formatTimestamp, parseServerTimestamp } from '@/utils/format'
 
 function relativeTime(value: string | null): string {
   if (!value) return '—'
@@ -37,62 +41,40 @@ export default function UsersTab() {
   const [query, setQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<'' | UserRole>('')
-  const [pageIndex, setPageIndex] = useState(0)
 
-  const [items, setItems] = useState<AdminUser[]>([])
-  const [total, setTotal] = useState(0)
-  const [hasNext, setHasNext] = useState(false)
-  const [listStatus, setListStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [listError, setListError] = useState('')
+  const list = usePagedList<AdminUser>(
+    (limit, offset) =>
+      adminApi.listUsers({
+        q: debouncedQuery || undefined,
+        role: roleFilter || undefined,
+        limit,
+        offset,
+      }),
+    { deps: [debouncedQuery, roleFilter] },
+  )
 
   const [updatingId, setUpdatingId] = useState<number | null>(null)
   const [actionError, setActionError] = useState('')
-  const [reloadKey, setReloadKey] = useState(0)
 
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
   const [resettingUser, setResettingUser] = useState<AdminUser | null>(null)
 
   const appliedQuery = useRef('')
 
+  // 搜索防抖：只在真正变了词时才重置到第 1 页
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const next = query.trim()
       if (next === appliedQuery.current) return
       appliedQuery.current = next
       setDebouncedQuery(next)
-      setPageIndex(0)
-      setListStatus('loading')
+      list.reset()
     }, 300)
     return () => window.clearTimeout(timer)
   }, [query])
 
-  useEffect(() => {
-    let cancelled = false
-    adminApi
-      .listUsers({
-        q: debouncedQuery || undefined,
-        role: roleFilter || undefined,
-        limit: PAGE_SIZE,
-        offset: pageIndex * PAGE_SIZE,
-      })
-      .then((page) => {
-        if (cancelled) return
-        setItems(page.items)
-        setTotal(page.total)
-        setHasNext(page.has_next)
-        setListStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setListError(errorMessage(err))
-        setListStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [debouncedQuery, roleFilter, pageIndex, reloadKey])
-
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const { items, total, hasNext, pageIndex, status, error } = list
+  const totalPages = Math.max(1, Math.ceil((total ?? 0) / PAGE_SIZE))
 
   const requestRoleChange = (target: AdminUser, next: UserRole) => {
     if (target.role === next || updatingId === target.id) return
@@ -100,18 +82,18 @@ export default function UsersTab() {
     setActionError('')
     setUpdatingId(target.id)
     // 先就地更新，失败再回滚到原角色
-    setItems((prev) =>
+    list.setItems((prev) =>
       prev.map((item) => (item.id === target.id ? { ...item, role: next } : item)),
     )
     adminApi
       .updateUser(target.id, { role: next })
       .then((updated) => {
-        setItems((prev) =>
+        list.setItems((prev) =>
           prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)),
         )
       })
       .catch((err) => {
-        setItems((prev) =>
+        list.setItems((prev) =>
           prev.map((item) => (item.id === target.id ? { ...item, role: previousRole } : item)),
         )
         setActionError(errorMessage(err))
@@ -120,7 +102,7 @@ export default function UsersTab() {
   }
 
   const handleSaved = (updated: AdminUser) => {
-    setItems((prev) =>
+    list.setItems((prev) =>
       prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)),
     )
     if (currentUser && updated.id === currentUser.id) {
@@ -146,16 +128,11 @@ export default function UsersTab() {
         setUpdatingId(target.id)
         try {
           await adminApi.deleteUser(target.id)
-          setItems((prev) => {
-            const next = prev.filter((item) => item.id !== target.id)
-            if (next.length === 0 && pageIndex > 0) {
-              setPageIndex((index) => Math.max(0, index - 1))
-              setListStatus('loading')
-            }
-            return next
-          })
-          setTotal((value) => Math.max(0, value - 1))
           setEditingUser(null)
+          // 删掉的是本页最后一条且不在第 1 页：回退一页，否则停在空页上
+          if (items.length <= 1 && pageIndex > 0) list.goToPage(pageIndex - 1)
+          // 其余情况以服务端为准重取：总数、页码、空态都不用手算
+          else list.reload()
         } catch (err) {
           setActionError(errorMessage(err))
         } finally {
@@ -186,8 +163,7 @@ export default function UsersTab() {
             value={roleFilter}
             onChange={(next) => {
               setRoleFilter(next as '' | UserRole)
-              setPageIndex(0)
-              setListStatus('loading')
+              list.reset()
             }}
             options={FILTER_OPTIONS}
             ariaLabel="按角色筛选"
@@ -197,32 +173,18 @@ export default function UsersTab() {
 
       <div className="invite-list-head">
         <h2 className="admin-section-title">用户</h2>
-        <span className="invite-total">共 {total} 人</span>
+        <span className="invite-total">共 {total ?? 0} 人</span>
       </div>
 
-      {listStatus === 'loading' && <div className="user-empty">加载中…</div>}
+      <ListState
+        status={status}
+        error={error}
+        onRetry={list.retry}
+        count={items.length}
+        emptyText="没有匹配的用户。"
+      />
 
-      {listStatus === 'error' && (
-        <div className="user-empty">
-          <p>{listError}</p>
-          <button
-            type="button"
-            className="blog-button"
-            onClick={() => {
-              setListStatus('loading')
-              setReloadKey((key) => key + 1)
-            }}
-          >
-            重试
-          </button>
-        </div>
-      )}
-
-      {listStatus === 'ready' && items.length === 0 && (
-        <div className="user-empty">没有匹配的用户。</div>
-      )}
-
-      {listStatus === 'ready' && items.length > 0 && (
+      {status === 'ready' && items.length > 0 && (
         <div className="user-list">
           <div className={`user-list-head${showActions ? ' has-actions' : ''}`} aria-hidden="true">
             <span>用户</span>
@@ -318,33 +280,13 @@ export default function UsersTab() {
       {actionError && <p className="comment-error">{actionError}</p>}
 
       {totalPages > 1 && (
-        <div className="admin-pager">
-          <button
-            type="button"
-            className="blog-button"
-            disabled={pageIndex === 0 || listStatus === 'loading'}
-            onClick={() => {
-              setPageIndex((index) => Math.max(0, index - 1))
-              setListStatus('loading')
-            }}
-          >
-            上一页
-          </button>
-          <span>
-            第 {pageIndex + 1} / {totalPages} 页
-          </span>
-          <button
-            type="button"
-            className="blog-button"
-            disabled={!hasNext || listStatus === 'loading'}
-            onClick={() => {
-              setPageIndex((index) => index + 1)
-              setListStatus('loading')
-            }}
-          >
-            下一页
-          </button>
-        </div>
+        <Pager
+          pageIndex={pageIndex}
+          hasNext={hasNext}
+          onPage={list.goToPage}
+          totalPages={totalPages}
+          disabled={status === 'loading'}
+        />
       )}
 
       {editingUser && (

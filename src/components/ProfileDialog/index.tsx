@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ApiError } from '@/api/client'
+import { errorMessage } from '@/api/errors'
 import { authApi } from '@/api/auth'
 import type { AuthUser } from '@/api/auth'
 import Modal from '@/components/Modal'
@@ -9,15 +9,6 @@ export interface ProfileDialogProps {
   user: AuthUser
   onClose: () => void
   onSaved: (user: AuthUser) => void
-}
-
-function profileErrorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
-    if (err.status === 422) return err.detail || '提交的内容不符合要求，请检查后重试。'
-    return err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
 }
 
 export default function ProfileDialog({ user, onClose, onSaved }: ProfileDialogProps) {
@@ -56,7 +47,7 @@ export default function ProfileDialog({ user, onClose, onSaved }: ProfileDialogP
       onSaved(updated)
       onClose()
     } catch (err) {
-      setError(profileErrorText(err))
+      setError(errorMessage(err))
       setSaving(false)
     }
   }

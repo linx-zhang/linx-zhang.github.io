@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown'
+import type { PluggableList } from 'unified'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
@@ -14,10 +15,23 @@ interface MarkdownViewProps {
   content: string
   className?: string
   style?: CSSProperties
+  /**
+   * 是否放行 Markdown 里的原始 HTML。
+   *
+   * 只有内容来源可信时才开（wiki：仓库里的 md，作者就是站点主人）。
+   * 博客正文来自任意注册用户，默认关闭——否则 <style> / <iframe> / <form> 会真进 DOM，
+   * 可以伪造登录浮层钓 localStorage 里的 token。关闭后原始 HTML 退化成文本，正文照常可读。
+   */
+  rawHtml?: boolean
 }
 
 /** 全站统一的 Markdown 渲染入口，避免 Docs 与博客使用不同插件配置 */
-export default function MarkdownView({ content, className, style }: MarkdownViewProps) {
+export default function MarkdownView({
+  content,
+  className,
+  style,
+  rawHtml = false,
+}: MarkdownViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   // 代码块复制按钮：md 是运行时渲染的，给每个 <pre> 挂一个按钮，内容变化后重挂
@@ -49,6 +63,11 @@ export default function MarkdownView({ content, className, style }: MarkdownView
     }, 1400)
   }
 
+  // rehypeRaw 只在可信内容下挂载
+  const rehypePlugins: PluggableList = rawHtml
+    ? [rehypeRaw, [rehypePrismPlus, { ignoreMissing: true }]]
+    : [[rehypePrismPlus, { ignoreMissing: true }]]
+
   return (
     <div
       ref={containerRef}
@@ -56,10 +75,7 @@ export default function MarkdownView({ content, className, style }: MarkdownView
       style={{ color: '#1f2937', lineHeight: 1.6, ...style }}
       onClick={handleCopy}
     >
-      <ReactMarkdown
-        remarkPlugins={[remarkFrontmatter, remarkGfm]}
-        rehypePlugins={[rehypeRaw, [rehypePrismPlus, { ignoreMissing: true }]]}
-      >
+      <ReactMarkdown remarkPlugins={[remarkFrontmatter, remarkGfm]} rehypePlugins={rehypePlugins}>
         {content}
       </ReactMarkdown>
     </div>

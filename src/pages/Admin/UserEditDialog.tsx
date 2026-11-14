@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ApiError } from '@/api/client'
+import { errorMessage } from '@/api/errors'
 import { adminApi } from '@/api/admin'
 import type { AdminUser, UpdateUserPayload } from '@/api/admin'
 import Modal from '@/components/Modal'
@@ -13,17 +13,6 @@ export interface UserEditDialogProps {
 
 function trimValue(value: string): string {
   return value.trim()
-}
-
-function editErrorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.code === 'email_exists') return '该邮箱已被使用'
-    if (err.code === 'invalid_email') return '邮箱格式不正确，请检查后重试'
-    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
-    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
-    return err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
 }
 
 /** 编辑用户资料与邮箱，保存时只提交改动过的字段；角色与删除在行内操作 */
@@ -82,7 +71,7 @@ export default function UserEditDialog({
       onSaved(updated)
       onClose()
     } catch (err) {
-      setError(editErrorText(err))
+      setError(errorMessage(err))
       setSaving(false)
     }
   }

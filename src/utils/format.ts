@@ -24,6 +24,3 @@ export function formatTimestamp(value: string): string {
   if (!date) return value.replace('T', ' ').slice(0, 16)
   return `${formatDate(value)} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
-
-/** 列表类页面统一的分页大小 */
-export const PAGE_SIZE = 20

@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ApiError, errorMessage } from '@/api/client'
+import { errorMessage } from '@/api/errors'
 import { blogApi } from '@/api/blog'
 import type { Comment, Post, PostNeighbors } from '@/api/blog'
 import { useAuth } from '@/auth/AuthProvider'
 import { usePermission } from '@/auth/usePermission'
+import { useResource } from '@/hooks/useResource'
 import MarkdownView from '@/components/MarkdownView'
 import Avatar from '@/components/Avatar'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
+import { COMMENT_BODY_MAX, POST_TITLE_MAX } from '@/constants'
 import { formatTimestamp } from '@/utils/format'
 import './Blog.css'
 
@@ -59,13 +61,30 @@ export default function PostDetail() {
   const { has } = usePermission()
   const { confirm, dialog } = useConfirm()
 
-  const [post, setPost] = useState<Post | null>(null)
-  const [neighbors, setNeighbors] = useState<PostNeighbors | null>(null)
-  const [postStatus, setPostStatus] = useState<'loading' | 'ready' | 'missing' | 'error'>(
-    validId ? 'loading' : 'missing',
+  // 正文：404 视为「文章不存在」，其余错误给重试
+  const postQuery = useResource<Post>(() => blogApi.getPost(postId), [postId], {
+    enabled: validId,
+    treat404AsMissing: true,
+  })
+  const post = postQuery.data
+  const postStatus = validId ? postQuery.status : 'missing'
+
+  // 上一篇 / 下一篇：拿不到就整块不展示（silent，不弹错误）
+  const neighbors = useResource<PostNeighbors>(
+    () => blogApi.getNeighbors(postId, listFilters),
+    [postId, listFilters.q, listFilters.author],
+    { enabled: validId, silent: true },
+  ).data
+
+  // 评论：列表本身就按创建顺序排好，避免每次渲染重排
+  const commentsQuery = useResource<Comment[]>(
+    () => blogApi.listComments(postId).then((list) => [...list].sort(commentOrder)),
+    [postId],
+    { enabled: validId },
   )
-  const [postError, setPostError] = useState('')
-  const [postReloadKey, setPostReloadKey] = useState(0)
+  const comments = commentsQuery.data ?? []
+  const commentStatus = commentsQuery.status === 'missing' ? 'ready' : commentsQuery.status
+  const refreshComments = commentsQuery.reload
 
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
@@ -75,97 +94,11 @@ export default function PostDetail() {
   const [deletingPost, setDeletingPost] = useState(false)
   const [postActionError, setPostActionError] = useState('')
 
-  const [comments, setComments] = useState<Comment[]>([])
-  const [commentStatus, setCommentStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [commentError, setCommentError] = useState('')
-
   const [body, setBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [deleteError, setDeleteError] = useState('')
-
-  useEffect(() => {
-    if (!validId) return
-    let cancelled = false
-    setPostStatus('loading')
-    setPostError('')
-    blogApi
-      .getPost(postId)
-      .then((value) => {
-        if (cancelled) return
-        setPost(value)
-        setPostStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        if (err instanceof ApiError && err.status === 404) {
-          setPostStatus('missing')
-          return
-        }
-        setPostError(errorMessage(err))
-        setPostStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [postId, validId, postReloadKey])
-
-  // 上一篇 / 下一篇：按当前列表的筛选条件取邻篇，拿不到就整块不展示
-  useEffect(() => {
-    if (!validId) return
-    let cancelled = false
-    blogApi
-      .getNeighbors(postId, listFilters)
-      .then((value) => {
-        if (cancelled) return
-        setNeighbors(value)
-      })
-      .catch(() => {
-        if (cancelled) return
-        setNeighbors(null)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [postId, validId, listFilters.q, listFilters.author])
-
-  useEffect(() => {
-    if (!validId) return
-    let cancelled = false
-    setCommentStatus('loading')
-    setCommentError('')
-    blogApi
-      .listComments(postId)
-      .then((list) => {
-        if (cancelled) return
-        setComments([...list].sort(commentOrder))
-        setCommentStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setCommentError(errorMessage(err))
-        setCommentStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [postId, validId])
-
-  const refreshComments = () => {
-    setCommentStatus('loading')
-    setCommentError('')
-    blogApi
-      .listComments(postId)
-      .then((list) => {
-        setComments([...list].sort(commentOrder))
-        setCommentStatus('ready')
-      })
-      .catch((err) => {
-        setCommentError(errorMessage(err))
-        setCommentStatus('error')
-      })
-  }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -175,8 +108,8 @@ export default function PostDetail() {
       setSubmitError('评论内容不能为空')
       return
     }
-    if (trimmed.length > 5000) {
-      setSubmitError('评论内容不能超过 5000 个字符')
+    if (trimmed.length > COMMENT_BODY_MAX) {
+      setSubmitError(`评论内容不能超过 ${COMMENT_BODY_MAX} 个字符`)
       return
     }
     setSubmitting(true)
@@ -235,8 +168,8 @@ export default function PostDetail() {
       setEditError('标题不能为空')
       return
     }
-    if (trimmedTitle.length > 200) {
-      setEditError('标题不能超过 200 个字符')
+    if (trimmedTitle.length > POST_TITLE_MAX) {
+      setEditError(`标题不能超过 ${POST_TITLE_MAX} 个字符`)
       return
     }
     if (editBody.trim().length === 0) {
@@ -250,7 +183,7 @@ export default function PostDetail() {
         title: trimmedTitle,
         body_md: editBody,
       })
-      setPost(updated)
+      postQuery.setData(updated)
       setEditing(false)
     } catch (err) {
       setEditError(errorMessage(err))
@@ -306,13 +239,9 @@ export default function PostDetail() {
     return (
       <div className="blog-page">
         <div className="blog-state blog-state-error">
-          <p>{postError}</p>
+          <p>{postQuery.error}</p>
           <div className="blog-state-actions">
-            <button
-              type="button"
-              className="blog-button"
-              onClick={() => setPostReloadKey((key) => key + 1)}
-            >
+            <button type="button" className="blog-button" onClick={postQuery.reload}>
               重试
             </button>
             <Link className="blog-button" to={backToList}>
@@ -345,7 +274,7 @@ export default function PostDetail() {
               <input
                 type="text"
                 value={editTitle}
-                maxLength={200}
+                maxLength={POST_TITLE_MAX}
                 disabled={saving}
                 onChange={(event) => {
                   setEditTitle(event.target.value)
@@ -444,7 +373,7 @@ export default function PostDetail() {
 
         {commentStatus === 'error' && (
           <div className="blog-state blog-state-error">
-            <p>{commentError}</p>
+            <p>{commentsQuery.error}</p>
             <button type="button" className="blog-button" onClick={refreshComments}>
               重试
             </button>
@@ -499,13 +428,13 @@ export default function PostDetail() {
                     setSubmitError('')
                   }}
                   rows={4}
-                  maxLength={5000}
+                  maxLength={COMMENT_BODY_MAX}
                   placeholder="写下你的想法…"
                 />
               </label>
               {submitError && <p className="comment-error">{submitError}</p>}
               <div className="comment-form-footer">
-                <span className="comment-count">{body.length} / 5000</span>
+                <span className="comment-count">{body.length} / {COMMENT_BODY_MAX}</span>
                 <button
                   type="submit"
                   className="blog-button comment-submit"

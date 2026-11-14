@@ -25,19 +25,6 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * 把任意异常转成可直接展示的文案：5xx 统一提示、403 优先用后端 detail，其余直接用 detail。
- * 页面层只调这一个函数，别再各自复制一份判断。
- */
-export function errorMessage(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
-    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
-    return err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
-}
-
 export function getStoredToken(): string | null {
   return window.localStorage.getItem(TOKEN_KEY)
 }
@@ -62,8 +49,6 @@ function errorFrom(status: number, body: unknown): ApiError {
 }
 
 export interface RequestOptions {
-  /** 管理接口的 403 应展示后端 detail，而不是直接清空登录态 */
-  skipForbiddenLogout?: boolean
   /**
    * 登录/注册这类端点：401 是「这次提交的凭据不对」这一业务结果，不是 token 失效。
    * 不跳过就会清掉本地 token 并广播 auth:unauthorized，登录框被自己的事件关掉，
@@ -72,9 +57,18 @@ export interface RequestOptions {
   skipAuthReset?: boolean
 }
 
+/** 未登录 / token 失效的唯一出口：清本地 token 并通知 AuthProvider */
+function resetAuth(): void {
+  clearToken()
+  window.dispatchEvent(new Event('auth:unauthorized'))
+}
+
 /**
  * 全站唯一的数据传输入口：拼 base、注入 Bearer、解析 envelope、统一抛 ApiError。
- * 各业务模块（auth / blog / admin）只提供类型化的接口函数。
+ * 各业务模块（auth / blog / admin / memo / clip）只提供类型化的接口函数。
+ *
+ * 登出只在 401 时发生。403 是「这个账号没有这个权限」，属于业务结果，清掉登录态会让
+ * 用户莫名其妙被踢下线（例如在已删除的文章下发评论）。要展示文案就交给 errorMessage。
  */
 export async function request<T>(
   path: string,
@@ -91,13 +85,9 @@ export async function request<T>(
 
   const response = await fetch(`${API_BASE}${path}`, { ...init, headers })
 
-  if (
-    !options.skipAuthReset &&
-    (response.status === 401 || (response.status === 403 && !options.skipForbiddenLogout))
-  ) {
-    clearToken()
-    window.dispatchEvent(new Event('auth:unauthorized'))
-  }
+  if (response.status === 401 && !options.skipAuthReset) resetAuth()
+
+  if (response.status === 204) return undefined as T
 
   const text = await response.text()
   let body: unknown = null

@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react'
-import { ApiError, errorMessage } from '@/api/client'
+import { useState } from 'react'
+import { errorMessage } from '@/api/errors'
 import { adminApi } from '@/api/admin'
 import type { ActivityItem, ActivityType } from '@/api/admin'
 import Select from '@/components/Select'
 import DateRangePicker from '@/components/DateRangePicker'
 import type { DateRangeValue } from '@/components/DateRangePicker'
-import { PAGE_SIZE, parseServerTimestamp } from '@/utils/format'
+import { usePagedList } from '@/hooks/usePagedList'
+import { parseServerTimestamp } from '@/utils/format'
+import ListState from '@/components/ListState'
+import Pager from './Pager'
 
 const TYPE_OPTIONS = [
   { value: '', label: '全部类型' },
@@ -59,43 +62,21 @@ export default function ActivityTab() {
   const [resolving, setResolving] = useState(false)
 
   const [applied, setApplied] = useState<AppliedFilters>({})
-  const [pageIndex, setPageIndex] = useState(0)
-  const [items, setItems] = useState<ActivityItem[]>([])
-  const [hasNext, setHasNext] = useState(false)
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error' | 'missing'>('loading')
-  const [listError, setListError] = useState('')
-  const [reloadKey, setReloadKey] = useState(0)
 
-  useEffect(() => {
-    let cancelled = false
-    adminApi
-      .listActivity({
+  // 只有点「查询 / 重置」才换 applied，因此翻页不会把未提交的输入带进请求
+  const list = usePagedList<ActivityItem>(
+    (limit, offset) =>
+      adminApi.listActivity({
         user_id: applied.userId,
         type: applied.type,
         from: applied.from,
         to: applied.to,
-        limit: PAGE_SIZE,
-        offset: pageIndex * PAGE_SIZE,
-      })
-      .then((page) => {
-        if (cancelled) return
-        setItems(page.items)
-        setHasNext(page.has_next)
-        setStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        if (err instanceof ApiError && err.status === 404) {
-          setStatus('missing')
-          return
-        }
-        setListError(errorMessage(err))
-        setStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [applied, pageIndex, reloadKey])
+        limit,
+        offset,
+      }),
+    { deps: [applied], treat404AsMissing: true },
+  )
+  const { items, hasNext, pageIndex, status, error: listError } = list
 
   const applyFilters = async () => {
     const raw = userInput.trim()
@@ -140,9 +121,8 @@ export default function ActivityTab() {
       return
     }
 
-    setPageIndex(0)
-    setStatus('loading')
-    setListError('')
+    // 条件变了就回第 1 页：deps 变化会触发重取，reset 负责把页码归零
+    list.reset()
     setApplied({
       userId,
       type: typeFilter || undefined,
@@ -156,9 +136,7 @@ export default function ActivityTab() {
     setTypeFilter('')
     setDateRange({})
     setFilterError('')
-    setPageIndex(0)
-    setStatus('loading')
-    setListError('')
+    list.reset()
     setApplied({})
   }
 
@@ -226,43 +204,14 @@ export default function ActivityTab() {
         </span>
       </div>
 
-      {status === 'loading' && <div className="user-empty">加载中…</div>}
-
-      {status === 'missing' && (
-        <div className="user-empty">
-          <p>日志接口尚未部署，请等待后端上线后重试。</p>
-          <button
-            type="button"
-            className="blog-button"
-            onClick={() => {
-              setStatus('loading')
-              setReloadKey((key) => key + 1)
-            }}
-          >
-            重试
-          </button>
-        </div>
-      )}
-
-      {status === 'error' && (
-        <div className="user-empty">
-          <p>{listError}</p>
-          <button
-            type="button"
-            className="blog-button"
-            onClick={() => {
-              setStatus('loading')
-              setReloadKey((key) => key + 1)
-            }}
-          >
-            重试
-          </button>
-        </div>
-      )}
-
-      {status === 'ready' && items.length === 0 && (
-        <div className="user-empty">没有匹配的日志。</div>
-      )}
+      <ListState
+        status={status}
+        error={listError}
+        onRetry={list.retry}
+        count={items.length}
+        emptyText="没有匹配的日志。"
+        missingText="日志接口尚未部署，请等待后端上线后重试。"
+      />
 
       {status === 'ready' && items.length > 0 && (
         <div className="activity-list">
@@ -300,31 +249,7 @@ export default function ActivityTab() {
       )}
 
       {status === 'ready' && (pageIndex > 0 || hasNext) && (
-        <div className="admin-pager">
-          <button
-            type="button"
-            className="blog-button"
-            disabled={pageIndex === 0}
-            onClick={() => {
-              setPageIndex((index) => Math.max(0, index - 1))
-              setStatus('loading')
-            }}
-          >
-            上一页
-          </button>
-          <span>第 {pageIndex + 1} 页</span>
-          <button
-            type="button"
-            className="blog-button"
-            disabled={!hasNext}
-            onClick={() => {
-              setPageIndex((index) => index + 1)
-              setStatus('loading')
-            }}
-          >
-            下一页
-          </button>
-        </div>
+        <Pager pageIndex={pageIndex} hasNext={hasNext} onPage={list.goToPage} />
       )}
     </section>
   )

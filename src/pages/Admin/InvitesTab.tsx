@@ -1,39 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { errorMessage } from '@/api/client'
-import { adminApi } from '@/api/admin'
-import type { InviteCode, InviteRole } from '@/api/admin'
+import { errorMessage } from '@/api/errors'
+import { adminApi, inviteStatus } from '@/api/admin'
+import type { InviteCode, InviteRole, InviteStatus } from '@/api/admin'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import Select from '@/components/Select'
-import { PAGE_SIZE, formatTimestamp } from '@/utils/format'
+import { usePagedList } from '@/hooks/usePagedList'
+import { formatTimestamp } from '@/utils/format'
 import { copyText } from '@/utils/clipboard'
+import ListState from '@/components/ListState'
+import Pager from './Pager'
 import { roleLabel } from './userRoles'
 
-function statusOf(invite: InviteCode): 'unused' | 'used' | 'expired' {
-  if (invite.used_at) return 'used'
-  if (!invite.expires_at) return 'unused'
-  const raw = invite.expires_at.includes('T')
-    ? invite.expires_at
-    : invite.expires_at.replace(' ', 'T')
-  const withZone = /Z|[+-]\d{2}:\d{2}$/.test(raw) ? raw : `${raw}Z`
-  return Date.parse(withZone) <= Date.now() ? 'expired' : 'unused'
-}
-
-function statusLabel(invite: InviteCode): string {
-  const status = statusOf(invite)
-  if (status === 'used') return '已使用'
-  if (status === 'expired') return '已过期'
-  return '未使用'
+const STATUS_LABEL: Record<InviteStatus, string> = {
+  unused: '未使用',
+  used: '已使用',
+  expired: '已过期',
 }
 
 export default function InvitesTab() {
-  const [pageIndex, setPageIndex] = useState(0)
-  const [items, setItems] = useState<InviteCode[]>([])
-  const [total, setTotal] = useState(0)
-  const [hasNext, setHasNext] = useState(false)
-  const [listStatus, setListStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [listError, setListError] = useState('')
-  const [reloadKey, setReloadKey] = useState(0)
+  const list = usePagedList<InviteCode>((limit, offset) =>
+    adminApi.listInviteCodes({ limit, offset }),
+  )
+  const { items, total, hasNext, pageIndex, status: listStatus, error: listError } = list
 
   const [role, setRole] = useState<InviteRole>('internal')
   const [count, setCount] = useState('1')
@@ -50,27 +39,6 @@ export default function InvitesTab() {
   const [deleteError, setDeleteError] = useState('')
   const { confirm, dialog } = useConfirm()
 
-  useEffect(() => {
-    let cancelled = false
-    adminApi
-      .listInviteCodes({limit: PAGE_SIZE, offset: pageIndex * PAGE_SIZE})
-      .then((page) => {
-        if (cancelled) return
-        setItems(page.items)
-        setTotal(page.total)
-        setHasNext(page.has_next)
-        setListStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setListError(errorMessage(err))
-        setListStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [pageIndex, reloadKey])
-
   const submitCreate = async (countValue: number, daysValue: number, noteValue: string) => {
     setCreating(true)
     try {
@@ -82,10 +50,8 @@ export default function InvitesTab() {
       })
       setHighlight(created.map((item) => item.code))
       setNotice(`已创建 ${created.length} 个邀请码，已高亮显示，可直接复制。`)
-      setListStatus('loading')
-      setListError('')
-      setPageIndex(0)
-      setReloadKey((key) => key + 1)
+      // 新建的码排在最前：回第 1 页重取
+      list.reset()
     } catch (err) {
       setCreateError(errorMessage(err))
     } finally {
@@ -152,19 +118,14 @@ export default function InvitesTab() {
           setDeleteError(errorMessage(err))
         } finally {
           setDeletingCode(null)
-          setListStatus('loading')
-          setListError('')
-          setReloadKey((key) => key + 1)
+          if (items.length <= 1 && pageIndex > 0) list.goToPage(pageIndex - 1)
+          else list.reload()
         }
       },
     })
   }
 
-  const changePage = (next: number) => {
-    setListStatus('loading')
-    setListError('')
-    setPageIndex(next)
-  }
+  const changePage = list.goToPage
 
   return (
     <section className="invite-section">
@@ -223,36 +184,22 @@ export default function InvitesTab() {
 
       <div className="invite-list-head">
         <h2 className="admin-section-title">邀请码列表</h2>
-        {listStatus === 'ready' && <span className="invite-total">共 {total} 个</span>}
+        {listStatus === 'ready' && <span className="invite-total">共 {total ?? 0} 个</span>}
       </div>
 
-      {listStatus === 'loading' && <div className="admin-card invite-empty">加载中…</div>}
-
-      {listStatus === 'error' && (
-        <div className="admin-card invite-empty">
-          <p>{listError}</p>
-          <button
-            type="button"
-            className="blog-button"
-            onClick={() => {
-              setListStatus('loading')
-              setListError('')
-              setReloadKey((key) => key + 1)
-            }}
-          >
-            重试
-          </button>
-        </div>
-      )}
-
-      {listStatus === 'ready' && items.length === 0 && (
-        <div className="admin-card invite-empty">还没有邀请码，使用上方表单生成。</div>
-      )}
+      <ListState
+        status={listStatus}
+        error={listError}
+        onRetry={list.retry}
+        count={items.length}
+        className="admin-card invite-empty"
+        emptyText="还没有邀请码，使用上方表单生成。"
+      />
 
       {listStatus === 'ready' && items.length > 0 && (
         <ul className="invite-list">
           {items.map((invite) => {
-            const status = statusOf(invite)
+            const status = inviteStatus(invite)
             const isNew = highlight.includes(invite.code)
             return (
               <li
@@ -278,7 +225,7 @@ export default function InvitesTab() {
                     {roleLabel(invite.role)}
                   </span>
                   <span className={`invite-status invite-status-${status}`}>
-                    {statusLabel(invite)}
+                    {STATUS_LABEL[status]}
                   </span>
                   {status === 'unused' && (
                     <button
@@ -311,25 +258,12 @@ export default function InvitesTab() {
       {copyError && <p className="admin-error">{copyError}</p>}
 
       {listStatus === 'ready' && (
-        <div className="invite-pager">
-          <button
-            type="button"
-            className="blog-button"
-            disabled={pageIndex === 0}
-            onClick={() => changePage(pageIndex - 1)}
-          >
-            上一页
-          </button>
-          <span>第 {pageIndex + 1} 页</span>
-          <button
-            type="button"
-            className="blog-button"
-            disabled={!hasNext}
-            onClick={() => changePage(pageIndex + 1)}
-          >
-            下一页
-          </button>
-        </div>
+        <Pager
+          pageIndex={pageIndex}
+          hasNext={hasNext}
+          onPage={changePage}
+          className="invite-pager"
+        />
       )}
       {dialog}
     </section>

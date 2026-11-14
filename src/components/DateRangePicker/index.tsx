@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useFloatingPanel } from '@/components/FloatingPanel/useFloatingPanel'
+import {
+  WEEKDAYS,
+  addDays,
+  addMonths,
+  dayNumber,
+  isOutsideMonth,
+  monthGrid,
+  startOfMonth,
+  today as todayDay,
+} from '@/utils/calendar'
 // 触发按钮与 Select 共用同一套样式，避免两处边框/圆角/高度漂移
 import '@/components/Select/Select.css'
 import './DateRangePicker.css'
@@ -20,45 +30,8 @@ export interface DateRangePickerProps {
   ariaLabel?: string
 }
 
-const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
 const PANEL_MIN_WIDTH = 300
 const PANEL_ESTIMATE_HEIGHT = 390
-
-function pad(value: number): string {
-  return String(value).padStart(2, '0')
-}
-
-function toDay(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
-
-/** 统一取本地中午，避免夏令时切换导致跨日计算偏移 */
-function parseDay(day: string): Date {
-  const [year, month, date] = day.split('-').map(Number)
-  return new Date(year, month - 1, date, 12)
-}
-
-function addDays(day: string, delta: number): string {
-  const date = parseDay(day)
-  date.setDate(date.getDate() + delta)
-  return toDay(date)
-}
-
-function startOfMonth(day: string): Date {
-  const date = parseDay(day)
-  return new Date(date.getFullYear(), date.getMonth(), 1, 12)
-}
-
-function addMonths(month: Date, delta: number): Date {
-  return new Date(month.getFullYear(), month.getMonth() + delta, 1, 12)
-}
-
-/** 固定 42 格（6 行），首格为所在周的周日 */
-function monthGrid(month: Date): string[] {
-  const first = new Date(month.getFullYear(), month.getMonth(), 1, 12)
-  const start = addDays(toDay(first), -first.getDay())
-  return Array.from({ length: 42 }, (_, index) => addDays(start, index))
-}
 
 function rangeText(value: DateRangeValue, placeholder: string): string {
   if (value.from && value.to) {
@@ -77,8 +50,8 @@ export default function DateRangePicker({
   placeholder = '全部日期',
   ariaLabel,
 }: DateRangePickerProps) {
-  const [viewMonth, setViewMonth] = useState(() => startOfMonth(toDay(new Date())))
-  const [focusDay, setFocusDay] = useState(() => toDay(new Date()))
+  const [viewMonth, setViewMonth] = useState(() => startOfMonth(todayDay()))
+  const [focusDay, setFocusDay] = useState(todayDay)
 
   const {
     open,
@@ -89,7 +62,7 @@ export default function DateRangePicker({
     closePanel,
   } = useFloatingPanel({ estimateHeight: PANEL_ESTIMATE_HEIGHT, minWidth: PANEL_MIN_WIDTH })
 
-  const [today] = useState(() => toDay(new Date()))
+  const [today] = useState(todayDay)
   const days = monthGrid(viewMonth)
   const hasValue = Boolean(value.from || value.to)
 
@@ -279,7 +252,7 @@ export default function DateRangePicker({
 
             <div className="date-grid" role="grid" aria-label="日期">
               {days.map((day) => {
-                const outside = parseDay(day).getMonth() !== viewMonth.getMonth()
+                const outside = isOutsideMonth(day, viewMonth)
                 const isStart = value.from === day
                 const isEnd = value.to === day
                 const from = value.from
@@ -304,7 +277,7 @@ export default function DateRangePicker({
                     onClick={() => pickDay(day)}
                     onFocus={() => setFocusDay(day)}
                   >
-                    {parseDay(day).getDate()}
+                    {dayNumber(day)}
                   </button>
                 )
               })}

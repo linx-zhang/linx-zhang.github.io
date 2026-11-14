@@ -1,31 +1,18 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
+import { useResource } from '@/hooks/useResource'
 import { formatDate } from '@/utils/format'
 import './Home.css'
 
-export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [postsStatus, setPostsStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+const HOME_POST_COUNT = 3
 
-  useEffect(() => {
-    let cancelled = false
-    blogApi
-      .listPosts(3, 0)
-      .then((page) => {
-        if (cancelled) return
-        setPosts(page.items)
-        setPostsStatus('ready')
-      })
-      .catch(() => {
-        if (cancelled) return
-        setPostsStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+export default function Home() {
+  const { data, status } = useResource<Post[]>(
+    () => blogApi.listPosts(HOME_POST_COUNT, 0).then((page) => page.items),
+    [],
+  )
+  const posts = data ?? []
 
   return (
     <div className="home-page">
@@ -71,13 +58,13 @@ export default function Home() {
           </Link>
         </div>
 
-        {postsStatus === 'loading' && <p className="home-note">加载中…</p>}
+        {status === 'loading' && <p className="home-note">加载中…</p>}
 
-        {postsStatus === 'ready' && posts.length === 0 && (
+        {status === 'ready' && posts.length === 0 && (
           <p className="home-note">还没有发布文章，先看看知识库吧。</p>
         )}
 
-        {postsStatus === 'ready' && posts.length > 0 && (
+        {status === 'ready' && posts.length > 0 && (
           <ul className="home-posts">
             {posts.map((post) => (
               <li key={post.id}>
@@ -90,7 +77,7 @@ export default function Home() {
           </ul>
         )}
 
-        {postsStatus === 'error' && (
+        {status === 'error' && (
           <p className="home-note">最新文章暂时不可用，可直接前往博客列表。</p>
         )}
       </section>

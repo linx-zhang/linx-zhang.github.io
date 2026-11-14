@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { errorMessage } from '@/api/client'
+import { errorMessage } from '@/api/errors'
 import { blogApi } from '@/api/blog'
 import type { Post } from '@/api/blog'
 import { usePermission } from '@/auth/usePermission'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
-import { usePagedFetch } from '@/hooks/usePagedFetch'
+import { usePagedList } from '@/hooks/usePagedList'
+import ListState from '@/components/ListState'
+import Pager from './Pager'
+import { BATCH_DELETE_MAX } from '@/constants'
 import { formatTimestamp } from '@/utils/format'
 
 interface DeleteFailure {
@@ -19,7 +22,7 @@ export default function PostsTab() {
   const canDelete = has('post:delete:any')
 
   const { items, setItems, pageIndex, hasNext, status, error, goToPage, retry } =
-    usePagedFetch<Post>((limit, offset) => blogApi.listPosts(limit, offset))
+    usePagedList<Post>((limit, offset) => blogApi.listPosts(limit, offset))
 
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [deleting, setDeleting] = useState(false)
@@ -72,7 +75,7 @@ export default function PostsTab() {
         try {
           // 单次请求：后端逐条返回 deleted / failed，前端不做整体回滚
           const result = await blogApi.deletePostsBatch(
-            targets.map((post) => post.id).slice(0, 50),
+            targets.map((post) => post.id).slice(0, BATCH_DELETE_MAX),
           )
           const deleted = new Set(result.deleted)
           setFailures(result.failed.map((item) => ({ id: item.id, detail: item.detail })))
@@ -129,20 +132,13 @@ export default function PostsTab() {
         </div>
       )}
 
-      {status === 'loading' && <div className="user-empty">加载中…</div>}
-
-      {status === 'error' && (
-        <div className="user-empty">
-          <p>{error}</p>
-          <button type="button" className="blog-button" onClick={refresh}>
-            重试
-          </button>
-        </div>
-      )}
-
-      {status === 'ready' && items.length === 0 && (
-        <div className="user-empty">还没有文章，去博客页写一篇吧。</div>
-      )}
+      <ListState
+        status={status}
+        error={error}
+        onRetry={refresh}
+        count={items.length}
+        emptyText="还没有文章，去博客页写一篇吧。"
+      />
 
       {status === 'ready' && items.length > 0 && (
         <div className="post-list">
@@ -207,25 +203,12 @@ export default function PostsTab() {
       )}
 
       {status === 'ready' && (
-        <div className="admin-pager">
-          <button
-            type="button"
-            className="blog-button"
-            disabled={pageIndex === 0 || deleting}
-            onClick={() => goToPage(pageIndex - 1)}
-          >
-            上一页
-          </button>
-          <span>第 {pageIndex + 1} 页</span>
-          <button
-            type="button"
-            className="blog-button"
-            disabled={!hasNext || deleting}
-            onClick={() => goToPage(pageIndex + 1)}
-          >
-            下一页
-          </button>
-        </div>
+        <Pager
+          pageIndex={pageIndex}
+          hasNext={hasNext}
+          onPage={goToPage}
+          disabled={deleting}
+        />
       )}
 
       {dialog}

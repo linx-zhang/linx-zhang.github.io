@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ApiError } from '@/api/client'
+import { authErrorMessage } from '@/api/errors'
 import { adminApi } from '@/api/admin'
 import type { AdminUser, ResetPasswordResult } from '@/api/admin'
 import Modal from '@/components/Modal'
@@ -10,17 +10,6 @@ export interface ResetPasswordDialogProps {
   /** 重置自己时当前会话也会失效，弹窗里要额外提醒 */
   isSelf: boolean
   onClose: () => void
-}
-
-function resetErrorText(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.code === 'invalid_password') return '密码长度需为 8–128 个字符。'
-    if (err.code === 'not_found') return '该用户不存在或已被删除。'
-    if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
-    if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
-    return err.detail
-  }
-  return '网络请求失败，请检查连接后重试。'
 }
 
 /** 管理员重置密码：可手动指定新密码，留空则由后端生成一次性临时密码 */
@@ -52,7 +41,7 @@ export default function ResetPasswordDialog({
     try {
       setResult(await adminApi.resetUserPassword(user.id, password || undefined))
     } catch (err) {
-      setError(resetErrorText(err))
+      setError(authErrorMessage(err))
     } finally {
       setPending(false)
     }

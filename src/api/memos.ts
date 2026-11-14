@@ -1,4 +1,5 @@
 import { request } from '@/api/client'
+import type { Page } from '@/types'
 
 export interface Memo {
   id: number
@@ -13,10 +14,7 @@ export interface Memo {
 }
 
 /** 与全站一致的分页形状：服务端多取一条判断 has_next */
-export interface MemoPage {
-  items: Memo[]
-  has_next: boolean
-}
+export type MemoPage = Page<Memo>
 
 /** 个人空间的计数，单独一个接口，列表里不带 total */
 export interface MemoSummary {

@@ -1,6 +1,4 @@
 import { Outlet, NavLink } from 'react-router-dom'
-import { ActivityTracker } from '@/activity'
-import AuthProvider from '@/auth/AuthProvider'
 import { usePermission } from '@/auth/usePermission'
 import AuthMenu from '@/components/AuthMenu'
 import './RootLayout.css'
@@ -23,26 +21,26 @@ function GlobalNav() {
   )
 }
 
+/**
+ * 只有视觉外壳：导航 + 内容区 + 页脚。
+ * AuthProvider 与活跃上报在 main.tsx 的根上，这样 /profile 这类不套外壳的页面
+ * 也有登录态与访问统计，不会再出现「同一站点两套运行时」。
+ */
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <ActivityTracker />
-      <div className="root-container">
-        <header className="global-header no-print">
-          <div className="header-inner">
-            <GlobalNav />
-            <AuthMenu />
-          </div>
-        </header>
+    <div className="root-container">
+      <header className="global-header no-print">
+        <div className="header-inner">
+          <GlobalNav />
+          <AuthMenu />
+        </div>
+      </header>
 
-        <main className="main-content">
-          <Outlet />
-        </main>
+      <main className="main-content">
+        <Outlet />
+      </main>
 
-        <footer className="global-footer no-print">
-          &copy; Linx Zhang
-        </footer>
-      </div>
-    </AuthProvider>
+      <footer className="global-footer no-print">&copy; Linx Zhang</footer>
+    </div>
   )
 }

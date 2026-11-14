@@ -1,37 +1,32 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import DatePicker from '@/components/DatePicker'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
-import { errorMessage } from '@/api/client'
+import { errorMessage } from '@/api/errors'
 import { memoApi } from '@/api/memos'
 import type { Memo, MemoSummary } from '@/api/memos'
 import { useAuth } from '@/auth/AuthProvider'
 import { usePermission } from '@/auth/usePermission'
-import { PAGE_SIZE, formatDate } from '@/utils/format'
+import { useInfiniteList } from '@/hooks/useInfiniteList'
+import { useResource } from '@/hooks/useResource'
+import { MEMO_BODY_MAX } from '@/constants'
+import { formatDate } from '@/utils/format'
+import { today, WEEKDAYS } from '@/utils/calendar'
 import './Space.css'
 
 type Filter = 'all' | 'pending' | 'done'
 
-const pad = (value: number) => String(value).padStart(2, '0')
-
-/** 本地日期（YYYY-MM-DD）：due_at 存的就是这个口径，不能用 UTC 比 */
-function localToday(): string {
-  const now = new Date()
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-}
-
 /** "M 月 D 日 · 星期四" */
 function todayLabel(): string {
   const now = new Date()
-  const weekday = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
-  return `${now.getMonth() + 1} 月 ${now.getDate()} 日 · ${weekday[now.getDay()]}`
+  return `${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${WEEKDAYS[now.getDay()]}`
 }
 
 function dueMeta(dueAt: string): { text: string; tone: 'today' | 'late' | 'later' } {
-  const today = localToday()
-  if (dueAt === today) return { text: '今天到期', tone: 'today' }
-  if (dueAt < today) return { text: `${dueAt.slice(5)} 已过期`, tone: 'late' }
+  const todayKey = today()
+  if (dueAt === todayKey) return { text: '今天到期', tone: 'today' }
+  if (dueAt < todayKey) return { text: `${dueAt.slice(5)} 已过期`, tone: 'late' }
   return { text: `${dueAt.slice(5)} 到期`, tone: 'later' }
 }
 
@@ -47,14 +42,23 @@ export default function Space() {
   const { confirm, dialog } = useConfirm()
 
   const [filter, setFilter] = useState<Filter>('all')
-  const [items, setItems] = useState<Memo[]>([])
-  const [hasNext, setHasNext] = useState(false)
-  const [pageIndex, setPageIndex] = useState(0)
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [error, setError] = useState('')
-  const [reloadKey, setReloadKey] = useState(0)
 
-  const [summary, setSummary] = useState<MemoSummary | null>(null)
+  /**
+   * 列表用「追加型」状态机：只有 loadMore 会追加，reload 一定清空回第 1 页。
+   * 这正是此前「同一页被追加两遍」的根因——旧实现在 reload 时只 bump 了 key，
+   * 页码还停在原来的位置，于是 pageIndex !== 0 走了追加分支。
+   */
+  const list = useInfiniteList<Memo>(
+    (limit, offset) => memoApi.list(filter === 'all' ? undefined : filter === 'done', limit, offset),
+    { enabled: user !== null },
+  )
+
+  const summaryQuery = useResource<MemoSummary>(() => memoApi.summary(), [user?.id], {
+    enabled: user !== null,
+    silent: true,
+  })
+  const summary = summaryQuery.data
+
   const [body, setBody] = useState('')
   const [dueAt, setDueAt] = useState('')
   const [saving, setSaving] = useState(false)
@@ -77,61 +81,30 @@ export default function Space() {
     return () => window.clearTimeout(timer)
   }, [expanded])
 
-  const loadPage = useCallback(
-    (done: boolean | undefined, offset: number) => memoApi.list(done, PAGE_SIZE, offset),
-    [],
-  )
-
-  useEffect(() => {
-    if (!user) return
-    let cancelled = false
-    setStatus('loading')
-    setError('')
-    const done = filter === 'all' ? undefined : filter === 'done'
-    loadPage(done, pageIndex * PAGE_SIZE)
-      .then((page) => {
-        if (cancelled) return
-        setItems((prev) => (pageIndex === 0 ? page.items : [...prev, ...page.items]))
-        setHasNext(page.has_next)
-        setStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setError(errorMessage(err))
-        setStatus('error')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [user, filter, pageIndex, reloadKey, loadPage])
-
-  useEffect(() => {
-    if (!user) return
-    let cancelled = false
-    memoApi
-      .summary()
-      .then((next) => {
-        if (!cancelled) setSummary(next)
-      })
-      .catch(() => {
-        // 计数失败不影响列表本身，页面照常显示条目
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [user, reloadKey])
+  const items = list.items
+  const status = list.status
+  const hasNext = list.hasNext
+  const error = list.error
 
   const refresh = () => {
-    setPageIndex(0)
-    setReloadKey((key) => key + 1)
+    list.reload()
+    summaryQuery.reload()
   }
 
   const switchFilter = (next: Filter) => {
     if (next === filter) return
     setFilter(next)
-    setItems([])
-    setPageIndex(0)
-    setReloadKey((key) => key + 1)
+    list.reload()
+  }
+
+  /** 服务端返回值对齐到列表；当前筛选不该再包含它时直接移出，避免「勾完还留在待办里」 */
+  const applyMemo = (memo: Memo) => {
+    const visible = filter === 'all' || (filter === 'done' ? memo.done : !memo.done)
+    list.setItems((prev) =>
+      visible
+        ? prev.map((item) => (item.id === memo.id ? memo : item))
+        : prev.filter((item) => item.id !== memo.id),
+    )
   }
 
   const submit = async (event?: FormEvent) => {
@@ -142,8 +115,8 @@ export default function Space() {
       setComposeError('写点什么再保存')
       return
     }
-    if (text.length > 2000) {
-      setComposeError('一条最多 2000 个字符')
+    if (text.length > MEMO_BODY_MAX) {
+      setComposeError(`一条最多 ${MEMO_BODY_MAX} 个字符`)
       return
     }
     setSaving(true)
@@ -153,10 +126,7 @@ export default function Space() {
       setDueAt('')
       // 新建的条目在「已完成」里看不到，切回「全部」再刷新
       if (filter === 'done') setFilter('all')
-      // 清掉旧列表再刷新，这样重取期间会显示骨架，不会「点了保存像什么都没发生」
-      setItems([])
-      setPageIndex(0)
-      setReloadKey((key) => key + 1)
+      refresh()
     } catch (err) {
       setComposeError(errorMessage(err))
     } finally {
@@ -182,16 +152,17 @@ export default function Space() {
       setEditError('内容不能为空')
       return
     }
-    if (text.length > 2000) {
-      setEditError('一条最多 2000 个字符')
+    if (text.length > MEMO_BODY_MAX) {
+      setEditError(`一条最多 ${MEMO_BODY_MAX} 个字符`)
       return
     }
     setEditSaving(true)
     try {
       const updated = await memoApi.update(memo.id, { body: text, due_at: editDue || null })
-      setItems((prev) => prev.map((item) => (item.id === memo.id ? updated : item)))
+      applyMemo(updated)
       setEditingId(null)
-      setReloadKey((key) => key + 1)
+      // 计数交给服务端：自己算 pending/done 迟早和过滤口径漂移
+      summaryQuery.reload()
     } catch (err) {
       setEditError(errorMessage(err))
     } finally {
@@ -201,19 +172,17 @@ export default function Space() {
 
   const toggleDone = async (memo: Memo) => {
     const nextDone = !memo.done
-    // 先改本地：勾选要立刻有反馈，失败再回滚并刷新计数
-    setItems((prev) =>
+    // 先改本地：勾选要立刻有反馈，失败再回滚
+    list.setItems((prev) =>
       prev.map((item) => (item.id === memo.id ? { ...item, done: nextDone } : item)),
     )
     try {
       const updated = await memoApi.update(memo.id, { done: nextDone })
-      setItems((prev) => prev.map((item) => (item.id === memo.id ? updated : item)))
-      setReloadKey((key) => key + 1)
-    } catch (err) {
-      setItems((prev) =>
-        prev.map((item) => (item.id === memo.id ? { ...item, done: memo.done } : item)),
-      )
-      setError(errorMessage(err))
+      applyMemo(updated)
+      summaryQuery.reload()
+    } catch {
+      // 失败就以服务端为准重取：本地回滚要判断它该不该留在当前筛选里，容易出错
+      list.reload()
     }
   }
 
@@ -225,8 +194,8 @@ export default function Space() {
       tone: 'danger',
       onConfirm: async () => {
         await memoApi.remove(memo.id)
-        setItems((prev) => prev.filter((item) => item.id !== memo.id))
-        setReloadKey((key) => key + 1)
+        list.setItems((prev) => prev.filter((item) => item.id !== memo.id))
+        summaryQuery.reload()
       },
     })
   }
@@ -280,12 +249,14 @@ export default function Space() {
         </p>
       </header>
 
-      {/* 快捷入口是给管理员的：普通用户看到「分析 / 邀请码」也进不去，不如不显示 */}
-      {user.role === 'admin' && (
+      {/* 快捷入口按权限码显示，而不是按角色名：权限才是后端真正校验的东西 */}
+      {(has('post:create:any') || has('activity:read:any') || has('invite_code:read:any')) && (
         <nav className="space-quick" aria-label="快捷入口">
-          <Link to="/blog">
-            写文章<span>发到博客</span>
-          </Link>
+          {has('post:create:any') && (
+            <Link to="/blog">
+              写文章<span>发到博客</span>
+            </Link>
+          )}
           {has('activity:read:any') && (
             <Link to="/admin?tab=analytics">
               分析<span>访客与停留</span>
@@ -319,7 +290,7 @@ export default function Space() {
                 ref={textareaRef}
                 value={body}
                 rows={1}
-                maxLength={2000}
+                maxLength={MEMO_BODY_MAX}
                 placeholder="写点什么，比如「周五前交周报」"
                 aria-label="新备忘录"
                 onChange={(event) => {
@@ -444,7 +415,7 @@ export default function Space() {
                       className="space-edit-text"
                       value={editBody}
                       rows={3}
-                      maxLength={2000}
+                      maxLength={MEMO_BODY_MAX}
                       autoFocus
                       aria-label="修改备忘录"
                       onChange={(event) => {
@@ -557,7 +528,7 @@ export default function Space() {
               type="button"
               className="space-button space-more"
               disabled={status === 'loading'}
-              onClick={() => setPageIndex((index) => index + 1)}
+              onClick={list.loadMore}
             >
               {status === 'loading' ? '加载中…' : '加载更多'}
             </button>

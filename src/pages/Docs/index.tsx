@@ -154,7 +154,7 @@ export default function Docs() {
       ) : markdown === null ? (
         <p className="doc-body-loading">正在加载正文…</p>
       ) : (
-        <MarkdownView content={markdown} className="doc-markdown" />
+        <MarkdownView content={markdown} className="doc-markdown" rawHtml />
       )
     ) : (
       <iframe
