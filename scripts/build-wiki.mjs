@@ -95,10 +95,16 @@ function slugOf(file) {
   return relative(SRC_DIR, file).replace(/\.(md|markdown|html)$/i, '')
 }
 
-function stripFrontmatter(text) {
-  if (!text.startsWith('---')) return text
-  const match = text.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/)
-  return match ? text.slice(match[0].length) : text
+function splitFrontmatter(text) {
+  if (!text.startsWith('---')) return { meta: {}, body: text }
+  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)
+  if (!match) return { meta: {}, body: text }
+  const meta = {}
+  for (const line of match[1].split(/\r?\n/)) {
+    const pair = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/)
+    if (pair) meta[pair[1]] = pair[2].trim().replace(/^["'](.*)["']$/, '$1')
+  }
+  return { meta, body: text.slice(match[0].length) }
 }
 
 function titleOfMarkdown(md) {
@@ -202,9 +208,11 @@ async function vendorize(raw, warnings) {
 
 async function buildMarkdown(file, slug) {
   const raw = await fs.readFile(file, 'utf8')
-  const title = titleOfMarkdown(stripFrontmatter(raw)) || slug.split('/').pop()
-  const description = summaryOf(raw) || title
-  return { markdown: raw, title, description }
+  const { meta, body } = splitFrontmatter(raw)
+  const title = titleOfMarkdown(body) || slug.split('/').pop()
+  const description = summaryOf(body) || title
+  // frontmatter 只给构建用（pin 等），不进站内正文
+  return { markdown: body, title, description, pin: Number.parseInt(meta.pin ?? '', 10) || 0 }
 }
 
 async function buildHtmlDoc(file, slug, warnings) {
@@ -263,19 +271,31 @@ async function main() {
     await fs.mkdir(path.dirname(outFile), { recursive: true })
     await fs.writeFile(outFile, isHtml ? built.html : built.markdown, 'utf8')
 
+    const slugParts = slug.split('/')
     entries.push({
       slug,
       title: built.title,
       type: isHtml ? 'html' : 'md',
-      category: slug.includes('/') ? slug.split('/')[0] : '综合',
+      category: slug.includes('/') ? slugParts[0] : '综合',
+      // 二级目录（notes/python、notes/cpp…）单独带出来，列表 meta 行才有话可说
+      topic: slugParts.length > 2 ? slugParts[1] : '',
       filePath: `/${relative(ROOT, file)}`,
       // md 的 href 是运行时取来渲染的源文本；html 的是可独立打开的页面
       href: `/wiki/${slug}${isHtml ? '.html' : '.md'}`,
       standalone: Boolean(built.standalone),
+      // 置顶权重：0 表示不置顶，正整数越小越靠前（frontmatter `pin: 1`）
+      pin: built.pin ?? 0,
     })
   }
 
-  entries.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'))
+  // 置顶的按 pin 升序排在最前，其余维持标题字典序
+  entries.sort((a, b) => {
+    if (a.pin || b.pin) {
+      if (a.pin && b.pin) return a.pin - b.pin
+      return a.pin ? -1 : 1
+    }
+    return a.title.localeCompare(b.title, 'zh-CN')
+  })
   await fs.writeFile(path.join(OUT_DIR, 'index.json'), `${JSON.stringify(entries, null, 2)}\n`, 'utf8')
 
   console.log(`wiki: ${entries.length} 篇 -> ${relative(ROOT, OUT_DIR)}`)

@@ -74,6 +74,19 @@
   gap: 16px;
 }
 
+/* 置顶角标：跟 chip 选中态同一个低饱和靛蓝，别抢标题的视觉重量 */
+.doc-pin {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
 .doc-title {
   font-size: 16px;
   font-weight: 600;

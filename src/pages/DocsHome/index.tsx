@@ -9,11 +9,14 @@ export default function DocsHome() {
 
   const docList = useMemo(() => docs ?? [], [docs]);
 
-  // 分类来自构建期生成的 index.json，slug 第一层即分类
+  // 分类来自构建期生成的 index.json，slug 第一层即分类。
+  // 排序按「篇数降序、同数按名字」：内容多的分类先出现，新加的分类不会因为字母序被塞到最后。
   const categories = useMemo(() => {
-    const cats = new Set<string>();
-    docList.forEach((doc) => cats.add(doc.category));
-    const sortedCats = Array.from(cats).sort((a, b) => a.localeCompare(b, 'zh-CN'));
+    const counts = new Map<string, number>();
+    docList.forEach((doc) => counts.set(doc.category, (counts.get(doc.category) ?? 0) + 1));
+    const sortedCats = Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh-CN'))
+      .map(([name]) => name);
     return ['全部', ...sortedCats];
   }, [docList]);
 
@@ -59,8 +62,9 @@ export default function DocsHome() {
           <main className="doc-list">
             {filteredDocs.map((doc) => (
               <div key={doc.slug} className="doc-item">
-                {/* 第一行：标题 + 右侧操作 */}
+                {/* 第一行：标题 + 右侧操作；置顶文档带一个角标 */}
                 <div className="doc-item-head">
+                  {doc.pin ? <span className="doc-pin">置顶</span> : null}
                   <Link to={`/wiki/${doc.slug}`} className="doc-title">
                     {doc.title}
                   </Link>
@@ -79,9 +83,15 @@ export default function DocsHome() {
                     </Link>
                   </div>
                 </div>
-                {/* 第二行：分类 · 类型 */}
+                {/* 第二行：分类 · 主题 · 类型 */}
                 <div className="doc-meta">
                   {doc.category}
+                  {doc.topic ? (
+                    <>
+                      <span className="doc-meta-dot">·</span>
+                      {doc.topic}
+                    </>
+                  ) : null}
                   <span className="doc-meta-dot">·</span>
                   {doc.type.toUpperCase()}
                 </div>

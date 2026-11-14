@@ -258,6 +258,8 @@ linx-zhang.github.io/
 │  ├─ build-docs.mjs        # 先建到 docs_build 再整目录替换 docs/，附带 wiki 入口复制
 │  └─ postbuild-wiki-index.mjs # 把 SPA 入口复制成 docs/wiki/index.html，否则 /wiki 会被 Pages 命中 wiki/index.json
 ├─ raw-docs/                # 笔记源文件；仅 .md / .markdown / .html 参与构建
+│  ├─ project/              # 本站工程长文（overview / frontend / backend / metrics，pin 置顶）
+│  └─ notes/                # 语言与工具速查：cpp / golang / js / python / devops 二级主题
 ├─ public/                  # favicon.svg（取自 icons.svg 的 #documentation-icon）、icons.svg 图标 sprite、404.html（SPA 深链兜底）
 │  └─ wiki/                 # 生成物（gitignore）：<slug>.md、<slug>.html、index.json、vendor/
 ├─ .cache/wiki-vendor/      # 外链脚本的本地缓存（跨构建复用，gitignore）
@@ -275,11 +277,12 @@ linx-zhang.github.io/
 `scripts/build-wiki.mjs`（由 `predev` / `prebuild` 自动触发，也可 `npm run wiki` 单独跑）：
 
 - 扫描 `raw-docs/**/*.{md,markdown,html}`，`.py` 等附件不参与
-- **Markdown**：原样复制成 `public/wiki/<slug>.md`，**不再预渲染 HTML**；标题、摘要从源文本解析出来写进索引
+- **Markdown**：原样复制成 `public/wiki/<slug>.md`（frontmatter 只给构建用，不进正文），**不再预渲染 HTML**；标题、摘要从源文本解析出来写进索引
 - **HTML**：仍产成 `public/wiki/<slug>.html`，原样保真拷贝；两种情况会处理——
   - 文件里没有 `<html>`（片段式文档）：补 `doctype/html/head/meta/title` 外壳，摘掉外链 `<link rel="stylesheet">`，套上同款排版样式
   - 引用了外链脚本（CDN）：构建期下载一次存到 `.cache/wiki-vendor/`，改写为 `/wiki/vendor/<file>` 本地路径
-- 产出 `public/wiki/index.json`：`slug / title / type / category / filePath / href / standalone`（md 的 `href` 指向 `.md`，html 的指向 `.html`）
+- 产出 `public/wiki/index.json`：`slug / title / type / category / topic / filePath / href / standalone / pin`（md 的 `href` 指向 `.md`，html 的指向 `.html`）
+- **分类与置顶**：`category` 取 slug 第一段（`project` / `notes`），`topic` 取第二段（`python` / `cpp`…）；md 文件头可写 `pin: 1`（正整数越小越靠前），列表排序「置顶在前 + 其余按标题字典序」，分类 chip 按篇数降序
 
 ### 2. 运行期：索引 + 分类型渲染
 
@@ -328,7 +331,7 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 
 8. 探针只用 **GET**：`HEAD` 对已删除的路径也回 200，会得出错误结论。
 9. 看 `/wiki` 应返回约 600 字节 SPA 外壳；`/assets/index-*.js`、`/wiki/<slug>.md` 应 200。
-10. 直接访问 `/wiki/js/finance-simulator`（带不带 `?full=1`）会被 Pages 补成 `.html` 命中静态页、绕过 SPA；验证应用页要从站内点进去。
+10. 直接访问 `/wiki/notes/js/finance-simulator`（带不带 `?full=1`）会被 Pages 补成 `.html` 命中静态页、绕过 SPA；验证应用页要从站内点进去。
 
 **视觉改动**
 

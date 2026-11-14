@@ -6,6 +6,10 @@ export interface DocItem {
   title: string
   type: 'md' | 'html'
   category: string
+  /** 二级目录（如 notes/python、notes/cpp），分类下的主题，可能为空 */
+  topic?: string
+  /** 置顶权重：0 不置顶，正整数越小越靠前 */
+  pin?: number
   /** 仓库内的源文件路径，用于"源文件"链接 */
   filePath: string
   /** 独立静态页地址 */

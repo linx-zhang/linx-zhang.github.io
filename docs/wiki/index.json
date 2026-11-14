@@ -1,155 +1,222 @@
 [
   {
-    "slug": "docs/site-setup",
+    "slug": "project/overview",
     "title": "关于本站",
     "type": "md",
-    "category": "docs",
-    "filePath": "/raw-docs/docs/site-setup.md",
-    "href": "/wiki/docs/site-setup.md",
-    "standalone": false
+    "category": "project",
+    "topic": "",
+    "filePath": "/raw-docs/project/overview.md",
+    "href": "/wiki/project/overview.md",
+    "standalone": false,
+    "pin": 1
   },
   {
-    "slug": "cpp/compile-link",
+    "slug": "project/frontend",
+    "title": "深入前端：静态托管上的单页应用",
+    "type": "md",
+    "category": "project",
+    "topic": "",
+    "filePath": "/raw-docs/project/frontend.md",
+    "href": "/wiki/project/frontend.md",
+    "standalone": false,
+    "pin": 2
+  },
+  {
+    "slug": "project/backend",
+    "title": "深入后端：Cloudflare Worker + D1 的工程化",
+    "type": "md",
+    "category": "project",
+    "topic": "",
+    "filePath": "/raw-docs/project/backend.md",
+    "href": "/wiki/project/backend.md",
+    "standalone": false,
+    "pin": 3
+  },
+  {
+    "slug": "project/metrics",
+    "title": "代码量与复杂度：这个个人站的真实体量",
+    "type": "md",
+    "category": "project",
+    "topic": "",
+    "filePath": "/raw-docs/project/metrics.md",
+    "href": "/wiki/project/metrics.md",
+    "standalone": false,
+    "pin": 4
+  },
+  {
+    "slug": "notes/python/stream-tar-directory",
+    "title": "边遍历目录边流式生成 tar",
+    "type": "md",
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/stream-tar-directory.md",
+    "href": "/wiki/notes/python/stream-tar-directory.md",
+    "standalone": false,
+    "pin": 0
+  },
+  {
+    "slug": "notes/python/get-memory-size",
+    "title": "测量 Python 对象占用的内存",
+    "type": "md",
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/get-memory-size.md",
+    "href": "/wiki/notes/python/get-memory-size.md",
+    "standalone": false,
+    "pin": 0
+  },
+  {
+    "slug": "notes/python/request-signing",
+    "title": "接口请求签名与校验（SHA-256 + secret）",
+    "type": "md",
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/request-signing.md",
+    "href": "/wiki/notes/python/request-signing.md",
+    "standalone": false,
+    "pin": 0
+  },
+  {
+    "slug": "notes/cpp/compile-link",
     "title": "静态库与动态库：编译、链接、加载三段到底发生了什么",
     "type": "md",
-    "category": "cpp",
-    "filePath": "/raw-docs/cpp/compile-link.md",
-    "href": "/wiki/cpp/compile-link.md",
-    "standalone": false
+    "category": "notes",
+    "topic": "cpp",
+    "filePath": "/raw-docs/notes/cpp/compile-link.md",
+    "href": "/wiki/notes/cpp/compile-link.md",
+    "standalone": false,
+    "pin": 0
   },
   {
-    "slug": "python/merge-images-with-numpy",
-    "title": "设置图片路径",
+    "slug": "notes/golang/lan-share",
+    "title": "局域网共享本地文件",
     "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/merge-images-with-numpy.md",
-    "href": "/wiki/python/merge-images-with-numpy.md",
-    "standalone": false
+    "category": "notes",
+    "topic": "golang",
+    "filePath": "/raw-docs/notes/golang/lan-share.md",
+    "href": "/wiki/notes/golang/lan-share.md",
+    "standalone": false,
+    "pin": 0
   },
   {
-    "slug": "js/finance-simulator",
+    "slug": "notes/python/find-chinese-characters",
+    "title": "批量提取文件中的中文字符",
+    "type": "md",
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/find-chinese-characters.md",
+    "href": "/wiki/notes/python/find-chinese-characters.md",
+    "standalone": false,
+    "pin": 0
+  },
+  {
+    "slug": "notes/python/algorithm/flatten-dict-paths",
+    "title": "取出嵌套字典全部叶子节点的路径",
+    "type": "md",
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/algorithm/flatten-dict-paths.md",
+    "href": "/wiki/notes/python/algorithm/flatten-dict-paths.md",
+    "standalone": false,
+    "pin": 0
+  },
+  {
+    "slug": "notes/golang/has-timestamp-safe-id",
+    "title": "生成带时间戳的安全 ID",
+    "type": "md",
+    "category": "notes",
+    "topic": "golang",
+    "filePath": "/raw-docs/notes/golang/has-timestamp-safe-id.md",
+    "href": "/wiki/notes/golang/has-timestamp-safe-id.md",
+    "standalone": false,
+    "pin": 0
+  },
+  {
+    "slug": "notes/python/importlib",
+    "title": "用 importlib 从任意路径导入模块",
+    "type": "md",
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/importlib.md",
+    "href": "/wiki/notes/python/importlib.md",
+    "standalone": false,
+    "pin": 0
+  },
+  {
+    "slug": "notes/python/merge-images-with-numpy",
+    "title": "用 NumPy 纵向拼接图片",
+    "type": "md",
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/merge-images-with-numpy.md",
+    "href": "/wiki/notes/python/merge-images-with-numpy.md",
+    "standalone": false,
+    "pin": 0
+  },
+  {
+    "slug": "notes/python/merge-images-with-pil",
+    "title": "用 Pillow 纵向拼接图片",
+    "type": "md",
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/merge-images-with-pil.md",
+    "href": "/wiki/notes/python/merge-images-with-pil.md",
+    "standalone": false,
+    "pin": 0
+  },
+  {
+    "slug": "notes/js/finance-simulator",
     "title": "资产增长模拟器（25 岁起）",
     "type": "html",
-    "category": "js",
-    "filePath": "/raw-docs/js/finance-simulator.html",
-    "href": "/wiki/js/finance-simulator.html",
-    "standalone": true
+    "category": "notes",
+    "topic": "js",
+    "filePath": "/raw-docs/notes/js/finance-simulator.html",
+    "href": "/wiki/notes/js/finance-simulator.html",
+    "standalone": true,
+    "pin": 0
   },
   {
-    "slug": "python/cprofile-middleware",
-    "title": "cprofile-middleware",
+    "slug": "notes/python/cprofile-middleware",
+    "title": "Django 中间件：用 cProfile 找出慢请求",
     "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/cprofile-middleware.md",
-    "href": "/wiki/python/cprofile-middleware.md",
-    "standalone": false
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/cprofile-middleware.md",
+    "href": "/wiki/notes/python/cprofile-middleware.md",
+    "standalone": false,
+    "pin": 0
   },
   {
-    "slug": "python/find-chinese-characters",
-    "title": "Find chinese-character Tool",
-    "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/find-chinese-characters.md",
-    "href": "/wiki/python/find-chinese-characters.md",
-    "standalone": false
-  },
-  {
-    "slug": "golang/has-timestamp-safe-id",
-    "title": "Generate Has Timestamp Id",
-    "type": "md",
-    "category": "golang",
-    "filePath": "/raw-docs/golang/has-timestamp-safe-id.md",
-    "href": "/wiki/golang/has-timestamp-safe-id.md",
-    "standalone": false
-  },
-  {
-    "slug": "python/get-memory-size",
-    "title": "Get Memory Sizeof | Python",
-    "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/get-memory-size.md",
-    "href": "/wiki/python/get-memory-size.md",
-    "standalone": false
-  },
-  {
-    "slug": "python/algorithm/flatten-dict-paths",
-    "title": "Get the keys of all levels above the base type",
-    "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/algorithm/flatten-dict-paths.md",
-    "href": "/wiki/python/algorithm/flatten-dict-paths.md",
-    "standalone": false
-  },
-  {
-    "slug": "python/importlib",
-    "title": "importlib",
-    "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/importlib.md",
-    "href": "/wiki/python/importlib.md",
-    "standalone": false
-  },
-  {
-    "slug": "golang/lan-share",
-    "title": "Local Area Net Share local-file Tool",
-    "type": "md",
-    "category": "golang",
-    "filePath": "/raw-docs/golang/lan-share.md",
-    "href": "/wiki/golang/lan-share.md",
-    "standalone": false
-  },
-  {
-    "slug": "python/merge-images-with-pil",
-    "title": "merge-images-with-pil",
-    "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/merge-images-with-pil.md",
-    "href": "/wiki/python/merge-images-with-pil.md",
-    "standalone": false
-  },
-  {
-    "slug": "python/io-cpu-intensive-task",
+    "slug": "notes/python/io-cpu-intensive-task",
     "title": "Python 并发：线程、进程、协程怎么选",
     "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/io-cpu-intensive-task.md",
-    "href": "/wiki/python/io-cpu-intensive-task.md",
-    "standalone": false
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/io-cpu-intensive-task.md",
+    "href": "/wiki/notes/python/io-cpu-intensive-task.md",
+    "standalone": false,
+    "pin": 0
   },
   {
-    "slug": "python/request-signing",
-    "title": "request-signing",
-    "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/request-signing.md",
-    "href": "/wiki/python/request-signing.md",
-    "standalone": false
-  },
-  {
-    "slug": "python/stream-tar-directory",
-    "title": "stream-tar-directory",
-    "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/stream-tar-directory.md",
-    "href": "/wiki/python/stream-tar-directory.md",
-    "standalone": false
-  },
-  {
-    "slug": "python/devops/overview",
+    "slug": "notes/devops/overview",
     "title": "What's Devops",
     "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/devops/overview.md",
-    "href": "/wiki/python/devops/overview.md",
-    "standalone": false
+    "category": "notes",
+    "topic": "devops",
+    "filePath": "/raw-docs/notes/devops/overview.md",
+    "href": "/wiki/notes/devops/overview.md",
+    "standalone": false,
+    "pin": 0
   },
   {
-    "slug": "python/pyqt/windows-toolchain",
+    "slug": "notes/python/pyqt/windows-toolchain",
     "title": "Windows 上做 PyQt 桌面应用的工具链",
     "type": "md",
-    "category": "python",
-    "filePath": "/raw-docs/python/pyqt/windows-toolchain.md",
-    "href": "/wiki/python/pyqt/windows-toolchain.md",
-    "standalone": false
+    "category": "notes",
+    "topic": "python",
+    "filePath": "/raw-docs/notes/python/pyqt/windows-toolchain.md",
+    "href": "/wiki/notes/python/pyqt/windows-toolchain.md",
+    "standalone": false,
+    "pin": 0
   }
 ]
