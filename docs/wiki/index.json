@@ -1,5 +1,14 @@
 [
   {
+    "slug": "docs/site-setup",
+    "title": "关于本站",
+    "type": "md",
+    "category": "docs",
+    "filePath": "/raw-docs/docs/site-setup.md",
+    "href": "/wiki/docs/site-setup.md",
+    "standalone": false
+  },
+  {
     "slug": "cpp/compile-link",
     "title": "静态库与动态库：编译、链接、加载三段到底发生了什么",
     "type": "md",
@@ -25,15 +34,6 @@
     "filePath": "/raw-docs/js/finance-simulator.html",
     "href": "/wiki/js/finance-simulator.html",
     "standalone": true
-  },
-  {
-    "slug": "docs/site-setup",
-    "title": "About & Site Setup Guide",
-    "type": "md",
-    "category": "docs",
-    "filePath": "/raw-docs/docs/site-setup.md",
-    "href": "/wiki/docs/site-setup.md",
-    "standalone": false
   },
   {
     "slug": "scripts/build-site",
