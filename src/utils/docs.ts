@@ -6,6 +6,8 @@ export interface DocItem {
   title: string
   type: 'md' | 'html'
   category: string
+  /** 分类的展示名（目录名只做 slug 前缀），缺省时用 category */
+  categoryLabel?: string
   /** 二级目录（如 notes/python、notes/cpp），分类下的主题，可能为空 */
   topic?: string
   /** 置顶权重：0 不置顶，正整数越小越靠前 */

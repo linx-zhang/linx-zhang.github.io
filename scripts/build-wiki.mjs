@@ -14,6 +14,14 @@ const OUT_DIR = path.join(ROOT, 'public', 'wiki')
 const VENDOR_CACHE = path.join(ROOT, '.cache', 'wiki-vendor')
 const EXTS = ['.md', '.markdown', '.html']
 
+// 分类的展示名：目录名只作 slug 前缀，站点上显示这个（没配的分类直接用目录名）
+const CATEGORY_LABELS = {
+  notes: '笔记',
+  project: '本站工程',
+  systems: '认证 + 客服系统',
+  rbac: 'RBAC 权限设计',
+}
+
 const FONT_STACK =
   'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
 
@@ -278,11 +286,14 @@ async function main() {
     await fs.writeFile(outFile, isHtml ? built.html : built.markdown, 'utf8')
 
     const slugParts = slug.split('/')
+    const category = slug.includes('/') ? slugParts[0] : '综合'
     entries.push({
       slug,
       title: built.title,
       type: isHtml ? 'html' : 'md',
-      category: slug.includes('/') ? slugParts[0] : '综合',
+      category,
+      // 目录名只做 slug 前缀，列表 chip / 侧栏组名用这个展示名
+      categoryLabel: CATEGORY_LABELS[category] ?? category,
       // 二级目录（notes/python、notes/cpp…）单独带出来，列表 meta 行才有话可说
       topic: slugParts.length > 2 ? slugParts[1] : '',
       filePath: `/${relative(ROOT, file)}`,

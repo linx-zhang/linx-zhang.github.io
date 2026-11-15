@@ -9,15 +9,23 @@ export default function DocsHome() {
 
   const docList = useMemo(() => docs ?? [], [docs]);
 
-  // 分类来自构建期生成的 index.json，slug 第一层即分类。
+  // 分类来自构建期生成的 index.json，slug 第一层即分类；展示名取 categoryLabel。
   // 排序按「篇数降序、同数按名字」：内容多的分类先出现，新加的分类不会因为字母序被塞到最后。
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
-    docList.forEach((doc) => counts.set(doc.category, (counts.get(doc.category) ?? 0) + 1));
+    const labels = new Map<string, string>();
+    docList.forEach((doc) => {
+      counts.set(doc.category, (counts.get(doc.category) ?? 0) + 1);
+      if (!labels.has(doc.category)) labels.set(doc.category, doc.categoryLabel ?? doc.category);
+    });
     const sortedCats = Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh-CN'))
-      .map(([name]) => name);
-    return ['全部', ...sortedCats];
+      .sort(
+        (a, b) =>
+          b[1] - a[1] ||
+          (labels.get(a[0]) ?? a[0]).localeCompare(labels.get(b[0]) ?? b[0], 'zh-CN'),
+      )
+      .map(([name]) => ({ key: name, label: labels.get(name) ?? name }));
+    return [{ key: '全部', label: '全部' }, ...sortedCats];
   }, [docList]);
 
   const filteredDocs = useMemo(() => {
@@ -50,11 +58,11 @@ export default function DocsHome() {
           <div className="docs-filter-bar">
             {categories.map((cat) => (
               <button
-                key={cat}
-                className={`docs-chip ${activeCategory === cat ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat)}
+                key={cat.key}
+                className={`docs-chip ${activeCategory === cat.key ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat.key)}
               >
-                {cat}
+                {cat.label}
               </button>
             ))}
           </div>
@@ -85,7 +93,7 @@ export default function DocsHome() {
                 </div>
                 {/* 第二行：分类 · 主题 · 类型 */}
                 <div className="doc-meta">
-                  {doc.category}
+                  {doc.categoryLabel ?? doc.category}
                   {doc.topic ? (
                     <>
                       <span className="doc-meta-dot">·</span>

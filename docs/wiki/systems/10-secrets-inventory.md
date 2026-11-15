@@ -20,7 +20,7 @@
 | **第三方平台密钥** | `WECHAT_APP_SECRET`、`CRM_APPSECRET`、`CRM_APPID` | `config.py` | 高 |
 | **本系统内部密钥** | `SECRET_KEY`、`session_key`、`CENTRIFUGO_SECRET`、`SSO_CLIENT_SECRET`、`APP_SECRET_MAP` | `config.py`、`app.yaml` | 高 |
 | **业务常量口令** | `DEFAULT_PASSWORD`、`API_TOKEN_KEY`、`COMPANY_TOKEN_KEY`、`TASKBOT_DEPLOY_KEY` | `exc/consts.py` | 高 |
-| **前端对称密钥** | AES `key`、固定 `IV` | `jsjsjsj/*`、`sso_pwd/pkg/e/const.go` | 中（认知误区类） |
+| **前端对称密钥** | AES `key`、固定 `IV` | 前端演示页、`sso_pwd/pkg/e/const.go` | 中（认知误区类） |
 
 > 补充：还有一类**不带 `PASSWORD` 字样但同样是凭据**的：`REDIS_URL`（内嵌密码）、带鉴权信息的内部服务地址、私有化镜像仓库地址、内网 IP + 端口。这类最容易被扫描规则漏掉。
 
@@ -120,7 +120,7 @@ APP_SECRET_KEY = "<LOCAL_SECRET>"
 
 **① 前端持有对称密钥（第 2 篇详述）**
 
-`sso_pwd` 把 AES key 写进 Go 常量，`jsjsjsj` 把同一个 key 写进 JS。**key 一旦进前端，就等于公开**。真实解法只有 TLS；若必须做，改成「服务端下发短时效公钥 + 前端用公钥加密」，对称密钥永不下发。
+`sso_pwd` 把 AES key 写进 Go 常量，前端演示页把同一个 key 写进 JS。**key 一旦进前端，就等于公开**。真实解法只有 TLS；若必须做，改成「服务端下发短时效公钥 + 前端用公钥加密」，对称密钥永不下发。
 
 **② `signature.py` 的 `print` 与请求日志全量打印**
 

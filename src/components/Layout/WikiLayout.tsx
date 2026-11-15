@@ -8,11 +8,12 @@ export default function WikiLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { docs } = useDocList();
 
-  // 侧栏按分类分组：分类就是 slug 第一段，组内按 index.json 的标题顺序
-  const groups = new Map<string, { slug: string; title: string }[]>();
+  // 侧栏按分类分组：分类就是 slug 第一段，组内按 index.json 的标题顺序；
+  // 组名用展示名（categoryLabel），目录名只做 slug 前缀
+  const groups = new Map<string, { slug: string; title: string; label: string }[]>();
   (docs ?? []).forEach((doc) => {
     const list = groups.get(doc.category) ?? [];
-    list.push({ slug: doc.slug, title: doc.title });
+    list.push({ slug: doc.slug, title: doc.title, label: doc.categoryLabel ?? doc.category });
     groups.set(doc.category, list);
   });
 
@@ -48,7 +49,7 @@ export default function WikiLayout() {
                   aria-expanded={!collapsed[category]}
                 >
                   <span className={`tree-caret ${collapsed[category] ? 'is-collapsed' : ''}`}>▾</span>
-                  <span className="tree-group-name">{category}</span>
+                  <span className="tree-group-name">{items[0]?.label ?? category}</span>
                   <span className="tree-count">{items.length}</span>
                 </button>
                 {!collapsed[category] && (
