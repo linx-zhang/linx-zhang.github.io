@@ -106,7 +106,8 @@
   color: #1f2937;
 }
 .tree-group-name {
-  text-transform: lowercase;
+  /* 组名现在是展示名（含中文与大写缩写如 RBAC），保持原样 */
+  text-transform: none;
 }
 .tree-count {
   margin-left: auto;

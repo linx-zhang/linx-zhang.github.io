@@ -175,7 +175,7 @@ export default function Docs() {
       <nav className="doc-breadcrumb no-print" aria-label="面包屑">
         <Link to="/wiki">知识库</Link>
         <span className="doc-crumb-sep">›</span>
-        <span className="doc-crumb-cat">{doc.category}</span>
+        <span className="doc-crumb-cat">{doc.categoryLabel ?? doc.category}</span>
         <span className="doc-crumb-sep">›</span>
         <span className="doc-crumb-current">{doc.title}</span>
         {fullscreen ? (
