@@ -22,6 +22,9 @@ const CATEGORY_LABELS = {
   rbac: 'RBAC 权限设计',
 }
 
+// 分类排序：侧栏与首页 chip 共用同一次序，未列出的分类排到最后（按展示名兜底）
+const CATEGORY_ORDER = ['project', 'rbac', 'systems', 'notes']
+
 const FONT_STACK =
   'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
 
@@ -294,6 +297,10 @@ async function main() {
       category,
       // 目录名只做 slug 前缀，列表 chip / 侧栏组名用这个展示名
       categoryLabel: CATEGORY_LABELS[category] ?? category,
+      // 分类展示位次：侧栏分组与首页 chip 都按它排，未配置的分类排在已配置的后面
+      categoryRank: CATEGORY_ORDER.includes(category)
+        ? CATEGORY_ORDER.indexOf(category)
+        : CATEGORY_ORDER.length,
       // 二级目录（notes/python、notes/cpp…）单独带出来，列表 meta 行才有话可说
       topic: slugParts.length > 2 ? slugParts[1] : '',
       filePath: `/${relative(ROOT, file)}`,

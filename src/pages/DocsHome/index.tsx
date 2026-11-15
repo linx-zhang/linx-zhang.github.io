@@ -10,21 +10,20 @@ export default function DocsHome() {
   const docList = useMemo(() => docs ?? [], [docs]);
 
   // 分类来自构建期生成的 index.json，slug 第一层即分类；展示名取 categoryLabel。
-  // 排序按「篇数降序、同数按名字」：内容多的分类先出现，新加的分类不会因为字母序被塞到最后。
+  // 顺序取构建期的 categoryRank（与侧栏分组同一次序），篇数只影响分组内的列表
   const categories = useMemo(() => {
-    const counts = new Map<string, number>();
-    const labels = new Map<string, string>();
+    const meta = new Map<string, { label: string; rank: number }>();
     docList.forEach((doc) => {
-      counts.set(doc.category, (counts.get(doc.category) ?? 0) + 1);
-      if (!labels.has(doc.category)) labels.set(doc.category, doc.categoryLabel ?? doc.category);
+      if (!meta.has(doc.category)) {
+        meta.set(doc.category, {
+          label: doc.categoryLabel ?? doc.category,
+          rank: doc.categoryRank ?? 999,
+        });
+      }
     });
-    const sortedCats = Array.from(counts.entries())
-      .sort(
-        (a, b) =>
-          b[1] - a[1] ||
-          (labels.get(a[0]) ?? a[0]).localeCompare(labels.get(b[0]) ?? b[0], 'zh-CN'),
-      )
-      .map(([name]) => ({ key: name, label: labels.get(name) ?? name }));
+    const sortedCats = [...meta.entries()]
+      .sort((a, b) => a[1].rank - b[1].rank || a[1].label.localeCompare(b[1].label, 'zh-CN'))
+      .map(([key, item]) => ({ key, label: item.label }));
     return [{ key: '全部', label: '全部' }, ...sortedCats];
   }, [docList]);
 
