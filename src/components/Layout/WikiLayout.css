@@ -147,6 +147,16 @@
   color: inherit;
   border-radius: 2px;
 }
+/* 搜索态：标题最多折两行，命中片段不会被省略号切在边上 */
+.sidebar-tree.is-searching .tree-items a {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
 
 /* 分类树：分组标题 + 子项左侧竖线，一眼看出层级 */
 .sidebar-tree {

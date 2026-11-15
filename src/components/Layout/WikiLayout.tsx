@@ -116,7 +116,7 @@ export default function WikiLayout() {
         </div>
 
         {sidebarOpen && (
-          <nav className="sidebar-tree">
+          <nav className={`sidebar-tree ${query ? 'is-searching' : ''}`}>
             {query && (
               <p className="tree-summary">
                 {totalHits > 0 ? `匹配 ${totalHits} 篇` : '没有匹配的文档'}
