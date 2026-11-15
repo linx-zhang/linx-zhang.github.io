@@ -32,6 +32,13 @@ export interface DatePickerProps {
 const PANEL_MIN_WIDTH = 280
 const PANEL_ESTIMATE_HEIGHT = 356
 
+/** 快捷选择：相对「今天」的天数偏移 */
+const QUICK_ITEMS = [
+  { label: '今天', offset: 0 },
+  { label: '明天', offset: 1 },
+  { label: '一周后', offset: 7 },
+] as const
+
 /**
  * 单日选择：全站自绘日历，不走浏览器的原生 date 控件。
  * 原生控件在手机上是系统滚轮、在桌面是浏览器自己的弹窗，两边长得都不一样且很丑。
@@ -45,7 +52,12 @@ export default function DatePicker({
   triggerClassName,
   icon,
 }: DatePickerProps) {
-  const [today] = useState(() => todayDay())
+  /**
+   * 「今天」每次渲染现算，不再在挂载时捕一次。
+   * 之前用 useState 捕获：页面从昨晚一直开着，第二天点「今天 / 明天 / 一周后」
+   * 拿到的仍是昨天的日期，看上去就像自己跳了一天。
+   */
+  const today = todayDay()
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(value ?? today))
   const [focusDay, setFocusDay] = useState(() => value ?? today)
 
@@ -58,7 +70,8 @@ export default function DatePicker({
 
   const openCalendar = () => {
     if (disabled) return
-    const anchor = value ?? today
+    // 锚点同样现算：正在编辑的条目有值时从它出发，没值时从「真的今天」出发
+    const anchor = value ?? todayDay()
     setFocusDay(anchor)
     setViewMonth(startOfMonth(anchor))
     openPanel()
@@ -169,15 +182,19 @@ export default function DatePicker({
             onKeyDown={onPanelKeyDown}
           >
             <div className="date-quick">
-              <button type="button" className="date-quick-item" onClick={() => pick(today)}>
-                今天
-              </button>
-              <button type="button" className="date-quick-item" onClick={() => pick(addDays(today, 1))}>
-                明天
-              </button>
-              <button type="button" className="date-quick-item" onClick={() => pick(addDays(today, 7))}>
-                一周后
-              </button>
+              {/* 快捷项直接标出落到哪一天：只写「明天」时用户看不出月份，
+                  跨月就容易被读成「下个月的那一天」 */}
+              {QUICK_ITEMS.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  className="date-quick-item date-quick-stacked"
+                  onClick={() => pick(addDays(today, item.offset))}
+                >
+                  <span>{item.label}</span>
+                  <span className="date-quick-day">{addDays(today, item.offset).slice(5)}</span>
+                </button>
+              ))}
               {value && (
                 <button
                   type="button"

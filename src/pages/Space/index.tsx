@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useRef, useState } from 'react'
-import type { FormEvent, KeyboardEvent } from 'react'
+import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import DatePicker from '@/components/DatePicker'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
@@ -207,6 +207,17 @@ export default function Space() {
     }
   }
 
+  /**
+   * 输入区只有 textarea 本体可点，框内的边距、到期日右侧的空白点下去什么都不发生，
+   * 手感上就是「点了输入框却没进编辑」。整条输入区都当热区，点击后把光标交给 textarea；
+   * 按钮自己带 onClick，先排除掉，别抢它们的点击。
+   */
+  const focusComposer = (event: MouseEvent<HTMLFormElement>) => {
+    const target = event.target as HTMLElement
+    if (target.closest('button') || target.closest('textarea')) return
+    textareaRef.current?.focus()
+  }
+
   const counts = useMemo(() => {
     const total = summary ? summary.pending + summary.done : null
     return {
@@ -279,7 +290,7 @@ export default function Space() {
           </button>
         ) : (
           <>
-            <form className="space-composer" onSubmit={submit} noValidate>
+            <form className="space-composer" onSubmit={submit} onClick={focusComposer} noValidate>
               <textarea
                 ref={textareaRef}
                 value={body}

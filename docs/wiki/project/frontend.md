@@ -133,14 +133,14 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 | 产物 | 体积 | 说明 |
 | --- | --- | --- |
 | `MarkdownView-*.js` | 917.8 KB | `react-markdown` + `rehype-raw` + `prism` 全在它里面 |
-| `index-*.js` | 336.5 KB | 首屏主包：React、Router、布局、首页、列表、空间、后台外壳 |
+| `index-*.js` | 336.8 KB | 首屏主包：React、Router、布局、首页、列表、空间、后台外壳 |
 | `SqlTool-*.js` | 260.4 KB | SQL 工具按需加载 |
-| `index-*.css` | 52.3 KB | 全局 + 首屏页面样式 |
+| `index-*.css` | 52.5 KB | 全局 + 首屏页面样式 |
 | `MarkdownView-*.css` | 35.2 KB | `github-markdown-css` + `prism-one-light` |
 
-13 个 JS chunk 合计约 1584.5 KB，其中 MarkdownView 一个就占了 58%。这块钱花得值：它只在打开文章、知识库阅读、写作预览时出现，首屏不碰它。反过来，主包 336.5 KB 里有相当一部分是「常用页不闪占位」的代价——空间、工具箱、后台外壳都静态进包，换来的是切页零等待。
+13 个 JS chunk 合计约 1584.8 KB，其中 MarkdownView 一个就占了 58%。这块钱花得值：它只在打开文章、知识库阅读、写作预览时出现，首屏不碰它。反过来，主包 336.8 KB 里有相当一部分是「常用页不闪占位」的代价——空间、工具箱、后台外壳都静态进包，换来的是切页零等待。
 
-CSS 合计约 102.8 KB，主包 52.3 KB、MarkdownView 35.2 KB，基本和页面体量对应。
+CSS 合计约 103.0 KB，主包 52.5 KB、MarkdownView 35.2 KB，基本和页面体量对应。
 
 ## 八、几个写进代码里的约定
 

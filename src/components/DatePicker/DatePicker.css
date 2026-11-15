@@ -22,3 +22,19 @@
 .date-trigger-value.is-empty {
   color: #9ca3af;
 }
+
+/* 快捷项：上面是「今天 / 明天 / 一周后」，下面是它会落到的那一天 */
+.date-quick-stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.06rem;
+  padding: 0.26rem 0;
+}
+
+.date-quick-day {
+  font-size: 0.7rem;
+  line-height: 1.3;
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+}
