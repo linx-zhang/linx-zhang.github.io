@@ -8,7 +8,8 @@
     "filePath": "/raw-docs/project/overview.md",
     "href": "/wiki/project/overview.md",
     "standalone": false,
-    "pin": 1
+    "pin": 1,
+    "order": 0
   },
   {
     "slug": "project/frontend",
@@ -19,7 +20,8 @@
     "filePath": "/raw-docs/project/frontend.md",
     "href": "/wiki/project/frontend.md",
     "standalone": false,
-    "pin": 2
+    "pin": 2,
+    "order": 0
   },
   {
     "slug": "project/backend",
@@ -30,7 +32,8 @@
     "filePath": "/raw-docs/project/backend.md",
     "href": "/wiki/project/backend.md",
     "standalone": false,
-    "pin": 3
+    "pin": 3,
+    "order": 0
   },
   {
     "slug": "project/metrics",
@@ -41,7 +44,8 @@
     "filePath": "/raw-docs/project/metrics.md",
     "href": "/wiki/project/metrics.md",
     "standalone": false,
-    "pin": 4
+    "pin": 4,
+    "order": 0
   },
   {
     "slug": "notes/python/stream-tar-directory",
@@ -52,7 +56,8 @@
     "filePath": "/raw-docs/notes/python/stream-tar-directory.md",
     "href": "/wiki/notes/python/stream-tar-directory.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/python/get-memory-size",
@@ -63,7 +68,68 @@
     "filePath": "/raw-docs/notes/python/get-memory-size.md",
     "href": "/wiki/notes/python/get-memory-size.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
+  },
+  {
+    "slug": "systems/00-overview",
+    "title": "一套企业系统的拆解：统一认证 + 智能客服",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/00-overview.md",
+    "href": "/wiki/systems/00-overview.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 1
+  },
+  {
+    "slug": "systems/01-oauth2-sso",
+    "title": "统一认证中心：OAuth 2 落地时，标准之外的那些决定",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/01-oauth2-sso.md",
+    "href": "/wiki/systems/01-oauth2-sso.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 2
+  },
+  {
+    "slug": "systems/02-password-hashing",
+    "title": "用 Go 复刻 Python 的密码哈希，以及一次「前端加密密码」的完整复盘",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/02-password-hashing.md",
+    "href": "/wiki/systems/02-password-hashing.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 3
+  },
+  {
+    "slug": "systems/03-permission-model",
+    "title": "多租户权限模型：公司 → 应用 → 角色 → 菜单，四层怎么串起来",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/03-permission-model.md",
+    "href": "/wiki/systems/03-permission-model.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 4
+  },
+  {
+    "slug": "systems/04-ticket-dispatcher",
+    "title": "客服调度引擎：可配置规则 + Redis 排队 + 五种分配策略",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/04-ticket-dispatcher.md",
+    "href": "/wiki/systems/04-ticket-dispatcher.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 5
   },
   {
     "slug": "notes/python/request-signing",
@@ -74,7 +140,8 @@
     "filePath": "/raw-docs/notes/python/request-signing.md",
     "href": "/wiki/notes/python/request-signing.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/cpp/compile-link",
@@ -85,7 +152,8 @@
     "filePath": "/raw-docs/notes/cpp/compile-link.md",
     "href": "/wiki/notes/cpp/compile-link.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/golang/lan-share",
@@ -96,7 +164,20 @@
     "filePath": "/raw-docs/notes/golang/lan-share.md",
     "href": "/wiki/notes/golang/lan-share.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
+  },
+  {
+    "slug": "systems/05-flask-celery",
+    "title": "Flask 工程骨架：一个文件决定全站的错误、日志与异步边界",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/05-flask-celery.md",
+    "href": "/wiki/systems/05-flask-celery.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 6
   },
   {
     "slug": "notes/python/find-chinese-characters",
@@ -107,7 +188,8 @@
     "filePath": "/raw-docs/notes/python/find-chinese-characters.md",
     "href": "/wiki/notes/python/find-chinese-characters.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/python/algorithm/flatten-dict-paths",
@@ -118,7 +200,8 @@
     "filePath": "/raw-docs/notes/python/algorithm/flatten-dict-paths.md",
     "href": "/wiki/notes/python/algorithm/flatten-dict-paths.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/golang/has-timestamp-safe-id",
@@ -129,7 +212,44 @@
     "filePath": "/raw-docs/notes/golang/has-timestamp-safe-id.md",
     "href": "/wiki/notes/golang/has-timestamp-safe-id.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
+  },
+  {
+    "slug": "systems/06-redis-cache",
+    "title": "Redis 缓存层封装：前缀强校验、pickle、scan 删除与防击穿",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/06-redis-cache.md",
+    "href": "/wiki/systems/06-redis-cache.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 7
+  },
+  {
+    "slug": "systems/07-message-channels",
+    "title": "多渠道消息接入：平台工厂 + 两套请求签名",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/07-message-channels.md",
+    "href": "/wiki/systems/07-message-channels.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 8
+  },
+  {
+    "slug": "systems/08-session-model",
+    "title": "会话域模型：服务 — 会话段 — 消息，三层结构与状态流转",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/08-session-model.md",
+    "href": "/wiki/systems/08-session-model.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 9
   },
   {
     "slug": "notes/python/importlib",
@@ -140,7 +260,8 @@
     "filePath": "/raw-docs/notes/python/importlib.md",
     "href": "/wiki/notes/python/importlib.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/python/merge-images-with-numpy",
@@ -151,7 +272,8 @@
     "filePath": "/raw-docs/notes/python/merge-images-with-numpy.md",
     "href": "/wiki/notes/python/merge-images-with-numpy.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/python/merge-images-with-pil",
@@ -162,7 +284,8 @@
     "filePath": "/raw-docs/notes/python/merge-images-with-pil.md",
     "href": "/wiki/notes/python/merge-images-with-pil.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/js/finance-simulator",
@@ -173,7 +296,8 @@
     "filePath": "/raw-docs/notes/js/finance-simulator.html",
     "href": "/wiki/notes/js/finance-simulator.html",
     "standalone": true,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/python/cprofile-middleware",
@@ -184,7 +308,20 @@
     "filePath": "/raw-docs/notes/python/cprofile-middleware.md",
     "href": "/wiki/notes/python/cprofile-middleware.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
+  },
+  {
+    "slug": "systems/09-robot-engine",
+    "title": "机器人平台：FAQ 检索与多轮任务的双引擎设计",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/09-robot-engine.md",
+    "href": "/wiki/systems/09-robot-engine.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 10
   },
   {
     "slug": "notes/python/io-cpu-intensive-task",
@@ -195,7 +332,20 @@
     "filePath": "/raw-docs/notes/python/io-cpu-intensive-task.md",
     "href": "/wiki/notes/python/io-cpu-intensive-task.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
+  },
+  {
+    "slug": "systems/10-secrets-inventory",
+    "title": "代码仓库里的敏感信息：一次完整盘点和治理方案",
+    "type": "md",
+    "category": "systems",
+    "topic": "",
+    "filePath": "/raw-docs/systems/10-secrets-inventory.md",
+    "href": "/wiki/systems/10-secrets-inventory.md",
+    "standalone": false,
+    "pin": 0,
+    "order": 11
   },
   {
     "slug": "notes/devops/overview",
@@ -206,7 +356,8 @@
     "filePath": "/raw-docs/notes/devops/overview.md",
     "href": "/wiki/notes/devops/overview.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   },
   {
     "slug": "notes/python/pyqt/windows-toolchain",
@@ -217,6 +368,7 @@
     "filePath": "/raw-docs/notes/python/pyqt/windows-toolchain.md",
     "href": "/wiki/notes/python/pyqt/windows-toolchain.md",
     "standalone": false,
-    "pin": 0
+    "pin": 0,
+    "order": 0
   }
 ]

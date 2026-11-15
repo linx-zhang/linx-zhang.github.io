@@ -211,8 +211,14 @@ async function buildMarkdown(file, slug) {
   const { meta, body } = splitFrontmatter(raw)
   const title = titleOfMarkdown(body) || slug.split('/').pop()
   const description = summaryOf(body) || title
-  // frontmatter 只给构建用（pin 等），不进站内正文
-  return { markdown: body, title, description, pin: Number.parseInt(meta.pin ?? '', 10) || 0 }
+  // frontmatter 只给构建用（pin / order），不进站内正文
+  return {
+    markdown: body,
+    title,
+    description,
+    pin: Number.parseInt(meta.pin ?? '', 10) || 0,
+    order: Number.parseInt(meta.order ?? '', 10) || 0,
+  }
 }
 
 async function buildHtmlDoc(file, slug, warnings) {
@@ -285,9 +291,12 @@ async function main() {
       standalone: Boolean(built.standalone),
       // 置顶权重：0 表示不置顶，正整数越小越靠前（frontmatter `pin: 1`）
       pin: built.pin ?? 0,
+      // 组内顺序：frontmatter `order: N`，只影响同一分类内的排列（系列文章用）
+      order: built.order ?? 0,
     })
   }
 
+  // 置顶的按 pin 升序排在最前；同分类内声明了 order 的按 order；其余维持标题字典序
   // 置顶的按 pin 升序排在最前，其余维持标题字典序
   entries.sort((a, b) => {
     if (a.pin || b.pin) {
@@ -296,6 +305,25 @@ async function main() {
     }
     return a.title.localeCompare(b.title, 'zh-CN')
   })
+
+  // 组内顺序（frontmatter `order: N`，系列文章用）：只在本分类内部按 order 重排，
+  // 并原位回填这些槽位——全局的标题顺序不变，侧栏和分组视图里这一组按 0→10 顺读。
+  const orderSlots = new Map()
+  entries.forEach((entry, index) => {
+    if (!entry.order) return
+    const list = orderSlots.get(entry.category) ?? []
+    list.push(index)
+    orderSlots.set(entry.category, list)
+  })
+  for (const [category, indexes] of orderSlots) {
+    const siblings = entries.filter((entry) => entry.category === category)
+    // 只有整组都声明了 order 时才重排，避免把没声明的文档挤出原位
+    if (siblings.some((entry) => !entry.order)) continue
+    siblings.sort((a, b) => a.order - b.order)
+    siblings.forEach((entry, i) => {
+      entries[indexes[i]] = entry
+    })
+  }
   await fs.writeFile(path.join(OUT_DIR, 'index.json'), `${JSON.stringify(entries, null, 2)}\n`, 'utf8')
 
   console.log(`wiki: ${entries.length} 篇 -> ${relative(ROOT, OUT_DIR)}`)

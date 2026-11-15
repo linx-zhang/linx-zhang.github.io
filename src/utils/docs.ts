@@ -10,6 +10,8 @@ export interface DocItem {
   topic?: string
   /** 置顶权重：0 不置顶，正整数越小越靠前 */
   pin?: number
+  /** 组内顺序：只在同一分类内生效（系列文章按此排列），0 表示不指定 */
+  order?: number
   /** 仓库内的源文件路径，用于"源文件"链接 */
   filePath: string
   /** 独立静态页地址 */
