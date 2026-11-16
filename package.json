@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "github-markdown-css": "^5.9.0",
+    "hash-wasm": "^4.13.0",
     "prism-themes": "^1.9.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

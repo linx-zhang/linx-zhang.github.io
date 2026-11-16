@@ -53,7 +53,7 @@ GitHub Pages 对 `/blog/36` 这类路径没有对应文件，会返回 404 页�
 
 ### 懒加载只切三刀
 
-`Docs`、`Blog`、`PostDetail` 三块单独成包，理由是它们共享 `react-markdown` / `rehype` / `prism` 这一串重依赖；首页、知识库列表、空间、工具箱、后台保持静态导入，换页不闪占位。工具箱内部再切一刀：五个工具组件各自 `lazy()`，进 `/tools` 只加载图标列表，点进去才拉对应实现。
+`Docs`、`Blog`、`PostDetail` 三块单独成包，理由是它们共享 `react-markdown` / `rehype` / `prism` 这一串重依赖；首页、知识库列表、空间、工具箱、后台保持静态导入，换页不闪占位。工具箱内部再切一刀：六个工具组件各自 `lazy()`，进 `/tools` 只加载图标列表，点进去才拉对应实现。文件哈希在这一刀之外还有第二层：`hash-wasm` 的 WASM 直到真的开始算哈希时才 `import()`，只打开页面不选算法不付这笔体积。
 
 ## 三、数据层：一个函数收口
 
@@ -113,6 +113,14 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 `RequirePermission` 的注释特意写了「体验层路由守卫；服务端仍会对每个管理请求做权威校验」——这句话防止后来者把它当成安全边界。前端能做的只是别让用户看到进不去的页面，真正的判定在 Worker 的 `require_permission(code)`。
 
 `Select` 支持 `className` / `panelClassName` / `panelMinWidth` 三个可选参数：页内要改触发器宽度和字号、要让浮层比触发器宽（否则选项文字会折行）都靠它们，公共样式不动。工具箱里 JSON 缩进、SQL 方言与大小写、UUID 版本与数量、时间戳单位共 5 处，就是靠这三个参数接上去的——那里早年写的是原生 `<select>`，外观随系统走，与旁边 36px 的 `tool-button` 是两套语言。新增工具时优先复用 `Select`，不要再写裸 `<select>`。
+
+### 文件哈希为什么用 WASM
+
+`src/pages/Tools/hash.ts` 把「读文件」和「算哈希」拆开：`hashFile()` 按 8MB 切片读 `Blob.slice().arrayBuffer()`，逐块喂给所有已选算法，所以 20MB 和 2GB 的内存占用一样（只有这几块分片在内存里），进度也是按已读字节算的。
+
+算法走 `hash-wasm` 而不是 `crypto.subtle`：后者只能一次性喂整个 `ArrayBuffer`（大文件必炸），而且没有 MD5——发布方给的校验值里 MD5 仍是最常见的一种。代价是多一个约 40KB 的 WASM，收益是四种算法同一套流式路径、由库保证正确性，不必自己维护一份 MD5 实现。
+
+校验那一侧只做纯函数：`normalizeHash()` 把 `sha256sum` 的 `hash  file` / `*file`、certutil 的两位一空格、`SHA256: ` 前缀统一洗成小写十六进制，`verifyHash()` 再逐算法比对——所以粘贴时大小写、空格、带文件名都不影响结果。这三条规则都有用例，改动时别只测界面。
 
 权限码本身也由后端下发：`/api/auth/me` 返回 `permissions` 数组，前端 `usePermission().has(code)` 消费，页面里不写 `role === 'admin'` 这种硬编码。角色改名、加一个 `internal` 角色，前端一行都不用改。
 

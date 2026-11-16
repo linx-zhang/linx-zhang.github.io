@@ -8,6 +8,7 @@ const SqlTool = lazy(() => import('./SqlTool'))
 const TimestampTool = lazy(() => import('./TimestampTool'))
 const RandomTool = lazy(() => import('./RandomTool'))
 const ClipTool = lazy(() => import('./ClipTool'))
+const HashTool = lazy(() => import('./HashTool'))
 
 interface ToolMeta {
   slug: string
@@ -110,6 +111,22 @@ const TOOLS: ToolMeta[] = [
         <rect x="6.7" y="6.4" width="10.6" height="13" rx="2" />
         <path d="M9.6 6.4V5.3c0-.5.4-.9.9-.9h3c.5 0 .9.4.9.9v1.1" />
         <path d="M9.2 11.2h5.6M9.2 14.6h5.6" />
+      </ToolIcon>
+    ),
+  },
+  {
+    slug: 'hash',
+    label: '文件哈希',
+    Component: HashTool,
+    hint: 'MD5 / SHA-256 · 不出本机',
+    detail:
+      '拖一个文件进来，算出 MD5、SHA-1、SHA-256、SHA-512；粘一段发布方给的哈希就能直接核对。文件只在本机读取。',
+    icon: (
+      <ToolIcon>
+        <path d="M10.2 5.8 8.8 18.2" />
+        <path d="M15.2 5.8 13.8 18.2" />
+        <path d="M5.8 9.9h12.4" />
+        <path d="M5.8 14.1h12.4" />
       </ToolIcon>
     ),
   },

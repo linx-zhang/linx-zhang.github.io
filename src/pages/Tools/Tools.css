@@ -31,7 +31,8 @@
 /* 入口：中等大小的图标 + 名字，一屏放得下，别挤成一排小链接 */
 .tools-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  /* 6 个工具正好排满一行；用固定列数而不是 auto-fit，避免不同宽度下最后一行只剩一格 */
+  grid-template-columns: repeat(6, 1fr);
   gap: 0.7rem;
   margin-top: 1.4rem;
 }
@@ -798,4 +799,163 @@ a.tool-button {
     min-height: 40vh;
     max-height: none;
   }
+}
+
+/* ---------- 文件哈希 ---------- */
+
+/* 拖放区：虚线 + 极浅灰底，和工具箱里 1px #e5e7eb 的边框语言同一套灰阶 */
+.tool-drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.1rem 1rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  background: #fafafa;
+  color: #6b7280;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.tool-drop:hover,
+.tool-drop.is-over {
+  border-color: #9ca3af;
+  background: #f3f4f6;
+}
+
+/* 隐藏在 label 里的原生 file input：点整块拖放区就等于点它 */
+.tool-drop-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tool-drop-main {
+  color: #1f2937;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.tool-drop-hint {
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.hash-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* 文件列表头顶的一行：左边数数、右边清空，避免把「清空」挤在算法勾选里跟着换行 */
+.hash-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.hash-progress-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.hash-progress-fill {
+  height: 100%;
+  background: #1f2937;
+  transition: width 0.2s ease;
+}
+
+.hash-file {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.hash-file-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.6rem;
+}
+
+.hash-file-head strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #1f2937;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hash-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 哈希是 32–128 位的无空格长串，必须让它自己折行，否则窄屏会把整行顶出去 */
+.hash-row {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr) auto;
+  /* 窄屏上哈希会折行，标签必须与第一行对齐，否则会浮到第二行旁边 */
+  align-items: start;
+  gap: 0.55rem;
+}
+
+.hash-alg {
+  color: #9ca3af;
+  font-size: 0.78rem;
+}
+
+.hash-value {
+  min-width: 0;
+  color: #374151;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  line-height: 1.55;
+  word-break: break-all;
+}
+
+.hash-verify {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hash-verdict {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+/* 校验框下面那行说明：只在还没比对结果时出现，颜色与 tool-meta 同一档浅灰 */
+.hash-hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.78rem;
+}
+
+.hash-verdict.is-match {
+  color: #15803d;
+}
+
+.hash-verdict.is-miss {
+  color: #b91c1c;
 }
