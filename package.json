@@ -13,6 +13,7 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check:contract": "node scripts/check-contract.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

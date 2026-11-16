@@ -41,6 +41,13 @@ jobs:
       - name: 单元测试
         run: npm test
 
+      # 契约常量是手抄的（前端 constants.ts 与后端 models.py 各一份），
+      # 这里直接 clone 后端仓库按真源比，任何一边单独改了都会在这一步红。
+      - name: 契约漂移检查
+        run: |
+          git clone --depth 1 https://github.com/linx-zhang/cf-api-worker.git /tmp/cf-api-worker
+          node scripts/check-contract.mjs --api /tmp/cf-api-worker
+
       - name: 构建
         run: npm run build
 

@@ -2,7 +2,20 @@ import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { API_BASE, getStoredToken } from '@/api/client'
 import { useAuth } from '@/auth/AuthProvider'
-import { ACTIVITY_MAX_BATCH, ACTIVITY_MAX_VISITOR_BATCH, ACTIVITY_HEARTBEAT_MS, ACTIVITY_VISITOR_DEDUPE_MS, ACTIVITY_VISITOR_WINDOW_MS } from '@/constants'
+import { ACTIVITY_MAX_BATCH, ACTIVITY_MAX_VISITOR_BATCH, ACTIVITY_HEARTBEAT_MS } from '@/constants'
+import {
+  EMPTY_VISITOR_BUDGET,
+  VISITOR_BUDGET_KEY,
+  acceptVisitorBatch,
+  decideVisitorReport,
+  isVisitorTrackablePath,
+  parseVisitorBudget,
+  serializeVisitorBudget,
+  takeBatch,
+  throttleVisitorBudget,
+  visitorWaitMs,
+  type VisitorBudget,
+} from './visitorBudget'
 
 export type ActivityType = 'page_view' | 'heartbeat' | 'page_leave'
 
@@ -21,43 +34,24 @@ const FLUSH_DELAY_MS = 300
 const MAX_PATH_LENGTH = 512
 /** 匿名批次吃了一次 429 之后最多再试一次，再失败就丢，别把队列卡死 */
 const MAX_VISITOR_RETRIES = 1
-const VISITOR_STATE_KEY = 'linx.activity.visitor'
-
-// 匿名只公开内容页：和 pages function 的 allow-list 保持一致，
-// 这样后台/个人页的访问不会以匿名身份进表
-const PUBLIC_PATH_ROOTS = ['/blog', '/wiki']
 // 事件先入内存队列，批量提交；模块级状态保证路由切换不会重建队列。
 let queue: ActivityEvent[] = []
 let flushTimer: number | null = null
 let inFlight = false
 let visitorRetries = 0
 
-interface VisitorState {
-  /** 下一次允许提交匿名批次的时间点：服务端按 IP 限流 30 秒 */
-  nextAllowedAt: number
-  /** 路径 → 上次上报时间，用于会话内去重 */
-  seen: Record<string, number>
-}
-
-function loadVisitorState(): VisitorState {
-  const empty: VisitorState = { nextAllowedAt: 0, seen: {} }
+function loadVisitorBudget(): VisitorBudget {
   try {
-    const raw = window.sessionStorage.getItem(VISITOR_STATE_KEY)
-    if (!raw) return empty
-    const parsed = JSON.parse(raw) as Partial<VisitorState>
-    return {
-      nextAllowedAt: typeof parsed.nextAllowedAt === 'number' ? parsed.nextAllowedAt : 0,
-      seen: parsed.seen && typeof parsed.seen === 'object' ? parsed.seen : {},
-    }
+    return parseVisitorBudget(window.sessionStorage.getItem(VISITOR_BUDGET_KEY))
   } catch {
     // 隐私模式下 sessionStorage 不可用：退化成纯内存，最坏结果只是多吃一次 429
-    return empty
+    return { ...EMPTY_VISITOR_BUDGET }
   }
 }
 
-function saveVisitorState(): void {
+function saveVisitorBudget(): void {
   try {
-    window.sessionStorage.setItem(VISITOR_STATE_KEY, JSON.stringify(visitorState))
+    window.sessionStorage.setItem(VISITOR_BUDGET_KEY, serializeVisitorBudget(visitorBudget))
   } catch {
     // 写不进去就只靠内存里的值
   }
@@ -65,21 +59,24 @@ function saveVisitorState(): void {
 
 // 窗口必须跨刷新保留：页面重载会把模块状态清零，之前正是这样每次进页都立刻发，
 // 然后被服务端的 30 秒窗口打回 429。
-const visitorState = loadVisitorState()
+let visitorBudget = loadVisitorBudget()
 
 /** 服务端接受了这批匿名事件：把窗口推到下一个 30 秒 */
 function noteVisitorAccepted(): void {
   visitorRetries = 0
-  visitorState.nextAllowedAt = Date.now() + ACTIVITY_VISITOR_WINDOW_MS
-  saveVisitorState()
+  visitorBudget = acceptVisitorBatch(visitorBudget, Date.now())
+  saveVisitorBudget()
 }
 
 /** 429：按 Retry-After 退避，多留 1 秒，避免卡在窗口边界上再吃一次 */
 function noteVisitorThrottled(retryAfter: string | null): void {
-  const seconds = Number(retryAfter)
-  const delay = Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : ACTIVITY_VISITOR_WINDOW_MS
-  visitorState.nextAllowedAt = Date.now() + delay + 1000
-  saveVisitorState()
+  const seconds = retryAfter === null ? null : Number(retryAfter)
+  visitorBudget = throttleVisitorBudget(
+    visitorBudget,
+    Date.now(),
+    seconds !== null && Number.isFinite(seconds) ? seconds : null,
+  )
+  saveVisitorBudget()
 }
 
 /**
@@ -87,28 +84,15 @@ function noteVisitorThrottled(retryAfter: string | null): void {
  * 重复刷新、来回切页不再产生重复 page_view，这是 429 噪声的主要来源。
  */
 function shouldReportVisitorView(path: string): boolean {
-  const bare = path.split('?')[0].split('#')[0] || '/'
-  const lastAt = visitorState.seen[bare]
-  if (lastAt !== undefined && Date.now() - lastAt < ACTIVITY_VISITOR_DEDUPE_MS) return false
-  visitorState.seen[bare] = Date.now()
-  const keys = Object.keys(visitorState.seen)
-  if (keys.length > 50) {
-    keys.sort((a, b) => visitorState.seen[b] - visitorState.seen[a])
-    for (const key of keys.slice(50)) delete visitorState.seen[key]
-  }
-  saveVisitorState()
-  return true
+  const decision = decideVisitorReport(visitorBudget, path, Date.now())
+  visitorBudget = decision.budget
+  if (decision.report) saveVisitorBudget()
+  return decision.report
 }
 
 function currentPath(): string {
   const { pathname, search } = window.location
   return `${pathname}${search}`.slice(0, MAX_PATH_LENGTH) || '/'
-}
-
-function isPublicPath(path: string): boolean {
-  const bare = path.split('?')[0].split('#')[0]
-  if (bare === '/') return true
-  return PUBLIC_PATH_ROOTS.some((root) => bare === root || bare.startsWith(`${root}/`))
 }
 
 function clearFlushTimer(): void {
@@ -132,13 +116,15 @@ async function flushQueue(): Promise<void> {
   const token = getStoredToken()
   if (!token) {
     // 匿名窗口没到就等：提前发的批次服务端会以 429 丢掉
-    const wait = visitorState.nextAllowedAt - Date.now()
+    const wait = visitorWaitMs(visitorBudget, Date.now())
     if (wait > 0) {
       scheduleFlush(wait)
       return
     }
   }
-  const batch = queue.splice(0, token ? ACTIVITY_MAX_BATCH : ACTIVITY_MAX_VISITOR_BATCH)
+  const limit = token ? ACTIVITY_MAX_BATCH : ACTIVITY_MAX_VISITOR_BATCH
+  const { batch, rest } = takeBatch(queue, limit)
+  queue = rest
   inFlight = true
   try {
     const response = await fetch(token ? ACTIVITY_URL : VISITOR_URL, {
@@ -175,7 +161,7 @@ function enqueue(event: ActivityEvent): void {
   if (!token) {
     // 未登录只记公开内容页的首次进入：心跳会把表刷爆，
     // 重复刷新同一页只会换来一次 429
-    if (event.type !== 'page_view' || !isPublicPath(event.path)) return
+    if (event.type !== 'page_view' || !isVisitorTrackablePath(event.path)) return
     if (!shouldReportVisitorView(event.path)) return
   }
   queue.push(event)
@@ -213,7 +199,7 @@ function flushWithKeepalive(events: ActivityEvent[]): void {
 function reportPageLeave(path: string, durationMs: number, ts: number): void {
   clearFlushTimer()
   const token = getStoredToken()
-  if (!token && !isPublicPath(path)) {
+  if (!token && !isVisitorTrackablePath(path)) {
     // 匿名访客在非公开页（如个人资料页）不留痕
     queue = []
     return
