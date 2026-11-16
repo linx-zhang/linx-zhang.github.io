@@ -22,7 +22,7 @@ pin: 1
 
 - **前端**：Vite 8 + React 19 + TypeScript + React Router 7；下拉、日期范围、弹窗、确认框、头像全部自研，没有引入第三方 UI 库
 - **后端**：Cloudflare Python Worker（FastAPI 风格）+ D1；响应统一为 `{ code, detail, data }`，前端 `request()` 解包 `data`
-- **部署**：构建产物固定输出到 `docs/`，`main` 分支的 `/docs` 目录直接由 GitHub Pages 托管；push 即上线，不经过构建流水线
+- **部署**：`npm run build` 写 `docs/`（不入库），`.github/workflows/build.yml` 在 push `main` 时跑 lint + test + build，校验产物后用 `upload-pages-artifact` + `deploy-pages` 发到 GitHub Pages——产物只活在 Actions 的 artifact 里，仓库不再存一份，也就不存在「产物和源码对不上」这种漂移
 - **深链兜底**：`public/404.html` 把原始路径暂存到 `sessionStorage` 再回根路径，`main.tsx` 在路由初始化前用 `history.replaceState` 恢复，刷新 `/blog/:id`、`/admin` 这类深链不会停在 404
 
 ## 知识库的内容是怎么进来的
