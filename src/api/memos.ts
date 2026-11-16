@@ -7,7 +7,7 @@ export interface Memo {
   done: boolean
   /** 最近一次完成的时间；取消勾选时后端会清空它 */
   done_at: string | null
-  /** 到期日，本地日期 YYYY-MM-DD；只用于展示与标红，不做提醒 */
+  /** 到期时刻，UTC datetime（本地当天 23:59:59 换算而来）；只用于展示与标红，不做提醒 */
   due_at: string | null
   created_at: string
   updated_at: string
@@ -20,7 +20,7 @@ export type MemoPage = Page<Memo>
 export interface MemoSummary {
   pending: number
   done: number
-  /** 未完成且到期日不晚于今天（含逾期） */
+  /** 未完成且到期时刻已到（含逾期） */
   due: number
 }
 

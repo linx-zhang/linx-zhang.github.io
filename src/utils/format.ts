@@ -24,3 +24,21 @@ export function formatTimestamp(value: string): string {
   if (!date) return value.replace('T', ' ').slice(0, 16)
   return `${formatDate(value)} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
+
+/** Date → 服务端存的形式（UTC 的 YYYY-MM-DD HH:MM:SS，不带时区后缀） */
+export function toServerTimestamp(date: Date): string {
+  return (
+    `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ` +
+    `${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`
+  )
+}
+
+/**
+ * 本地某一天（YYYY-MM-DD）→ 那天 23:59:59 的 UTC 串。
+ * 「到期」是本地人眼里当天的结束，落库仍按全站统一的 UTC datetime，
+ * 所以换算放在前端，服务端不做时区猜测。
+ */
+export function localDayEndUtc(day: string): string {
+  const [year, month, date] = day.split('-').map(Number)
+  return toServerTimestamp(new Date(year, month - 1, date, 23, 59, 59, 0))
+}

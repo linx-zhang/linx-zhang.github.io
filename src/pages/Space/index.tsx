@@ -11,7 +11,7 @@ import { usePermission } from '@/auth/usePermission'
 import { useInfiniteList } from '@/hooks/useInfiniteList'
 import { useResource } from '@/hooks/useResource'
 import { MEMO_BODY_MAX } from '@/constants'
-import { formatDate } from '@/utils/format'
+import { formatDate, localDayEndUtc } from '@/utils/format'
 import { today, WEEKDAYS } from '@/utils/calendar'
 import './Space.css'
 
@@ -24,10 +24,12 @@ function todayLabel(): string {
 }
 
 function dueMeta(dueAt: string): { text: string; tone: 'today' | 'late' | 'later' } {
+  // due_at 存的是 UTC 时刻（本地当天 23:59:59），比较前先换算成本地那一天
+  const day = formatDate(dueAt)
   const todayKey = today()
-  if (dueAt === todayKey) return { text: '今天到期', tone: 'today' }
-  if (dueAt < todayKey) return { text: `${dueAt.slice(5)} 已过期`, tone: 'late' }
-  return { text: `${dueAt.slice(5)} 到期`, tone: 'later' }
+  if (day === todayKey) return { text: '今天到期', tone: 'today' }
+  if (day < todayKey) return { text: `${day.slice(5)} 已过期`, tone: 'late' }
+  return { text: `${day.slice(5)} 到期`, tone: 'later' }
 }
 
 const FILTERS: { key: Filter; label: string }[] = [
@@ -60,13 +62,14 @@ export default function Space() {
   const summary = summaryQuery.data
 
   const [body, setBody] = useState('')
-  const [dueAt, setDueAt] = useState('')
+  // 输入框里的到期日只按「本地哪一天」保管，落库前换算成 UTC 时刻
+  const [dueDay, setDueDay] = useState('')
   const [saving, setSaving] = useState(false)
   const [composeError, setComposeError] = useState('')
   // 就地编辑已有条目：内容和到期日都能改，改完直接落库
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editBody, setEditBody] = useState('')
-  const [editDue, setEditDue] = useState('')
+  const [editDueDay, setEditDueDay] = useState('')
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState('')
   // 手机上先给一个「＋ 记一条」按钮，点开才是输入区；桌面上宽屏默认展开
@@ -121,9 +124,12 @@ export default function Space() {
     }
     setSaving(true)
     try {
-      await memoApi.create({ body: text, due_at: dueAt || null })
+      await memoApi.create({
+        body: text,
+        due_at: dueDay ? localDayEndUtc(dueDay) : null,
+      })
       setBody('')
-      setDueAt('')
+      setDueDay('')
       // 新建的条目在「已完成」里看不到，切回「全部」再刷新
       if (filter === 'done') setFilter('all')
       refresh()
@@ -137,7 +143,7 @@ export default function Space() {
   const startEdit = (memo: Memo) => {
     setEditingId(memo.id)
     setEditBody(memo.body)
-    setEditDue(memo.due_at ?? '')
+    setEditDueDay(memo.due_at ? formatDate(memo.due_at) : '')
     setEditError('')
   }
 
@@ -158,7 +164,10 @@ export default function Space() {
     }
     setEditSaving(true)
     try {
-      const updated = await memoApi.update(memo.id, { body: text, due_at: editDue || null })
+      const updated = await memoApi.update(memo.id, {
+        body: text,
+        due_at: editDueDay ? localDayEndUtc(editDueDay) : null,
+      })
       applyMemo(updated)
       setEditingId(null)
       // 计数交给服务端：自己算 pending/done 迟早和过滤口径漂移
@@ -310,8 +319,8 @@ export default function Space() {
                   把它藏起来，只用一个按钮显示状态，点按钮再拉起系统日历 */}
               <div className="space-due">
                 <DatePicker
-                  value={dueAt || null}
-                  onChange={(day) => setDueAt(day ?? '')}
+                  value={dueDay || null}
+                  onChange={(day) => setDueDay(day ?? '')}
                   placeholder="到期日"
                   ariaLabel="到期日"
                   triggerClassName="space-due-trigger"
@@ -321,12 +330,12 @@ export default function Space() {
                     </svg>
                   }
                 />
-                {dueAt && (
+                {dueDay && (
                   <button
                     type="button"
                     className="space-due-clear"
                     aria-label="清除到期日"
-                    onClick={() => setDueAt('')}
+                    onClick={() => setDueDay('')}
                   >
                     ×
                   </button>
@@ -441,8 +450,8 @@ export default function Space() {
                     <div className="space-edit-foot">
                       <div className="space-due">
                         <DatePicker
-                          value={editDue || null}
-                          onChange={(day) => setEditDue(day ?? '')}
+                          value={editDueDay || null}
+                          onChange={(day) => setEditDueDay(day ?? '')}
                           placeholder="到期日"
                           ariaLabel="到期日"
                           triggerClassName="space-due-trigger"
@@ -452,12 +461,12 @@ export default function Space() {
                             </svg>
                           }
                         />
-                        {editDue && (
+                        {editDueDay && (
                           <button
                             type="button"
                             className="space-due-clear"
                             aria-label="清除到期日"
-                            onClick={() => setEditDue('')}
+                            onClick={() => setEditDueDay('')}
                           >
                             ×
                           </button>
