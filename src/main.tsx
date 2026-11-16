@@ -17,6 +17,7 @@ import Admin from '@/pages/Admin'
 import Space from '@/pages/Space'
 import Tools from '@/pages/Tools'
 import RequirePermission from '@/components/RequirePermission'
+import { ADMIN_AREA_PERMISSIONS } from '@/auth/adminAccess'
 import { APP_ROUTES, isKnownDeepLink } from '@/routes'
 
 // 体量最大且只在深层页面用到的三块单独成包（Markdown / Prism / rehype 都在它们里面），
@@ -85,7 +86,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route
                 path={APP_ROUTES.admin}
                 element={
-                  <RequirePermission permission="invite_code:read:any">
+                  // 整个后台是一个容器，只要拥有任一管理权限就能进；分区自己的码在 Admin 内部判断
+                  <RequirePermission anyOf={ADMIN_AREA_PERMISSIONS}>
                     <Admin />
                   </RequirePermission>
                 }

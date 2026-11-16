@@ -1,10 +1,11 @@
 import { Outlet, NavLink } from 'react-router-dom'
+import { ADMIN_AREA_PERMISSIONS } from '@/auth/adminAccess'
 import { usePermission } from '@/auth/usePermission'
 import AuthMenu from '@/components/AuthMenu'
 import './RootLayout.css'
 
 function GlobalNav() {
-  const { has } = usePermission()
+  const { hasAny } = usePermission()
 
   return (
     <nav className="nav">
@@ -14,7 +15,7 @@ function GlobalNav() {
       <NavLink to="/tools" className="nav-item">工具箱</NavLink>
       {/* 空间未登录也能看日期与说明，所以对所有人开放；简历入口在首页卡片 */}
       <NavLink to="/space" className="nav-item">空间</NavLink>
-      {has('invite_code:read:any') && (
+      {hasAny(...ADMIN_AREA_PERMISSIONS) && (
         <NavLink to="/admin" className="nav-item">管理后台</NavLink>
       )}
     </nav>

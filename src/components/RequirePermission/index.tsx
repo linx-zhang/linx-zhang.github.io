@@ -3,16 +3,23 @@ import { useAuth } from '@/auth/AuthProvider'
 import { usePermission } from '@/auth/usePermission'
 import './RequirePermission.css'
 
-interface RequirePermissionProps {
-  /** 进入该区域所需的权限码 */
-  permission: string
-  children: ReactNode
-}
+/**
+ * `permission` 与 `anyOf` 二选一：
+ * - `permission`：单个权限码（某个具体分区）
+ * - `anyOf`：拥有其中任意一个即可（容器型区域，例如整个管理后台）
+ */
+type RequirePermissionProps =
+  | { permission: string; anyOf?: never; children: ReactNode }
+  | { permission?: never; anyOf: readonly string[]; children: ReactNode }
 
 /** 体验层路由守卫；服务端仍会对每个管理请求做权威校验。 */
-export default function RequirePermission({ permission, children }: RequirePermissionProps) {
+export default function RequirePermission(props: RequirePermissionProps) {
   const { user, ready, openLogin } = useAuth()
-  const { has } = usePermission()
+  const { has, hasAny } = usePermission()
+
+  const allowed = props.permission !== undefined
+    ? has(props.permission)
+    : hasAny(...props.anyOf)
 
   if (!ready) {
     return (
@@ -36,7 +43,7 @@ export default function RequirePermission({ permission, children }: RequirePermi
     )
   }
 
-  if (!has(permission)) {
+  if (!allowed) {
     return (
       <div className="guard-page">
         <div className="guard-card guard-guide">
@@ -47,5 +54,5 @@ export default function RequirePermission({ permission, children }: RequirePermi
     )
   }
 
-  return children
+  return props.children
 }
