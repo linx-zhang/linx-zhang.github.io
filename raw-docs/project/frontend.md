@@ -37,7 +37,7 @@ pin: 2
 </BrowserRouter>
 ```
 
-- `ErrorBoundary` 在最外层，因为 `AuthProvider` 启动时要请求 `/auth/me`，它自己出错也要有降级页，而不是白屏。
+- `ErrorBoundary` 在最外层，因为 `AuthProvider` 启动时要请求 `/api/auth/me`，它自己出错也要有降级页，而不是白屏。
 - `ActivityTracker` 挂在 Provider 内部、路由之外：它需要登录态去批量上报事件，但不该随页面切换重建。
 - 路由表本身只有 7 项，集中在 `src/routes.ts` 的 `APP_ROUTES`，页面代码不写裸路径字符串。
 
@@ -112,7 +112,7 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 
 `RequirePermission` 的注释特意写了「体验层路由守卫；服务端仍会对每个管理请求做权威校验」——这句话防止后来者把它当成安全边界。前端能做的只是别让用户看到进不去的页面，真正的判定在 Worker 的 `require_permission(code)`。
 
-权限码本身也由后端下发：`/auth/me` 返回 `permissions` 数组，前端 `usePermission().has(code)` 消费，页面里不写 `role === 'admin'` 这种硬编码。角色改名、加一个 `internal` 角色，前端一行都不用改。
+权限码本身也由后端下发：`/api/auth/me` 返回 `permissions` 数组，前端 `usePermission().has(code)` 消费，页面里不写 `role === 'admin'` 这种硬编码。角色改名、加一个 `internal` 角色，前端一行都不用改。
 
 ## 六、样式：全局层 + 页面层
 

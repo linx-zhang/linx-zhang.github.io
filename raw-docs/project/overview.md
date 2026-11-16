@@ -63,7 +63,7 @@ pin: 1
 | SQL 格式化 | 按子句换行、关键字大写 | 本地 |
 | 时间戳转换 | 10 位秒 / 13 位毫秒与日期互转 | 本地 |
 | UUID / 密码 | UUID、随机密码，字符集自选，可排除易混字符 | 本地 |
-| 共享剪切板 | 贴一段日志生成免登录短链，24 小时自动失效 | 后端 `/clips` + D1 |
+| 共享剪切板 | 贴一段日志生成免登录短链，24 小时自动失效 | 后端 `/api/clips` + D1 |
 
 除共享剪切板外都在浏览器本地计算，不发请求、不留内容。短链的 code 本身就是凭据：不往 URL 里塞 token，也不提供列表接口，过期与非法码返回同一个 404，避免探测。
 
@@ -86,7 +86,7 @@ npm run lint       # oxlint
 
 ## 账号与权限
 
-- 登录态：token 存 `localStorage` 的 `blog_access_token`，启动时请求 `GET /auth/me` 拿用户与权限码
+- 登录态：token 存 `localStorage` 的 `blog_access_token`，启动时请求 `GET /api/auth/me` 拿用户与权限码
 - 权限码由后端下发、前端只消费，形如 `resource:action:scope`（`post:update:own`、`user:delete:any`、`activity:read:any`…）；`RequirePermission` 负责未登录引导与无权限提示
 - 个人空间、备忘录全部 self-scoped，owner 由 token 决定；`/admin` 需要 `invite_code:read:any`，更细的分区再各自校验
 - 重置密码后旧 token 立即失效，前端收到 `auth:unauthorized` 自动退出

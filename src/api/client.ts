@@ -1,6 +1,13 @@
 // 后端 Worker 地址：切换环境只需改这一处
 export const API_BASE = 'https://linx-api-78i.pages.dev'
 
+/**
+ * 业务接口统一挂在 `/api` 下（后端 `src/api/app.py` 的 API_PREFIX）。
+ * 根路径留给平台自己：Worker 的 `/` 是健康检查，`/docs` 与 `/openapi.json` 是
+ * FastAPI 自带的，所以前端不要用 `${API_BASE}` 直接拼业务路径。
+ */
+export const API_ROOT = `${API_BASE}/api`
+
 const TOKEN_KEY = 'blog_access_token'
 
 /** 后端统一响应结构：{"code", "detail", "data"} */
@@ -83,7 +90,7 @@ export async function request<T>(
     if (token) headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(`${API_BASE}${path}`, { ...init, headers })
+  const response = await fetch(`${API_ROOT}${path}`, { ...init, headers })
 
   if (response.status === 401 && !options.skipAuthReset) resetAuth()
 

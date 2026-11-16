@@ -59,17 +59,24 @@ _GEO_HEADERS = (
 `api/app.py` 里没有任何业务代码，只有中间件、路由注册、异常处理器安装：
 
 ```python
-app.include_router(auth.router, prefix="/auth")
-app.include_router(posts.router, prefix="/posts")
-app.include_router(comments.router, prefix="/posts")
-app.include_router(comments.delete_router, prefix="/comments")
-app.include_router(admin.router, prefix="/admin")
-app.include_router(activity.router, prefix="/activity")
-app.include_router(memos.router, prefix="/memos")
-app.include_router(clips.router, prefix="/clips")
+API_PREFIX = "/api"
+api = APIRouter(prefix=API_PREFIX)
+
+api.include_router(auth.router, prefix="/auth")
+api.include_router(posts.router, prefix="/posts")
+api.include_router(comments.router, prefix="/posts")
+api.include_router(comments.delete_router, prefix="/comments")
+api.include_router(admin.router, prefix="/admin")
+api.include_router(activity.router, prefix="/activity")
+api.include_router(memos.router, prefix="/memos")
+api.include_router(clips.router, prefix="/clips")
+
+app.include_router(api)
 ```
 
-一个细节：评论的「创建」挂在 `/posts` 下（属于文章），「删除」挂在 `/comments` 下（属于评论自身），所以同一模块导出两个 router。URL 语义优先于模块内聚。
+业务端点统一在 `/api` 下，根路径留给平台自己：`/` 是健康检查，`/docs` 与 `/openapi.json` 是 FastAPI 自带的。这条前缀不是审美问题——一旦哪天要在同一个 Worker 上挂 `/rss`、`/og` 这类非 API 端点，没有前缀就得逐个改名。
+
+一个细节：评论的「创建」挂在 `/api/posts` 下（属于文章），「删除」挂在 `/api/comments` 下（属于评论自身），所以同一模块导出两个 router。URL 语义优先于模块内聚。
 
 CORS 也不是默认配置：Starlette 对预检请求回 200，而这个 API 统一回 204（`Preflight204CORSMiddleware`）。前端不依赖预检响应体，但保持「无内容即 204」能让缓存与日志里的语义一致。
 
@@ -144,7 +151,7 @@ def ensure_resource_permission(user, owner_id, own_code, any_code) -> None:
 
 「本人 + own 码 / 任意人 + any 码」这两段，是删文章、删评论、删剪切板共用的唯一写法。写成一处的收益很直接：任何一个资源加进来，权限判定不需要重新推演一遍。
 
-`/auth/me` 返回的 `permissions` 也来自同一张表（`permissions_for_role`），所以「前端拿到的权限」和「后端校验的权限」不可能不一致。
+`/api/auth/me` 返回的 `permissions` 也来自同一张表（`permissions_for_role`），所以「前端拿到的权限」和「后端校验的权限」不可能不一致。
 
 ## 八、分页与过滤：谓词只写一次
 
@@ -173,7 +180,7 @@ def _filter_conditions(q, author, author_id=None):
     """共享 q / author / author_id 谓词，让列表与相邻篇永不漂移"""
 ```
 
-`_filter_conditions` 同时被列表和 `/posts/{id}/neighbors` 使用。相邻篇必须在**同一个结果集**里找上一篇/下一篇，否则「筛选后点下一篇文章跳到了集合外」这种缺陷一定会出现。谓词写一处，两个端点就不可能给出不同答案。
+`_filter_conditions` 同时被列表和 `/api/posts/{id}/neighbors` 使用。相邻篇必须在**同一个结果集**里找上一篇/下一篇，否则「筛选后点下一篇文章跳到了集合外」这种缺陷一定会出现。谓词写一处，两个端点就不可能给出不同答案。
 
 还有一个显式的拒绝：
 

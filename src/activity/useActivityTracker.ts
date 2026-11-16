@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { API_BASE, getStoredToken } from '@/api/client'
+import { API_ROOT, getStoredToken } from '@/api/client'
 import { useAuth } from '@/auth/AuthProvider'
 import { ACTIVITY_MAX_BATCH, ACTIVITY_MAX_VISITOR_BATCH, ACTIVITY_HEARTBEAT_MS } from '@/constants'
 import {
@@ -26,9 +26,9 @@ export interface ActivityEvent {
   duration_ms?: number
 }
 
-const ACTIVITY_URL = `${API_BASE}/activity`
+const ACTIVITY_URL = `${API_ROOT}/activity`
 // 匿名访客走独立端点：不需要登录，服务端按 IP 限流并补 ip/地区
-const VISITOR_URL = `${API_BASE}/activity/visitor`
+const VISITOR_URL = `${API_ROOT}/activity/visitor`
 const MAX_QUEUED = 200
 const FLUSH_DELAY_MS = 300
 const MAX_PATH_LENGTH = 512

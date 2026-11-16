@@ -56,8 +56,8 @@ uv run --frozen ruff check src tests   # 当前 All checks passed
 冒烟（部署完必做）：
 
 ```powershell
-Invoke-WebRequest "https://api-worker.linx-zhang.workers.dev/"            # {"code":"ok",...}
-Invoke-WebRequest "https://api-worker.linx-zhang.workers.dev/posts?limit=3&offset=0"  # 200
+Invoke-WebRequest "https://api-worker.linx-zhang.workers.dev/"                        # {"code":"ok",...}
+Invoke-WebRequest "https://api-worker.linx-zhang.workers.dev/api/posts?limit=3&offset=0"  # 200
 ```
 
 ### 后端命令的四个坑
@@ -89,7 +89,9 @@ node scripts/check-contract.mjs --api "D:\this_code\cloudflare-workers\api-worke
 
 ## 4. 线上接口口径（别踩）
 
-- 路由**没有** `/api` 前缀：`GET /posts`、`GET /memos`…（`/api/posts` → 404）。
+- 业务接口统一挂在 **`/api`** 下：`GET /api/posts`、`/api/memos`…（后端 `src/api/app.py` 的 `API_PREFIX`）。
+  根路径只留给平台：`/` 是健康检查，`/docs`、`/openapi.json` 是 FastAPI 自带。前端拼地址一律用
+  `src/api/client.ts` 的 **`API_ROOT`**，不要用 `API_BASE` 直接拼业务路径。
 - 分页参数是 **`limit` / `offset`**（`page`/`limit` 组合 → 422）。
 - 软删语义：读用 `deleted_at IS NULL` 过滤，写用 `UPDATE ... SET deleted_at = datetime('now')`；全站时间统一 UTC datetime 字符串 `YYYY-MM-DD HH:MM:SS`，没有 date 型字段。
 

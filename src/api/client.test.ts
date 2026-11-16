@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   ApiError,
   API_BASE,
+  API_ROOT,
   getStoredToken,
   request,
   storeToken,
@@ -44,6 +45,11 @@ afterEach(() => {
 })
 
 describe('request', () => {
+  it('业务路径统一走 /api 前缀', () => {
+    // 前端只在 client.ts 里拼一次前缀；后端 app.py 的 API_PREFIX 是另一半。
+    expect(API_ROOT).toBe(`${API_BASE}/api`)
+  })
+
   it('拆掉信封，返回 data', async () => {
     fetchMock.mockResolvedValue(jsonResponse(200, envelope({ id: 7, title: 't' })))
     await expect(request('/posts/7')).resolves.toEqual({ id: 7, title: 't' })
@@ -56,7 +62,7 @@ describe('request', () => {
     await request('/posts', { method: 'POST', body: '{"title":"x"}' }, true)
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
-    expect(url).toBe(`${API_BASE}/posts`)
+    expect(url).toBe(`${API_ROOT}/posts`)
     const headers = init.headers as Headers
     expect(headers.get('Content-Type')).toBe('application/json')
     expect(headers.get('Authorization')).toBe('Bearer tk-123')
