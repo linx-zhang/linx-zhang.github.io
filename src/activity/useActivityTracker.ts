@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { API_BASE, getStoredToken } from '@/api/client'
 import { useAuth } from '@/auth/AuthProvider'
-import { ACTIVITY_MAX_BATCH, ACTIVITY_MAX_VISITOR_BATCH, ACTIVITY_HEARTBEAT_MS, ACTIVITY_VISITOR_WINDOW_MS } from '@/constants'
+import { ACTIVITY_MAX_BATCH, ACTIVITY_MAX_VISITOR_BATCH, ACTIVITY_HEARTBEAT_MS, ACTIVITY_VISITOR_DEDUPE_MS, ACTIVITY_VISITOR_WINDOW_MS } from '@/constants'
 
 export type ActivityType = 'page_view' | 'heartbeat' | 'page_leave'
 
@@ -19,6 +19,9 @@ const VISITOR_URL = `${API_BASE}/activity/visitor`
 const MAX_QUEUED = 200
 const FLUSH_DELAY_MS = 300
 const MAX_PATH_LENGTH = 512
+/** 匿名批次吃了一次 429 之后最多再试一次，再失败就丢，别把队列卡死 */
+const MAX_VISITOR_RETRIES = 1
+const VISITOR_STATE_KEY = 'linx.activity.visitor'
 
 // 匿名只公开内容页：和 pages function 的 allow-list 保持一致，
 // 这样后台/个人页的访问不会以匿名身份进表
@@ -27,7 +30,75 @@ const PUBLIC_PATH_ROOTS = ['/blog', '/wiki']
 let queue: ActivityEvent[] = []
 let flushTimer: number | null = null
 let inFlight = false
-let lastVisitorPostAt = 0
+let visitorRetries = 0
+
+interface VisitorState {
+  /** 下一次允许提交匿名批次的时间点：服务端按 IP 限流 30 秒 */
+  nextAllowedAt: number
+  /** 路径 → 上次上报时间，用于会话内去重 */
+  seen: Record<string, number>
+}
+
+function loadVisitorState(): VisitorState {
+  const empty: VisitorState = { nextAllowedAt: 0, seen: {} }
+  try {
+    const raw = window.sessionStorage.getItem(VISITOR_STATE_KEY)
+    if (!raw) return empty
+    const parsed = JSON.parse(raw) as Partial<VisitorState>
+    return {
+      nextAllowedAt: typeof parsed.nextAllowedAt === 'number' ? parsed.nextAllowedAt : 0,
+      seen: parsed.seen && typeof parsed.seen === 'object' ? parsed.seen : {},
+    }
+  } catch {
+    // 隐私模式下 sessionStorage 不可用：退化成纯内存，最坏结果只是多吃一次 429
+    return empty
+  }
+}
+
+function saveVisitorState(): void {
+  try {
+    window.sessionStorage.setItem(VISITOR_STATE_KEY, JSON.stringify(visitorState))
+  } catch {
+    // 写不进去就只靠内存里的值
+  }
+}
+
+// 窗口必须跨刷新保留：页面重载会把模块状态清零，之前正是这样每次进页都立刻发，
+// 然后被服务端的 30 秒窗口打回 429。
+const visitorState = loadVisitorState()
+
+/** 服务端接受了这批匿名事件：把窗口推到下一个 30 秒 */
+function noteVisitorAccepted(): void {
+  visitorRetries = 0
+  visitorState.nextAllowedAt = Date.now() + ACTIVITY_VISITOR_WINDOW_MS
+  saveVisitorState()
+}
+
+/** 429：按 Retry-After 退避，多留 1 秒，避免卡在窗口边界上再吃一次 */
+function noteVisitorThrottled(retryAfter: string | null): void {
+  const seconds = Number(retryAfter)
+  const delay = Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : ACTIVITY_VISITOR_WINDOW_MS
+  visitorState.nextAllowedAt = Date.now() + delay + 1000
+  saveVisitorState()
+}
+
+/**
+ * 匿名访客同一路径 5 分钟内只上报一次：
+ * 重复刷新、来回切页不再产生重复 page_view，这是 429 噪声的主要来源。
+ */
+function shouldReportVisitorView(path: string): boolean {
+  const bare = path.split('?')[0].split('#')[0] || '/'
+  const lastAt = visitorState.seen[bare]
+  if (lastAt !== undefined && Date.now() - lastAt < ACTIVITY_VISITOR_DEDUPE_MS) return false
+  visitorState.seen[bare] = Date.now()
+  const keys = Object.keys(visitorState.seen)
+  if (keys.length > 50) {
+    keys.sort((a, b) => visitorState.seen[b] - visitorState.seen[a])
+    for (const key of keys.slice(50)) delete visitorState.seen[key]
+  }
+  saveVisitorState()
+  return true
+}
 
 function currentPath(): string {
   const { pathname, search } = window.location
@@ -60,25 +131,37 @@ async function flushQueue(): Promise<void> {
   if (inFlight || queue.length === 0) return
   const token = getStoredToken()
   if (!token) {
-    // 匿名批次要等窗口过期再发：提前发的 page_view 会被服务端 429 丢掉，
-    // 攒到下一次 page_leave 一起发就必然会入库（含 leave 的批次总是放行）
-    const waited = Date.now() - lastVisitorPostAt
-    if (lastVisitorPostAt !== 0 && waited < ACTIVITY_VISITOR_WINDOW_MS) {
-      scheduleFlush(ACTIVITY_VISITOR_WINDOW_MS - waited)
+    // 匿名窗口没到就等：提前发的批次服务端会以 429 丢掉
+    const wait = visitorState.nextAllowedAt - Date.now()
+    if (wait > 0) {
+      scheduleFlush(wait)
       return
     }
-    lastVisitorPostAt = Date.now()
   }
   const batch = queue.splice(0, token ? ACTIVITY_MAX_BATCH : ACTIVITY_MAX_VISITOR_BATCH)
   inFlight = true
   try {
-    await fetch(token ? ACTIVITY_URL : VISITOR_URL, {
+    const response = await fetch(token ? ACTIVITY_URL : VISITOR_URL, {
       method: 'POST',
       headers: token
         ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
         : { 'Content-Type': 'application/json' },
       body: JSON.stringify({ events: batch }),
     })
+    if (!token) {
+      if (response.ok) {
+        noteVisitorAccepted()
+      } else {
+        // 通常是同 IP 的另一台设备 / 另一个标签页刚占用了窗口
+        if (response.status === 429) {
+          noteVisitorThrottled(response.headers.get('Retry-After'))
+          if (visitorRetries < MAX_VISITOR_RETRIES) {
+            visitorRetries += 1
+            queue.unshift(...batch)
+          }
+        }
+      }
+    }
   } catch {
     // 静默丢弃：活跃统计不应干扰正常浏览
   } finally {
@@ -89,8 +172,12 @@ async function flushQueue(): Promise<void> {
 
 function enqueue(event: ActivityEvent): void {
   const token = getStoredToken()
-  // 未登录时只记公开内容页，且不记心跳：匿名心跳会把表刷爆
-  if (!token && (event.type === 'heartbeat' || !isPublicPath(event.path))) return
+  if (!token) {
+    // 未登录只记公开内容页的首次进入：心跳会把表刷爆，
+    // 重复刷新同一页只会换来一次 429
+    if (event.type !== 'page_view' || !isPublicPath(event.path)) return
+    if (!shouldReportVisitorView(event.path)) return
+  }
   queue.push(event)
   if (queue.length > MAX_QUEUED) queue = queue.slice(queue.length - MAX_QUEUED)
   if (queue.length >= ACTIVITY_MAX_BATCH) {
@@ -109,7 +196,8 @@ function flushWithKeepalive(events: ActivityEvent[]): void {
   if (events.length === 0) return
   const token = getStoredToken()
   const limit = token ? ACTIVITY_MAX_BATCH : ACTIVITY_MAX_VISITOR_BATCH
-  if (!token) lastVisitorPostAt = Date.now()
+  // 带 page_leave 的批次服务端恒放行，但写入同样会刷新 IP 窗口，所以这里先按已接受处理
+  if (!token) noteVisitorAccepted()
   void fetch(token ? ACTIVITY_URL : VISITOR_URL, {
     method: 'POST',
     keepalive: true,

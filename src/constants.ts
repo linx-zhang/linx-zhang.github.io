@@ -28,6 +28,11 @@ export const ACTIVITY_MAX_VISITOR_BATCH = 20
 export const ACTIVITY_HEARTBEAT_MS = 60_000
 /** 匿名写入窗口；与 backend VISITOR_RATE_LIMIT_SECONDS 一致 */
 export const ACTIVITY_VISITOR_WINDOW_MS = 30_000
+/**
+ * 匿名访客同一路径的去重间隔：会话内重复刷新 / 来回切页不再重复上报，
+ * 只在真正"隔了一会儿又回来"时才再记一条。
+ */
+export const ACTIVITY_VISITOR_DEDUPE_MS = 5 * 60_000
 
 /** 批量删除单次最大条数（backend batch-delete 上限） */
 export const BATCH_DELETE_MAX = 50
