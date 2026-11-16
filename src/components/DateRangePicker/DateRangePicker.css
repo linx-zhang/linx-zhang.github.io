@@ -1,39 +1,177 @@
+/*
+ * 面板形状参考 Cloudflare 的时间选择器：左侧日历、右侧相对区间、底部起止与主按钮。
+ * 尺寸按本站的密度收紧（字号 0.78/0.8rem、控件高 2rem），不照搬它的大留白。
+ */
 .date-panel {
   position: fixed;
   z-index: var(--z-dropdown);
-  padding: 0.6rem;
+  padding: 0.55rem;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(31, 41, 55, 0.12);
 }
-.date-quick {
+
+.date-body {
   display: flex;
-  gap: 0.35rem;
-  margin-bottom: 0.5rem;
+  gap: 0.55rem;
 }
-.date-quick-item {
-  flex: 1;
-  padding: 0.32rem 0;
+
+.date-cal {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.date-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 0 0 5.6rem;
+  padding-left: 0.55rem;
+  border-left: 1px solid #f1f3f5;
+}
+
+.date-side-item {
+  padding: 0.34rem 0.4rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-family: inherit;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+}
+
+.date-side-item:hover {
+  background: #f3f4f6;
+}
+
+.date-side-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.35);
+}
+
+.date-side-clear {
+  margin-top: auto;
+  color: #b91c1c;
+}
+
+.date-side-clear:hover {
+  background: #fef2f2;
+}
+
+/* 底部：起止摘要 + 主按钮（带时分时是两个可编辑的时间字段） */
+.date-foot {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid #f1f3f5;
+}
+
+.date-foot-hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #9ca3af;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 0.3rem;
+}
+
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.date-field-label {
+  color: #9ca3af;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.date-field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.35rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.date-field-date {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #1f2937;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date-field-date.is-empty {
+  color: #9ca3af;
+}
+
+.date-time-input {
+  flex: 0 0 2.9rem;
+  width: 2.9rem;
+  padding: 0.1rem 0.15rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: #fff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.date-time-input:disabled {
+  color: #d1d5db;
+  background: #f9fafb;
+}
+
+.date-time-input:focus-visible {
+  outline: none;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.12);
+}
+
+.date-apply {
+  flex: none;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.date-apply-ghost {
+  flex: none;
+  padding: 0.3rem 0.7rem;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   background: #fff;
   color: #374151;
   font-family: inherit;
-  font-size: 0.78rem;
-  line-height: 1.4;
+  font-size: 0.76rem;
+  line-height: 1.5;
   cursor: pointer;
 }
-.date-quick-item:hover {
+
+.date-apply-ghost:hover {
   background: #f3f4f6;
 }
-.date-quick-clear {
-  color: #b91c1c;
-  border-color: #fecaca;
-}
-.date-quick-clear:hover {
-  background: #fef2f2;
-}
+
 .date-head {
   display: flex;
   align-items: center;
@@ -41,6 +179,7 @@
   gap: 0.5rem;
   margin-bottom: 0.4rem;
 }
+
 .date-nav {
   width: 1.8rem;
   height: 1.8rem;
@@ -54,27 +193,32 @@
   line-height: 1;
   cursor: pointer;
 }
+
 .date-nav:hover {
   background: #f3f4f6;
   color: #1f2937;
 }
+
 .date-title {
   color: #1f2937;
   font-size: 0.85rem;
   font-weight: 600;
 }
+
 .date-weekdays,
 .date-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
 }
+
 .date-weekdays span {
   padding: 0.2rem 0;
   color: #9ca3af;
   font-size: 0.72rem;
   text-align: center;
 }
+
 .date-day {
   height: 2rem;
   padding: 0;
@@ -87,45 +231,101 @@
   line-height: 1;
   cursor: pointer;
 }
+
 .date-day:hover {
   background: #f3f4f6;
 }
+
 .date-day:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.35);
 }
+
 .date-day-outside {
   color: #d1d5db;
 }
+
 .date-day-today {
   box-shadow: inset 0 0 0 1px #9ca3af;
 }
+
 .date-day-in-range {
   background: #eef2f7;
   border-radius: 0;
 }
+
 .date-day-in-range:hover {
   background: #e5eaf1;
 }
+
 .date-day-start,
 .date-day-end {
   background: #1f2937;
   color: #fff;
 }
+
 .date-day-start:hover,
 .date-day-end:hover {
   background: #111827;
 }
+
 .date-day-start {
   border-radius: 6px 0 0 6px;
 }
+
 .date-day-end {
   border-radius: 0 6px 6px 0;
 }
+
 .date-day-start.date-day-end {
   border-radius: 6px;
 }
+
+/* 只选了一端：两侧都收圆角，别留半个直角 */
+.date-day.date-day-single {
+  border-radius: 6px;
+}
+
 .date-day-start.date-day-today,
 .date-day-end.date-day-today {
   box-shadow: inset 0 0 0 1px #6b7280;
+}
+
+/* 窄屏：右侧快捷列改成日历下方的一行，否则日历会被挤到一格只有二十来像素 */
+@media (max-width: 460px) {
+  .date-body {
+    flex-direction: column;
+  }
+
+  .date-side {
+    flex: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.45rem 0 0;
+    margin-top: 0.45rem;
+    border-left: none;
+    border-top: 1px solid #f1f3f5;
+  }
+
+  .date-side-item {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .date-side-stacked {
+    align-items: center;
+  }
+
+  .date-side-clear {
+    margin-top: 0;
+  }
+
+  .date-foot {
+    flex-wrap: wrap;
+  }
+
+  .date-field {
+    flex: 1 1 8rem;
+  }
 }

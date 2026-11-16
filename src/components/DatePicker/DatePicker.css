@@ -1,4 +1,7 @@
-/* 触发器：Select 的尺寸在表单里合适，这里只补图标与按内容收窄 */
+/*
+ * 触发器：Select 的尺寸在表单里合适，这里只补图标与按内容收窄。
+ * 面板骨架（左日历 + 右侧快捷列 + 底部条）复用 DateRangePicker.css，这里只补单日特有的部分。
+ */
 .date-trigger {
   display: inline-flex;
   align-items: center;
@@ -23,16 +26,16 @@
   color: #9ca3af;
 }
 
-/* 快捷项：上面是「今天 / 明天 / 一周后」，下面是它会落到的那一天 */
-.date-quick-stacked {
+/* 快捷项：上面是「今天 / 明天 / 一周后」，下面小字标出它会落到哪一天 */
+.date-side-stacked {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.06rem;
-  padding: 0.26rem 0;
+  padding: 0.32rem 0.4rem;
 }
 
-.date-quick-day {
+.date-side-day {
   font-size: 0.7rem;
   line-height: 1.3;
   color: #9ca3af;

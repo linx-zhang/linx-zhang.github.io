@@ -29,8 +29,8 @@ export interface DatePickerProps {
   icon?: React.ReactNode
 }
 
-const PANEL_MIN_WIDTH = 280
-const PANEL_ESTIMATE_HEIGHT = 356
+const PANEL_MIN_WIDTH = 330
+const PANEL_ESTIMATE_HEIGHT = 336
 
 /** 快捷选择：相对「今天」的天数偏移 */
 const QUICK_ITEMS = [
@@ -181,87 +181,96 @@ export default function DatePicker({
             style={{ top: position.top, left: position.left, width: position.width }}
             onKeyDown={onPanelKeyDown}
           >
-            <div className="date-quick">
-              {/* 快捷项直接标出落到哪一天：只写「明天」时用户看不出月份，
-                  跨月就容易被读成「下个月的那一天」 */}
-              {QUICK_ITEMS.map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  className="date-quick-item date-quick-stacked"
-                  onClick={() => pick(addDays(today, item.offset))}
-                >
-                  <span>{item.label}</span>
-                  <span className="date-quick-day">{addDays(today, item.offset).slice(5)}</span>
-                </button>
-              ))}
+            <div className="date-body">
+              <div className="date-cal">
+                <div className="date-head">
+                  <button
+                    type="button"
+                    className="date-nav"
+                    aria-label="上个月"
+                    onClick={() => setViewMonth((month) => addMonths(month, -1))}
+                  >
+                    ‹
+                  </button>
+                  <span className="date-title" aria-live="polite">
+                    {viewMonth.getFullYear()} 年 {viewMonth.getMonth() + 1} 月
+                  </span>
+                  <button
+                    type="button"
+                    className="date-nav"
+                    aria-label="下个月"
+                    onClick={() => setViewMonth((month) => addMonths(month, 1))}
+                  >
+                    ›
+                  </button>
+                </div>
+
+                <div className="date-weekdays" aria-hidden="true">
+                  {WEEKDAYS.map((label) => (
+                    <span key={label}>{label}</span>
+                  ))}
+                </div>
+
+                <div className="date-grid" role="grid" aria-label="日期">
+                  {days.map((day) => {
+                    const outside = isOutsideMonth(day, viewMonth)
+                    const classes = ['date-day']
+                    if (outside) classes.push('date-day-outside')
+                    if (day === today) classes.push('date-day-today')
+                    if (day === value) {
+                      // start 提供选中态配色（深底白字），single 把右侧圆角补回来：
+                      // 单日选择没有「另一半」等着接，不该留半个直角
+                      classes.push('date-day-start', 'date-day-single')
+                    }
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        role="gridcell"
+                        data-day={day}
+                        tabIndex={day === focusDay ? 0 : -1}
+                        aria-selected={day === value}
+                        aria-label={`${day}${day === value ? '，已选择' : ''}${outside ? '，非本月' : ''}`}
+                        className={classes.join(' ')}
+                        onClick={() => pick(day)}
+                        onFocus={() => setFocusDay(day)}
+                      >
+                        {dayNumber(day)}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="date-side">
+                {/* 快捷项直接标出落到哪一天：只写「明天」时用户看不出月份，
+                    跨月就容易被读成「下个月的那一天」 */}
+                {QUICK_ITEMS.map((item) => {
+                  const target = addDays(today, item.offset)
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className="date-side-item date-side-stacked"
+                      onClick={() => pick(target)}
+                    >
+                      <span>{item.label}</span>
+                      <span className="date-side-day">{target.slice(5)}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="date-foot">
+              <span className="date-foot-hint">
+                {value ? `已选 ${value}` : '点日期即生效，不需要再确认'}
+              </span>
               {value && (
-                <button
-                  type="button"
-                  className="date-quick-item date-quick-clear"
-                  onClick={() => pick(null)}
-                >
-                  清空
+                <button type="button" className="date-apply-ghost" onClick={() => pick(null)}>
+                  清除
                 </button>
               )}
-            </div>
-
-            <div className="date-head">
-              <button
-                type="button"
-                className="date-nav"
-                aria-label="上个月"
-                onClick={() => setViewMonth((month) => addMonths(month, -1))}
-              >
-                ‹
-              </button>
-              <span className="date-title" aria-live="polite">
-                {viewMonth.getFullYear()} 年 {viewMonth.getMonth() + 1} 月
-              </span>
-              <button
-                type="button"
-                className="date-nav"
-                aria-label="下个月"
-                onClick={() => setViewMonth((month) => addMonths(month, 1))}
-              >
-                ›
-              </button>
-            </div>
-
-            <div className="date-weekdays" aria-hidden="true">
-              {WEEKDAYS.map((label) => (
-                <span key={label}>{label}</span>
-              ))}
-            </div>
-
-            <div className="date-grid" role="grid" aria-label="日期">
-              {days.map((day) => {
-                const outside = isOutsideMonth(day, viewMonth)
-                const classes = ['date-day']
-                if (outside) classes.push('date-day-outside')
-                if (day === today) classes.push('date-day-today')
-                if (day === value) {
-                  // start 提供选中态配色（深底白字），single 把右侧圆角补回来：
-                  // 单日选择没有「另一半」等着接，不该留半个直角
-                  classes.push('date-day-start', 'date-day-single')
-                }
-                return (
-                  <button
-                    key={day}
-                    type="button"
-                    role="gridcell"
-                    data-day={day}
-                    tabIndex={day === focusDay ? 0 : -1}
-                    aria-selected={day === value}
-                    aria-label={`${day}${day === value ? '，已选择' : ''}${outside ? '，非本月' : ''}`}
-                    className={classes.join(' ')}
-                    onClick={() => pick(day)}
-                    onFocus={() => setFocusDay(day)}
-                  >
-                    {dayNumber(day)}
-                  </button>
-                )
-              })}
             </div>
           </div>,
           document.body,

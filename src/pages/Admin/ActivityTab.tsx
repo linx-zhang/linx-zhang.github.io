@@ -46,12 +46,14 @@ function formatDuration(value: number | null): string {
   return `${minutes} 分 ${seconds} 秒`
 }
 
-function startOfDayIso(value: string): string {
-  return new Date(`${value}T00:00:00`).toISOString()
+/** 区间起点：该分钟的第 0 秒 */
+function startOfMinuteIso(day: string, clock: string | undefined): string {
+  return new Date(`${day}T${clock ?? '00:00'}:00`).toISOString()
 }
 
-function endOfDayIso(value: string): string {
-  return new Date(`${value}T23:59:59.999`).toISOString()
+/** 区间终点：取该分钟的最后一刻，选「16:30」时那一分内的记录也算进来 */
+function endOfMinuteIso(day: string, clock: string | undefined): string {
+  return new Date(`${day}T${clock ?? '23:59'}:59.999`).toISOString()
 }
 
 export default function ActivityTab() {
@@ -115,9 +117,9 @@ export default function ActivityTab() {
       }
     }
 
-    const { from: fromDate, to: toDate } = dateRange
-    if (fromDate && toDate && fromDate > toDate) {
-      setFilterError('开始日期不能晚于结束日期')
+    const { from: fromDate, to: toDate, fromTime, toTime } = dateRange
+    if (fromDate && toDate && `${fromDate} ${fromTime ?? '00:00'}` > `${toDate} ${toTime ?? '23:59'}`) {
+      setFilterError('开始时间不能晚于结束时间')
       return
     }
 
@@ -126,8 +128,8 @@ export default function ActivityTab() {
     setApplied({
       userId,
       type: typeFilter || undefined,
-      from: fromDate ? startOfDayIso(fromDate) : undefined,
-      to: toDate ? endOfDayIso(toDate) : undefined,
+      from: fromDate ? startOfMinuteIso(fromDate, fromTime) : undefined,
+      to: toDate ? endOfMinuteIso(toDate, toTime) : undefined,
     })
   }
 
@@ -168,11 +170,12 @@ export default function ActivityTab() {
           <span className="user-search-label">日期范围</span>
           <DateRangePicker
             value={dateRange}
+            withTime
             onChange={(next) => {
               setDateRange(next)
               setFilterError('')
             }}
-            ariaLabel="按日期范围筛选"
+            ariaLabel="按时间范围筛选"
           />
         </div>
         <div className="activity-actions">
