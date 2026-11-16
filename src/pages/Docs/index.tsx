@@ -46,6 +46,8 @@ function useMarkdownSource(doc: { slug: string; href: string; type: 'md' | 'html
     setText(null)
     setError(null)
 
+    // 直接 fetch 而不走 api/client：doc.href 是构建期复制的静态 md（/wiki/<slug>.md），
+    // 没有 envelope、不需要 Bearer，失败也只是这一篇正文缺内容。
     fetch(doc.href)
       .then((res) => {
         if (!res.ok) throw new Error(`正文加载失败（HTTP ${res.status}）`)

@@ -32,6 +32,8 @@ let inflight: Promise<DocItem[]> | null = null
 /** 加载文档清单；并发调用共用同一个请求，成功后走内存缓存 */
 export function loadDocList(): Promise<DocItem[]> {
   if (cachedDocs) return Promise.resolve(cachedDocs)
+  // 直接 fetch 而不走 api/client：这是构建期产出的静态文件（/wiki/index.json），
+  // 不是后端接口——没有 envelope、不需要 Bearer、401 也不该触发登出。
   inflight ??= fetch(INDEX_URL)
     .then((res) => {
       if (!res.ok) throw new Error(`文档索引加载失败（HTTP ${res.status}）`)

@@ -13,16 +13,16 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /blog/:id : PostDetail 文章详情与评论
   - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；tab 条通过 ?tab=posts|users|activity|analytics 深链（默认 posts），邀请码是独立分区 ?tab=invites，不占 tab 条，入口在用户页标题行
   - /space : 个人空间（备忘录 / 待办），未登录只显示页内登录门；导航「空间」项仅在登录后渲染
-  - /tools : 工具箱入口（5 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
+  - /tools : 工具箱入口（6 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip / hash）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
-- Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 对 401（以及未跳过时的 403）清 token 并广播该事件；管理接口传 skipForbiddenLogout 以展示后端 detail。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self。
+- Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 只在 401 时清 token 并广播该事件（403 是「没有这个权限」的业务结果，不清登录态）；登录/注册这类端点传 `skipAuthReset: true`，避免「凭据错」被当成 token 失效把登录框关掉。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self、clip:delete:own|delete:any。
 - User profile: users 有 nickname / first_name / last_name / avatar_url；展示名优先级 昵称 → 「名 姓」→ 邮箱前缀，已删除用户为「已注销」。GET /auth/me 与登录/注册响应带这四字段（无值为 null）；PATCH /auth/me 走 account:update:self，只接受这四字段（传 email/role 会 422），返回完整用户对象（含 permissions）；PATCH /admin/users/{id} 同时接受四字段与 email/role。
 - Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；DatePicker 单日选择；src/components/ConfirmDialog + useConfirm；src/components/Modal / DialogShell 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/MarkdownEditor 写作面板（工具栏命令在 commands.ts）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission、ListState、RouteFallback、ErrorBoundary。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
 - Shared CSS: 跨页共用的控件样式（.blog-button / .comment-submit / .comment-error 等）统一放 src/styles/shared.css 并由 src/main.tsx 引入，跟随主包加载——懒加载页面（Blog）的 CSS 不会在别的页面加载，控件样式写进页面 CSS 会导致 /admin 这类页面出现无样式裸文字按钮。
 - Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
-- Space memos: src/api/memos.ts 调 /memos（GET 列表 / GET /memos/summary 计数 / POST / PATCH / DELETE），全部 self-scoped，owner 由 token 决定。`due_at` 是本地日期 YYYY-MM-DD，只在列表里标红（今天到期 / 已过期），不发提醒；勾选完成写入 `done_at`，取消勾选后端清空它；删除是软删除（`deleted_at`）。列表按 offset 累加「加载更多」，计数单独走 summary 接口，列表本身不带 total。
-- Tools: src/pages/Tools/index.tsx 是一张注册表（slug / 图标 / 标题 / 副标题 / hooks 自带的 Component），新增工具只需加一条 + 一条路由。JSON / SQL / 时间戳 / UUID+密码四个工具纯本地计算；共享剪切板走后端 src/api/clips.ts（POST /clips 生成 32 位 uuid4 短链、GET /clips/:code 免登录读、DELETE /clips/:code 撤销），内容存 D1 的 cache_entries（`clip:` 前缀、24h TTL），GET 有每 ip 60 次/分 + 每 code 120 次/分的独立预算（429 rate_limited）。复制反馈统一走 src/hooks/useCopy（工具按钮）与 src/utils/clipboard（Markdown 代码块、后台复制），不再各自写 navigator.clipboard。
-- Bundle: 分包做在「重依赖」上，而不是按页面铺开。页面级只懒加载三个把 react-markdown / Prism / rehype 带进来的页面（Docs / Blog / PostDetail）；工具箱的五个工具组件各自 `lazy()`（JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool），写作面板里的 MarkdownView 也是懒加载。Home、DocsHome、Space、Admin、Tools 入口、Profile 仍在主包（`docs/assets/index-*.js`），切常用页不闪占位。
+- Space memos: src/api/memos.ts 调 /memos（GET 列表 / GET /memos/summary 计数 / POST / PATCH / DELETE），全部 self-scoped，owner 由 token 决定。`due_at` 存 **UTC 时刻** `YYYY-MM-DD HH:MM:SS`（前端把「本地那一天的 23:59:59」换算成 UTC 再上送，后端只做字符串比较），列表里标红「今天到期 / 已过期」，不发提醒；勾选完成写入 `done_at`，取消勾选后端清空它；删除是软删除（`deleted_at`）。列表按 offset 累加「加载更多」，计数单独走 summary 接口，列表本身不带 total。
+- Tools: src/pages/Tools/index.tsx 是一张注册表（slug / 图标 / 标题 / 副标题 / hooks 自带的 Component），新增工具只需加一条 + 一条路由。JSON / SQL / 时间戳 / UUID+密码 / 文件哈希这五个工具纯本地计算（哈希走 `hash-wasm`，8MB 分块读完再算，WASM 直到真的开始算才 `import()`）；共享剪切板走后端 src/api/clips.ts（POST /clips 生成 32 位 uuid4 短链、GET /clips/:code 免登录读、DELETE /clips/:code 撤销），内容存 D1 的 cache_entries（`clip:` 前缀、24h TTL），GET 有每 ip 60 次/分 + 每 code 120 次/分的独立预算（429 rate_limited）。复制反馈统一走 src/hooks/useCopy（工具按钮）与 src/utils/clipboard（Markdown 代码块、后台复制），不再各自写 navigator.clipboard。
+- Bundle: 分包做在「重依赖」上，而不是按页面铺开。页面级只懒加载三个把 react-markdown / Prism / rehype 带进来的页面（Docs / Blog / PostDetail）；工具箱的六个工具组件各自 `lazy()`（JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool），写作面板里的 MarkdownView 也是懒加载。Home、DocsHome、Space、Admin、Tools 入口、Profile 仍在主包（`docs/assets/index-*.js`），切常用页不闪占位。
 - Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
 - Print Rule: 所有非打印 UI 加 className="no-print"，@media print 隐藏；简历页使用 A4 版式。
 - Markdown/HTML Loading: 文档不再经 import.meta.glob 内联进 bundle。构建期 `scripts/build-wiki.mjs` 把 `raw-docs` 下的 md 复制成 `public/wiki/<slug>.md`（运行时用 MarkdownView 渲染，不预渲染 HTML），html 原样保真产成 `public/wiki/<slug>.html`（缺 `<html>` 的片段补壳，外链脚本改本地 `/wiki/vendor/`），并产出 `public/wiki/index.json`。前端运行时 `fetch('/wiki/index.json')` 取清单：md 取源文本就地渲染、正文列居中，html 用 iframe 直连（应用型页面固定 85vh，片段式由 `postMessage` 上报高度自适应）。硬约定：html 文档禁止外链 CDN。
@@ -45,7 +45,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki/<slug>.html`，站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
 - **GitHub 风格排版**：`github-markdown-css` + `react-markdown` + `prism-one-light`
 - **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
-- **工具箱**：`/tools` 五张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v1/v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）
+- **工具箱**：`/tools` 六张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v1/v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）
 - **GitHub Pages 部署**：`.github/workflows/build.yml` 在 push `main` 时 lint + test + build，用 `upload-pages-artifact` / `deploy-pages` 发布 `docs/`，产物不入库；`public/404.html` 兜底 SPA 深链刷新
 
 ---
@@ -173,7 +173,7 @@ npm run test
 
 ## 🧰 工具箱
 
-`/tools` 是入口页（五个中等图标卡），点任意一张进入独占整页的工具；`/tools/<slug>` 与 `/tools/clip/<code>` 共用同一个 `Tools` 组件，靠 `slug` / `code` 分派。
+`/tools` 是入口页（六张图标卡，容器 928px 下按 4 列排），点任意一张进入独占整页的工具；`/tools/<slug>` 与 `/tools/clip/<code>` 共用同一个 `Tools` 组件，靠 `slug` / `code` 分派。
 
 | slug | 工具 | 数据来源 |
 | --- | --- | --- |
@@ -182,6 +182,7 @@ npm run test
 | `timestamp` | 时间戳与日期互转（10 位秒 / 13 位毫秒） | 本地 |
 | `random` | UUID（v1 / v4 / v7）与密码生成 | 本地（crypto） |
 | `clip` | 共享剪切板：贴日志生成免登录短链 | 后端 `/clips` + D1 cache |
+| `hash` | 文件哈希：拖放 / 点选文件，MD5・SHA-1・SHA-256・SHA-512 多选 | 本地（`hash-wasm`，8MB 分块，WASM 按需 `import()`） |
 
 ### 共享剪切板的接口约定
 

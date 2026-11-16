@@ -127,6 +127,9 @@ async function flushQueue(): Promise<void> {
   queue = rest
   inFlight = true
   try {
+    // 直接 fetch 而不走 api/client：这条路要把失败咽掉（统计不该冒泡成 UI 错误），
+    // 还需要读 Retry-After 自己排下一批——client 的「401 清登录态 + 抛 ApiError」
+    // 正好是这里最不想要的两件事。
     const response = await fetch(token ? ACTIVITY_URL : VISITOR_URL, {
       method: 'POST',
       headers: token
@@ -184,6 +187,8 @@ function flushWithKeepalive(events: ActivityEvent[]): void {
   const limit = token ? ACTIVITY_MAX_BATCH : ACTIVITY_MAX_VISITOR_BATCH
   // 带 page_leave 的批次服务端恒放行，但写入同样会刷新 IP 窗口，所以这里先按已接受处理
   if (!token) noteVisitorAccepted()
+  // 卸载期上报只能直接 fetch：keepalive 是 api/client 不暴露的参数，
+  // 而且这一步不能 await（页面已经在走），失败也必须静默。
   void fetch(token ? ACTIVITY_URL : VISITOR_URL, {
     method: 'POST',
     keepalive: true,
