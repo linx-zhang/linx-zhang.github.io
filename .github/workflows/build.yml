@@ -1,14 +1,25 @@
-# 构建闸门。
-# 这个仓库的部署方式是「本地构建 → 把 docs/ 提交进仓 → GitHub Pages 直接发 docs/」，
-# 所以最容易出现、也最难靠肉眼发现的不一致是「源码改了，dist 忘了重构建，或者改了构建产物没带源码」。
-# 这里只做两件事：源码必须能 lint + 构建通过；构建出来的 docs/ 必须与仓库里那一份逐字节一致。
-name: build
+# 构建 + 发布。
+#
+# 站点产物 docs/ 不再入库：Pages 的 Source 设为 GitHub Actions，这里构建完直接把
+# docs/ 作为 artifact 发布。好处是发布环境就是 CI 验过的环境，也不会再有「源码改了
+# 但产物忘了重构建」这种只在产物入库方案里存在的漂移。
+name: build & deploy
 
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只跑一个发布；不做 cancel-in-progress，避免把线上停在半截版本
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -27,16 +38,31 @@ jobs:
       - name: 静态检查
         run: npm run lint
 
+      - name: 单元测试
+        run: npm test
+
       - name: 构建
         run: npm run build
 
-      - name: 校验 docs/ 与源码同步
+      - name: 校验产物完整
         run: |
-          if [ -n "$(git status --porcelain -- docs)" ]; then
-            echo "::error::docs/ 与本次构建结果不一致：请本地跑 npm run build，再把 docs/ 一并提交。"
-            git status --porcelain -- docs
-            git --no-pager diff --stat -- docs
-            git --no-pager diff -- docs | head -200
-            exit 1
-          fi
-          echo "docs/ 与源码一致"
+          test -f docs/index.html
+          test -f docs/404.html
+          test -f docs/wiki/index.json
+          test -d docs/assets
+          echo "docs 体积: $(du -sh docs | cut -f1)"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

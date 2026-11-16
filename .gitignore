@@ -35,3 +35,7 @@ dist-ssr
 # 构建中转目录（scripts/build-docs.mjs 用）
 /docs_build/
 /.docs-trash/
+
+# 站点产物：由 GitHub Actions 构建并直接发布（Pages Source = GitHub Actions），不再入库。
+# 本地仍然会在 docs/ 生成一份，方便 dev 起来或离线查看，但 git 不跟踪。
+/docs/
