@@ -1,0 +1,42 @@
+# 构建闸门。
+# 这个仓库的部署方式是「本地构建 → 把 docs/ 提交进仓 → GitHub Pages 直接发 docs/」，
+# 所以最容易出现、也最难靠肉眼发现的不一致是「源码改了，dist 忘了重构建，或者改了构建产物没带源码」。
+# 这里只做两件事：源码必须能 lint + 构建通过；构建出来的 docs/ 必须与仓库里那一份逐字节一致。
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 静态检查
+        run: npm run lint
+
+      - name: 构建
+        run: npm run build
+
+      - name: 校验 docs/ 与源码同步
+        run: |
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            echo "::error::docs/ 与本次构建结果不一致：请本地跑 npm run build，再把 docs/ 一并提交。"
+            git status --porcelain -- docs
+            git --no-pager diff --stat -- docs
+            git --no-pager diff -- docs | head -200
+            exit 1
+          fi
+          echo "docs/ 与源码一致"
