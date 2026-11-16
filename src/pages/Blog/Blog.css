@@ -345,8 +345,7 @@
   font-size: 0.9rem;
   font-weight: 500;
 }
-.post-edit-field input,
-.post-edit-field textarea {
+.post-edit-field input {
   width: 100%;
   padding: 0.6rem 0.75rem;
   border: 1px solid #e5e7eb;
@@ -357,19 +356,54 @@
   font-size: 0.95rem;
   line-height: 1.6;
 }
-.post-edit-field input:focus,
-.post-edit-field textarea:focus {
+.post-edit-field input:focus {
   outline: none;
   border-color: #9ca3af;
   box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.08);
 }
-.post-edit-field textarea {
-  resize: vertical;
-}
-.post-edit-field input:disabled,
-.post-edit-field textarea:disabled {
+.post-edit-field input:disabled {
   background: #f9fafb;
   color: #6b7280;
+}
+
+/* 正文块：标签 + 共用编辑器（编辑器自带边线，这里不再重复画框） */
+.post-edit-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.post-edit-label {
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 全屏编辑：像写作页那样铺满视口，只留一条窄边距，正文保持单栏读得开 */
+.post-edit-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  padding: 1.15rem clamp(1rem, 6vw, 4rem) 1.35rem;
+  background: #fff;
+  overflow: auto;
+}
+
+.post-edit-fullscreen .md-editor-body {
+  min-height: 0;
+}
+
+.post-edit-fullscreen .md-editor-input {
+  min-height: min(62vh, 640px);
+}
+
+.post-edit-fullscreen .post-edit-body {
+  flex: 1;
+}
+
+.post-edit-fullscreen-toggle {
+  margin-left: auto;
 }
 .post-neighbors {
   display: grid;

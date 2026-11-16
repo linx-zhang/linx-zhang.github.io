@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { errorMessage } from '@/api/errors'
@@ -8,6 +8,7 @@ import { useAuth } from '@/auth/AuthProvider'
 import { usePermission } from '@/auth/usePermission'
 import { useResource } from '@/hooks/useResource'
 import MarkdownView from '@/components/MarkdownView'
+import MarkdownEditor from '@/components/MarkdownEditor'
 import Avatar from '@/components/Avatar'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import { COMMENT_BODY_MAX, POST_TITLE_MAX } from '@/constants'
@@ -99,6 +100,8 @@ export default function PostDetail() {
   const refreshComments = commentsQuery.reload
 
   const [editing, setEditing] = useState(false)
+  /** 详情页编辑的全屏态：铺满视口，Esc 退出 */
+  const [editFullscreen, setEditFullscreen] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editBody, setEditBody] = useState('')
   const [saving, setSaving] = useState(false)
@@ -164,16 +167,32 @@ export default function PostDetail() {
     setEditBody(post.body_md)
     setEditError('')
     setPostActionError('')
+    setEditFullscreen(false)
     setEditing(true)
   }
 
   const cancelEdit = () => {
     setEditing(false)
+    setEditFullscreen(false)
     setEditError('')
   }
 
-  const handleSave = async (event: FormEvent) => {
-    event.preventDefault()
+  // 全屏编辑时锁住页面滚动，Esc 退出：这是详情页里唯一会盖住整页的状态
+  useEffect(() => {
+    if (!editFullscreen) return
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') setEditFullscreen(false)
+    }
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previous
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [editFullscreen])
+
+  const persist = async () => {
     setEditError('')
     const trimmedTitle = editTitle.trim()
     if (trimmedTitle.length === 0) {
@@ -197,11 +216,17 @@ export default function PostDetail() {
       })
       postQuery.setData(updated)
       setEditing(false)
+      setEditFullscreen(false)
     } catch (err) {
       setEditError(errorMessage(err))
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleSave = (event: FormEvent) => {
+    event.preventDefault()
+    void persist()
   }
 
   const handleDeletePost = () => {
@@ -280,7 +305,11 @@ export default function PostDetail() {
         </Link>
 
         {editing ? (
-          <form className="post-edit" onSubmit={handleSave} noValidate>
+          <form
+            className={`post-edit${editFullscreen ? ' post-edit-fullscreen' : ''}`}
+            onSubmit={handleSave}
+            noValidate
+          >
             <label className="post-edit-field">
               <span>标题</span>
               <input
@@ -294,34 +323,36 @@ export default function PostDetail() {
                 }}
               />
             </label>
-            <label className="post-edit-field">
-              <span>正文（Markdown）</span>
-              <textarea
+            <div className="post-edit-body">
+              <span className="post-edit-label">正文（Markdown）</span>
+              {/* 与写作页同一个编辑器：工具条 / 快捷键 / 撤销栈一致；
+                  这里走单栏（正文区只有 ~760px，两栏各 380px 太挤），右侧工具条可切预览 */}
+              <MarkdownEditor
                 value={editBody}
-                rows={16}
-                disabled={saving}
-                onChange={(event) => {
-                  setEditBody(event.target.value)
+                onChange={(next) => {
+                  setEditBody(next)
                   setEditError('')
                 }}
+                rows={editFullscreen ? 20 : 16}
+                layout="toggle"
+                disabled={saving}
+                onSubmitShortcut={() => void persist()}
               />
-            </label>
+            </div>
             {editError && <p className="comment-error">{editError}</p>}
             <div className="post-actions">
-              <button
-                type="submit"
-                className="blog-button comment-submit"
-                disabled={saving}
-              >
+              <button type="submit" className="blog-button comment-submit" disabled={saving}>
                 {saving ? '保存中…' : '保存'}
+              </button>
+              <button type="button" className="blog-button" disabled={saving} onClick={cancelEdit}>
+                取消
               </button>
               <button
                 type="button"
-                className="blog-button"
-                disabled={saving}
-                onClick={cancelEdit}
+                className="blog-button post-edit-fullscreen-toggle"
+                onClick={() => setEditFullscreen((open) => !open)}
               >
-                取消
+                {editFullscreen ? '退出全屏' : '全屏编辑'}
               </button>
             </div>
           </form>

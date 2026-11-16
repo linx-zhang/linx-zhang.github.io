@@ -23,6 +23,12 @@ export interface MarkdownEditorProps {
   extraCommands?: EditorCommand[]
   /** 工具条左侧的说明文字，例如「正文（Markdown）」 */
   label?: ReactNode
+  /**
+   * 排版：`split` 宽屏两栏（写作页，左写右预览）；
+   * `toggle` 永远单栏、靠工具条右端「预览」切换——用在正文区只有 800px 的详情页，
+   * 两栏各 380px 读起来太挤。
+   */
+  layout?: 'split' | 'toggle'
 }
 
 /** 工具栏按钮的显示符号：命令表只描述行为，符号在这里映射，新增命令时在这里补一行即可 */
@@ -67,6 +73,7 @@ export default function MarkdownEditor({
   onSubmitShortcut,
   extraCommands = [],
   label,
+  layout = 'split',
 }: MarkdownEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [previewText, setPreviewText] = useState(value)
@@ -139,7 +146,10 @@ export default function MarkdownEditor({
   const chars = value.length
 
   return (
-    <div className="md-editor" data-preview={previewFocus ? 'on' : 'off'}>
+    <div
+      className={`md-editor${layout === 'toggle' ? ' md-editor-toggle' : ''}`}
+      data-preview={previewFocus ? 'on' : 'off'}
+    >
       {label && <span className="md-editor-label">{label}</span>}
 
       <div className="md-editor-toolbar" role="toolbar" aria-label="格式工具">

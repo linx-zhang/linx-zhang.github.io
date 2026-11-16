@@ -205,3 +205,30 @@
     text-align: left;
   }
 }
+
+/* 单栏模式（详情页编辑）：宽屏也不分栏，靠工具条右端的「预览」切换。
+   选择器权重高于上面的媒体查询，宽屏下同样生效。 */
+.md-editor-toggle .md-editor-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.md-editor-toggle .md-editor-tool-preview {
+  display: inline-flex;
+}
+
+.md-editor-toggle .md-editor-preview {
+  display: none;
+  border-left: none;
+}
+
+.md-editor-toggle[data-preview='on'] .md-editor-input {
+  display: none;
+}
+
+.md-editor-toggle[data-preview='on'] .md-editor-preview {
+  display: flex;
+}
+
+.md-editor-toggle .md-editor-preview-body {
+  max-height: 640px;
+}
