@@ -31,8 +31,9 @@
 /* 入口：中等大小的图标 + 名字，一屏放得下，别挤成一排小链接 */
 .tools-grid {
   display: grid;
-  /* 6 个工具正好排满一行；用固定列数而不是 auto-fit，避免不同宽度下最后一行只剩一格 */
-  grid-template-columns: repeat(6, 1fr);
+  /* 4 列：容器 928px 下每格 224px，提示文案正好一行；6 列会压到 145px 把文案挤成三行。
+     固定列数而不是 auto-fit，避免窄一点就多算一列。工具涨到 8 个时正好 4+4 排满。 */
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.7rem;
   margin-top: 1.4rem;
 }
