@@ -32,10 +32,6 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     this.props.onError?.(error, info)
   }
 
-  private reset = () => {
-    this.setState({ error: null })
-  }
-
   render(): ReactNode {
     const { error } = this.state
     if (!error) return this.props.children
@@ -43,13 +39,17 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     return (
       <div className="error-boundary" role="alert">
         <h2>页面出错了</h2>
-        <p>这一块内容暂时无法显示。可以先重试，或返回上一页继续浏览。</p>
+        {/* 只有「重新加载」这一个出口：这里的崩溃是 render 抛错，
+            清掉 error 再渲染同一棵子树往往立刻再炸一次，点了没反应；
+            整页重载才会重新取数、重新挂载，是真正能恢复的那一步。 */}
+        <p>这一块内容暂时无法显示。重新加载页面通常就能恢复。</p>
         <div className="error-boundary-actions">
-          <button type="button" className="blog-button" onClick={this.reset}>
-            重试
-          </button>
-          <button type="button" className="blog-button" onClick={() => window.location.reload()}>
-            刷新页面
+          <button
+            type="button"
+            className="blog-button comment-submit"
+            onClick={() => window.location.reload()}
+          >
+            重新加载
           </button>
         </div>
       </div>
