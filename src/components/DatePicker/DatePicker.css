@@ -38,3 +38,12 @@
   color: #9ca3af;
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * 单日选中：两侧都是圆角。
+ * 面板样式复用 DateRangePicker，那里的 .date-day-start 故意只圆左边，右边留给范围；
+ * 单日选择没有延续的那一半，所以这里用更高优先级的两类选择器把右边补回来。
+ */
+.date-day.date-day-single {
+  border-radius: 6px;
+}

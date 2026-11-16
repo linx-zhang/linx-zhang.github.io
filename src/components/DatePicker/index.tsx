@@ -240,7 +240,11 @@ export default function DatePicker({
                 const classes = ['date-day']
                 if (outside) classes.push('date-day-outside')
                 if (day === today) classes.push('date-day-today')
-                if (day === value) classes.push('date-day-start')
+                if (day === value) {
+                  // start 提供选中态配色（深底白字），single 把右侧圆角补回来：
+                  // 单日选择没有「另一半」等着接，不该留半个直角
+                  classes.push('date-day-start', 'date-day-single')
+                }
                 return (
                   <button
                     key={day}
