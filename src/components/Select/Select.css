@@ -27,6 +27,11 @@
   color: #9ca3af;
   cursor: not-allowed;
 }
+/* 键盘走到这里要有可见落点：与日历侧栏、编辑器工具条同一套 2px 深灰环 */
+.select-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.35);
+}
 .select-value {
   min-width: 0;
   overflow: hidden;

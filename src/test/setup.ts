@@ -12,6 +12,14 @@ declare global {
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
+/**
+ * jsdom 没有实现 scrollIntoView，而下拉面板 / 日历面板打开时会对当前项调用它。
+ * 缺了这一步，任何渲染 Select 的用例都会以 TypeError 结束。
+ */
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
+}
+
 afterEach(() => {
   cleanup()
   window.localStorage.clear()

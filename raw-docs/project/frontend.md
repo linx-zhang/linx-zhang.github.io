@@ -112,6 +112,8 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 
 `RequirePermission` 的注释特意写了「体验层路由守卫；服务端仍会对每个管理请求做权威校验」——这句话防止后来者把它当成安全边界。前端能做的只是别让用户看到进不去的页面，真正的判定在 Worker 的 `require_permission(code)`。
 
+`Select` 支持 `className` / `panelClassName` / `panelMinWidth` 三个可选参数：页内要改触发器宽度和字号、要让浮层比触发器宽（否则选项文字会折行）都靠它们，公共样式不动。工具箱里 JSON 缩进、SQL 方言与大小写、UUID 版本与数量、时间戳单位共 5 处，就是靠这三个参数接上去的——那里早年写的是原生 `<select>`，外观随系统走，与旁边 36px 的 `tool-button` 是两套语言。新增工具时优先复用 `Select`，不要再写裸 `<select>`。
+
 权限码本身也由后端下发：`/api/auth/me` 返回 `permissions` 数组，前端 `usePermission().has(code)` 消费，页面里不写 `role === 'admin'` 这种硬编码。角色改名、加一个 `internal` 角色，前端一行都不用改。
 
 ## 六、样式：全局层 + 页面层

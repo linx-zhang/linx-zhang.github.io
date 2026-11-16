@@ -1,9 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useCopy } from '@/hooks/useCopy'
+import Select from '@/components/Select'
 import JsonTree from './JsonTree'
 
 /** 树形视图的上限：再大就只给文本，避免一次展开上千节点卡住 */
 const TREE_LIMIT = 120_000
+
+/** 缩进档位：值和 JSON.stringify 的第三个参数对应（1 走 Tab） */
+const INDENTS = [
+  { value: '2', label: '2 空格' },
+  { value: '4', label: '4 空格' },
+  { value: '1', label: 'Tab' },
+]
 
 /** 把各浏览器那句英文报错翻成「第几行第几列 + 这里缺什么 / 多什么」 */
 function locate(input: string, message: string): string {
@@ -98,18 +106,18 @@ export default function JsonTool() {
         <button type="button" className="tool-button" onClick={() => run('minify')}>
           压缩成一行
         </button>
-        <label className="tool-inline">
+        <span className="tool-inline">
           缩进
-          <select
+          <Select
             className="tool-select"
-            value={indent}
-            onChange={(event) => setIndent(Number(event.target.value))}
-          >
-            <option value={2}>2 空格</option>
-            <option value={4}>4 空格</option>
-            <option value={1}>Tab</option>
-          </select>
-        </label>
+            panelClassName="tool-select-panel"
+            ariaLabel="缩进方式"
+            panelMinWidth={132}
+            value={String(indent)}
+            options={INDENTS}
+            onChange={(value) => setIndent(Number(value))}
+          />
+        </span>
         <button
           type="button"
           className={isCopied() ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}

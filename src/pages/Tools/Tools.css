@@ -203,14 +203,27 @@ a.tool-button {
   color: #6b7280;
 }
 
+/* 工具箱里的下拉：触发器与 tool-button 同高同圆角，宽度跟内容走（公共 Select 默认撑满父级）；
+   展开后的面板沿用 components/Select 的语言：10px 圆角、同一层阴影、同一套 hover 底 */
 .tool-select {
+  width: auto;
   min-height: 36px;
-  padding: 0 0.4rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
-  color: #1f2937;
-  font: inherit;
+  padding: 0 0.5rem 0 0.6rem;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.tool-select .select-arrow {
+  font-size: 0.66rem;
+  color: #9ca3af;
+}
+
+.tool-select-panel {
+  padding: 0.25rem;
+}
+
+.tool-select-panel .select-option {
+  padding: 0.4rem 0.55rem;
   font-size: 0.8rem;
 }
 

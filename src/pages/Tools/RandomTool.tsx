@@ -1,5 +1,14 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useCopy } from '@/hooks/useCopy'
+import Select from '@/components/Select'
+
+/** UUID 版本档位：v7 带时间前缀，按时间递增 */
+const UUID_VERSIONS = [
+  { value: 'v4', label: 'v4 · 随机' },
+  { value: 'v7', label: 'v7 · 时间有序' },
+] as const
+
+const UUID_COUNTS = [1, 3, 5, 10].map((value) => ({ value: String(value), label: `${value} 个` }))
 
 /** 取 [0, max) 的随机整数：拒绝采样，避免取模偏斜 */
 function randomBelow(max: number): number {
@@ -171,31 +180,30 @@ export default function RandomTool() {
         </div>
 
         <div className="tool-bar">
-          <label className="tool-inline">
+          <span className="tool-inline">
             版本
-            <select
+            <Select
               className="tool-select"
+              panelClassName="tool-select-panel"
+              ariaLabel="UUID 版本"
+              panelMinWidth={172}
               value={version}
-              onChange={(event) => setVersion(event.target.value === 'v7' ? 'v7' : 'v4')}
-            >
-              <option value="v4">v4 · 随机</option>
-              <option value="v7">v7 · 时间有序</option>
-            </select>
-          </label>
-          <label className="tool-inline">
+              options={UUID_VERSIONS}
+              onChange={(value) => setVersion(value === 'v7' ? 'v7' : 'v4')}
+            />
+          </span>
+          <span className="tool-inline">
             数量
-            <select
+            <Select
               className="tool-select"
-              value={count}
-              onChange={(event) => setCount(Number(event.target.value))}
-            >
-              {[1, 3, 5, 10].map((value) => (
-                <option key={value} value={value}>
-                  {value} 个
-                </option>
-              ))}
-            </select>
-          </label>
+              panelClassName="tool-select-panel"
+              ariaLabel="生成数量"
+              panelMinWidth={104}
+              value={String(count)}
+              options={UUID_COUNTS}
+              onChange={(value) => setCount(Number(value))}
+            />
+          </span>
           <label className="tool-check">
             <input
               type="checkbox"

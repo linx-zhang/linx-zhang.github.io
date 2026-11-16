@@ -12,10 +12,16 @@ export interface SelectOption {
 export interface SelectProps {
   value: string
   onChange: (value: string) => void
-  options: SelectOption[]
+  options: readonly SelectOption[]
   disabled?: boolean
   placeholder?: string
   ariaLabel?: string
+  /** 追加到触发器上的类名：页内要调宽度 / 字号时用，不动公共样式 */
+  className?: string
+  /** 追加到浮层面板上的类名 */
+  panelClassName?: string
+  /** 浮层最小宽度（px）：触发器很窄时靠它避免选项文字折行 */
+  panelMinWidth?: number
 }
 
 const PANEL_MAX_HEIGHT = 280
@@ -28,12 +34,16 @@ export default function Select({
   disabled = false,
   placeholder = '请选择',
   ariaLabel,
+  className,
+  panelClassName,
+  panelMinWidth,
 }: SelectProps) {
   const [activeIndex, setActiveIndex] = useState(-1)
 
   const { open, position, triggerRef, panelRef, openPanel: openFloating, closePanel: closeFloating } =
     useFloatingPanel({
       estimateHeight: Math.min(PANEL_MAX_HEIGHT, options.length * 38 + 8),
+      minWidth: panelMinWidth,
     })
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
 
@@ -133,7 +143,9 @@ export default function Select({
       <button
         ref={triggerRef}
         type="button"
-        className={open ? 'select-trigger select-trigger-open' : 'select-trigger'}
+        className={['select-trigger', open ? 'select-trigger-open' : '', className]
+          .filter(Boolean)
+          .join(' ')}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -154,7 +166,7 @@ export default function Select({
         createPortal(
           <div
             ref={panelRef}
-            className="select-panel"
+            className={panelClassName ? `select-panel ${panelClassName}` : 'select-panel'}
             role="listbox"
             aria-label={ariaLabel}
             style={{
@@ -197,11 +209,11 @@ export default function Select({
   )
 }
 
-function firstEnabledIndex(options: SelectOption[]): number {
+function firstEnabledIndex(options: readonly SelectOption[]): number {
   return options.findIndex((option) => !option.disabled)
 }
 
-function lastEnabledIndex(options: SelectOption[]): number {
+function lastEnabledIndex(options: readonly SelectOption[]): number {
   for (let i = options.length - 1; i >= 0; i -= 1) {
     if (!options[i].disabled) return i
   }

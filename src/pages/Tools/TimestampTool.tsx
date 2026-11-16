@@ -1,5 +1,13 @@
 import { useState } from 'react'
 import { useCopy } from '@/hooks/useCopy'
+import Select from '@/components/Select'
+
+/** 输入单位档位：auto 按位数猜，sec / ms 手动锁定 */
+const UNITS = [
+  { value: 'auto', label: '自动' },
+  { value: 'sec', label: '秒' },
+  { value: 'ms', label: '毫秒' },
+] as const
 
 interface Converted {
   local: string
@@ -156,22 +164,22 @@ export default function TimestampTool() {
         <button type="submit" className="tool-button tool-button-primary">
           转换
         </button>
-        <label className="tool-inline">
+        <span className="tool-inline">
           单位
-          <select
+          <Select
             className="tool-select"
+            panelClassName="tool-select-panel"
+            ariaLabel="时间戳单位"
+            panelMinWidth={112}
             value={unit}
-            onChange={(event) => {
-              const next = event.target.value === 'sec' ? 'sec' : event.target.value === 'ms' ? 'ms' : 'auto'
+            options={UNITS}
+            onChange={(value) => {
+              const next = value === 'sec' ? 'sec' : value === 'ms' ? 'ms' : 'auto'
               setUnit(next)
               if (raw.trim() && /^-?\d+$/.test(raw.trim())) run(raw, next)
             }}
-          >
-            <option value="auto">自动</option>
-            <option value="sec">秒</option>
-            <option value="ms">毫秒</option>
-          </select>
-        </label>
+          />
+        </span>
         <button type="button" className="tool-button" onClick={fillNow}>
           现在
         </button>

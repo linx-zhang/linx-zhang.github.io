@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useCopy } from '@/hooks/useCopy'
+import Select from '@/components/Select'
 import { format } from 'sql-formatter'
 import { tokenizeSql } from './highlight'
 
@@ -9,6 +10,11 @@ const LANGUAGES = [
   { value: 'postgresql', label: 'PostgreSQL' },
   { value: 'sqlite', label: 'SQLite' },
   { value: 'bigquery', label: 'BigQuery' },
+] as const
+
+const KEYWORD_CASES = [
+  { value: 'upper', label: '大写' },
+  { value: 'lower', label: '小写' },
 ] as const
 
 export default function SqlTool() {
@@ -55,31 +61,30 @@ export default function SqlTool() {
         <button type="button" className="tool-button tool-button-primary" onClick={run}>
           格式化
         </button>
-        <label className="tool-inline">
+        <span className="tool-inline">
           方言
-          <select
+          <Select
             className="tool-select"
+            panelClassName="tool-select-panel"
+            ariaLabel="SQL 方言"
+            panelMinWidth={140}
             value={language}
-            onChange={(event) => setLanguage(event.target.value)}
-          >
-            {LANGUAGES.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="tool-inline">
+            options={LANGUAGES}
+            onChange={setLanguage}
+          />
+        </span>
+        <span className="tool-inline">
           关键字
-          <select
+          <Select
             className="tool-select"
+            panelClassName="tool-select-panel"
+            ariaLabel="关键字大小写"
+            panelMinWidth={112}
             value={keywordCase}
-            onChange={(event) => setKeywordCase(event.target.value === 'lower' ? 'lower' : 'upper')}
-          >
-            <option value="upper">大写</option>
-            <option value="lower">小写</option>
-          </select>
-        </label>
+            options={KEYWORD_CASES}
+            onChange={(value) => setKeywordCase(value === 'lower' ? 'lower' : 'upper')}
+          />
+        </span>
         <button
           type="button"
           className={isCopied() ? 'tool-button tool-copy is-copied' : 'tool-button tool-copy'}
