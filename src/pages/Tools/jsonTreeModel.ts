@@ -72,8 +72,8 @@ type Task =
   | { t: 'more'; depth: number; path: string; remaining: number }
 
 export interface BuildOptions {
-  /** 该分支是否展开 */
-  expanded: (path: string) => boolean
+  /** 该分支是否展开；depth 是行深度（根为 0），调用方可以直接按深度做「只开前 N 层」 */
+  expanded: (path: string, depth: number) => boolean
   /** 该分支一次渲染的子节点上限，缺省 CHILD_PAGE */
   childLimit?: (path: string) => number
   /** 行数上限，超出即截断（用于「全部展开」的预算保护） */
@@ -161,7 +161,7 @@ export function buildRows(root: unknown, options: BuildOptions): { rows: JsonRow
       continue
     }
 
-    if (!options.expanded(path)) {
+    if (!options.expanded(path, depth)) {
       rows.push({
         kind: 'branch',
         depth,

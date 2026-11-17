@@ -87,6 +87,18 @@ describe('buildRows', () => {
     expect(leaf.tone).toBe('string')
   })
 
+  it('expanded 回调拿到行深度，可直接做「只开前 N 层」', () => {
+    const seen: Array<[string, number]> = []
+    buildRows({ a: { b: 1 } }, {
+      expanded: (path, depth) => {
+        seen.push([path, depth])
+        return depth < 1
+      },
+    })
+    expect(seen).toContainEqual(['$', 0])
+    expect(seen).toContainEqual(['$|a', 1])
+  })
+
   it('数组下标与对象键的前缀形态不同', () => {
     const { rows } = buildRows({ list: ['a'] }, { expanded: () => true })
     const keyRow = rows[1] as BranchRow

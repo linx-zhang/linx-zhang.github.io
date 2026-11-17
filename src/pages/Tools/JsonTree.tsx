@@ -110,9 +110,21 @@ function Row({ row, actions }: { row: JsonRow; actions: RowActions }) {
   )
 }
 
+/** 路径 → 深度（`$` 为 0，之后每多一个 `|` 多一层） */
+const pathDepth = (path: string): number => {
+  let depth = 0
+  for (let i = 0; i < path.length; i++) {
+    if (path.charCodeAt(i) === 124) depth++
+  }
+  return depth
+}
+
 export default function JsonTree({ value, initialDepth, command, className }: JsonTreeProps) {
-  /** 展开状态由「指令 + 手动 toggle」派生，不用 effect 去同步，避免多一次渲染 */
-  const [manualPaths, setManualPaths] = useState<{ nonce: number; paths: Set<string> } | null>(null)
+  /**
+   * 展开状态 = 深度规则（默认开前 N 层）+ 手动覆盖。
+   * 不用「先收集所有要展开的路径」：63 MB 的数组有几百万个分支，收集本身就要遍历一遍。
+   */
+  const [manualOpen, setManualOpen] = useState<{ nonce: number; open: Map<string, boolean> } | null>(null)
   const [limits, setLimits] = useState<Record<string, number>>({})
   const [scrollTop, setScrollTop] = useState(0)
   const [viewport, setViewport] = useState(0)
@@ -122,21 +134,27 @@ export default function JsonTree({ value, initialDepth, command, className }: Js
     if (command.nonce === 0 || command.kind === 'depth') {
       // nonce 为 0 表示首次渲染，用 initialDepth（大 JSON 只开两层）
       const maxDepth = command.nonce === 0 ? initialDepth : command.depth
-      return { paths: collectBranches(value, { maxDepth }).paths, truncated: false }
+      return { maxDepth, paths: new Set<string>(), truncated: false }
     }
-    if (command.kind === 'none') return { paths: new Set<string>(), truncated: false }
+    if (command.kind === 'none') return { maxDepth: 0, paths: new Set<string>(), truncated: false }
     const all = collectBranches(value, { maxDepth: Number.POSITIVE_INFINITY, budget: EXPAND_ALL_BUDGET })
-    if (all.truncated) {
-      return { paths: collectBranches(value, { maxDepth: BIG_DEPTH }).paths, truncated: true }
-    }
-    return all
+    // 全展开超预算：退回只开前两层，并告诉用户一声
+    if (all.truncated) return { maxDepth: BIG_DEPTH, paths: new Set<string>(), truncated: true }
+    return { maxDepth: 0, paths: all.paths, truncated: false }
   }, [command, initialDepth, value])
 
-  const expanded = manualPaths && manualPaths.nonce === command.nonce ? manualPaths.paths : base.paths
+  const openMap = manualOpen && manualOpen.nonce === command.nonce ? manualOpen.open : null
 
   const { rows } = useMemo(
-    () => buildRows(value, { expanded: (path) => expanded.has(path), childLimit: (path) => limits[path] }),
-    [value, expanded, limits],
+    () =>
+      buildRows(value, {
+        expanded: (path, depth) => {
+          if (openMap?.has(path)) return openMap.get(path) === true
+          return depth < base.maxDepth || base.paths.has(path)
+        },
+        childLimit: (path) => limits[path],
+      }),
+    [value, openMap, base, limits],
   )
 
   const total = rows.length
@@ -157,17 +175,19 @@ export default function JsonTree({ value, initialDepth, command, className }: Js
   const actions: RowActions = useMemo(
     () => ({
       onToggle: (path) =>
-        setManualPaths((prev) => {
-          const source = prev && prev.nonce === command.nonce ? prev.paths : base.paths
-          const next = new Set(source)
-          if (next.has(path)) next.delete(path)
-          else next.add(path)
-          return { nonce: command.nonce, paths: next }
+        setManualOpen((prev) => {
+          const open = new Map(prev && prev.nonce === command.nonce ? prev.open : [])
+          // 手动点击时以当前渲染出来的状态取反：深度规则开着的点一下就是收
+          const current = open.has(path)
+            ? open.get(path) === true
+            : base.paths.has(path) || pathDepth(path) < base.maxDepth
+          open.set(path, !current)
+          return { nonce: command.nonce, open }
         }),
       onMore: (path) =>
         setLimits((prev) => ({ ...prev, [path]: (prev[path] ?? CHILD_PAGE) + CHILD_PAGE })),
     }),
-    [base.paths, command.nonce],
+    [base, command.nonce],
   )
 
   return (
