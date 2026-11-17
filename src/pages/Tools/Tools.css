@@ -288,6 +288,26 @@ a.tool-button {
   color: #6b7280;
 }
 
+/* 输出面板全屏：只放大同一个面板（同一个树实例），不复制一份出来，展开状态也不会丢 */
+.tool-pane.is-full {
+  position: fixed;
+  inset: 0.6rem;
+  z-index: var(--z-dialog);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+}
+
+.tool-pane.is-full .tool-editor {
+  min-height: 0;
+  height: 100%;
+  resize: none;
+}
+
+.tool-pane.is-full .tool-code-scroll {
+  min-height: 0;
+  max-height: none;
+  flex: 1 1 auto;
+}
+
 .tool-meta {
   color: #9ca3af;
 }
@@ -520,21 +540,45 @@ a.tool-button {
   color: #57606a;
 }
 
-/* JSON 树：一层缩进 14px，箭头单独一列，长值折行不撑破宽度 */
-.json-tree {
+/* JSON 树：单行定高 + 悬挂缩进，由 JsonTree 做定高虚拟滚动 */
+.json-scroll {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 13px;
-  line-height: 1.7;
   color: #1f2937;
-  white-space: pre-wrap;
-  word-break: break-word;
+  position: relative;
+}
+
+.json-notice {
+  margin: 0 0 0.45rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 8px;
+  background: #fbfbfc;
+  color: #6b7280;
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
 .json-row {
-  /* 块级行 + 悬挂缩进（缩进与 text-indent 由组件按层级算）：长值换行后仍对齐正文列 */
+  /* 块级行 + 悬挂缩进（缩进与 text-indent 由组件按层级算）：长值不折行，超出靠横向滚动 */
   display: block;
-  white-space: pre-wrap;
-  word-break: break-word;
+  height: 22px;
+  line-height: 22px;
+  white-space: pre;
+}
+
+.json-more {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #6b7280;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.json-more:hover {
+  color: #1f2937;
 }
 
 /* 同一行内的片段用间距分开，不再依赖 flex gap */
@@ -760,6 +804,12 @@ a.tool-button {
   .tool-code-scroll {
     min-height: 40vh;
     max-height: none;
+  }
+
+  /* 手机上全屏就别留边了，本来就没空间 */
+  .tool-pane.is-full {
+    inset: 0;
+    border-radius: 0;
   }
 
   .pw-output {
