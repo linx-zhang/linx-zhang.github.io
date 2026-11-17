@@ -1,68 +1,82 @@
+# DevOps 是什么：从「扔过墙」到一条可度量的流水线
 
-# What's Devops
+DevOps 常被当成「一堆工具」或「一个岗位」，但它真正回答的是一个组织问题：**当发布频率高到人肉协调撑不住时，开发和运维怎么共同为同一条交付链路负责**。下面按「它解决什么 → 它是什么 → 怎么度量 → 谁在做 → 怎么做 → 文化那一层」拆开。
 
-If you look back to the state of technology only a few decades ago, you’ll stumble upon a technological world full of silos and frustration. Two of an organization’s most vital teams—software development and IT operations—struggled to communicate effectively. Departments resided within silos, and development and testing were conducted at a snail’s pace.
+## 一、它要解决的问题
 
-I still have flashbacks of a time when dev teams would build a package, throw it over the wall, and just wait for QA to provide feedback. There was absolutely no communication during development—only when the dev team considered the project “done.” Even companies deploying once a month ran into production issues.
+在瀑布式流程里，开发写完代码、打个包，往运维那边一扔，然后等 QA 反馈。链条上有三道墙：
 
-Though this waterfall-based approach was inherently more conservative on paper, internal clashes made things remarkably difficult. Companies clearly needed to rethink their approaches. Long-standing development processes were leading to botched launches and rollbacks. Stakeholder priorities conflicted mightily with those of technical teams. Chains of productivity were fundamentally broken. Massive, monolithic source code hanges were growing cumbersome, and even iterative changes induced headaches.
+- **部门墙**：开发、测试、运维各自一套节奏，出了问题先互相推。
+- **反馈慢**：一次发布要等月度窗口，坏味道在几周后才被发现，回滚成本极高。
+- **发布是「事件」**：每次上线都得排期、开会、守夜，于是没人愿意多发布，循环继续恶化。
 
-However, with the introduction of microservices—a groundbreaking new infrastructure model comprised of small code blocks and APIs built atop scalable cloud-computing deployments—Agile software development and lean methodologies became integral to maintaining these new deployments. After all, the codebases were shrinking, teams came to own their own features, and months-long testing was no longer necessary to guarantee core functionality.
+微服务、云和敏捷/精益把这套结构顶穿了：服务被拆小、团队对自己那块功能自负盈亏、迭代周期从月变成周甚至天。**发布从「一年几次的事件」变成了「每天都会发生的日常动作」**，靠人肉协调已经不可能，只能把构建、测试、部署、监控、反馈这一整条链路自动化并连成闭环——这就是 DevOps 的起点。
 
-**And DevOps was born**—ushering in elevated cohesiveness, efficiency, and a cultural renaissance across all business units.
+## 二、它是什么
 
-In this guide, I’ll explain the ins and outs of DevOps, key best practices, and the criticality of cultural change in organizations to integrate DevOps methodologies and support better development practices, automated processes, and—ultimately—a better product.
+一句话：**DevOps 是让开发与运维共担一条交付链路、并把这条链路自动化成闭环的组织方式与实践集合**。它包含三层，缺一层都跑不起来：
 
-## How Does DevOps Work? DevOps Methodology Explained
+| 层 | 内容 | 缺了会怎样 |
+| --- | --- | --- |
+| 工具链 | 版本控制、CI、制品仓库、部署、监控 | 全靠人肉，频率一高就散架 |
+| 流程 | 小批量提交、自动化测试、灰度与回滚、变更评审 | 工具装上了但仍然「大爆炸发布」 |
+| 文化 | 失败追流程不追人、跨职能沟通、上线是常态 | 一出事就互相甩锅，没人敢改流水线 |
 
-Development and operations form the crux of DevOps. These two units form a tight-knit collaborative bond, and any software-related processes are equally designed around both teams. Additionally, effective implementation of DevOps is dependent on establishing an efficient pipeline. This cyclical collection of stages covers everything from planning to release and the capabilities needed within the delivery process:
+生命周期是一个环，不是一条线：
 
+```text
+plan → code → build → test → release → deploy → operate → monitor
+  ↑                                                      │
+  └────────────────── 反馈与度量 ─────────────────────────┘
+```
 
-<a target="_blank" href="http://m.qpic.cn/psc?/V52HCgKy0b7Yhv1a5Lcc2Cuwq53oINm3/ruAMsa53pVQWN7FLK88i5ig53.Smmj47X.o94KnbpZoFIMvN2QLop0IkfrG9BppnmicAPv3.5ThdT1hl8Q2bLKdPmt8vdvAvbXsj9CGSgEk!/b&bo=AARtAgAAAAADB0k!&rf=viewer_4">
-<img title="Click If No Picture" src="https://github.com/linx-zhang/static/blob/main/python/DevOps-lifecycle-capabilities-1024x621.png?raw=true">
-</a>
+环的意思是：**监控和反馈必须能改回计划和代码**。只做了前半段（能构建、能部署）而没有人看线上数据，那只是「有流水线的瀑布」。
 
+## 三、怎么度量：四个指标
 
-Though “deliberate” development pacing was once commonplace, DevOps instead centers on agility. By tightly integrating the roles of engineers, testers, and administrators, companies can achieve new heights of productivity. The feedback loop is enormously integral to realizing these DevOps benefits.
+判断 DevOps 做得好不好，业界最通用的是 DORA（DevOps Research and Assessment）提的四个指标：
 
-In a simple example, a developer will code a program and ship it off to testers for evaluation. Testers make notes and send feedback back to the engineers, who refine the product prior to deployment. This isn’t reserved just for beta periods prior to launch, since DevOps is a continual process spanning the entire software life cycle. Additionally, observing how this code (input) behaves when running in a test environment (output) tells developers and designers plenty about software readiness.
+| 指标 | 含义 | 它暴露什么 |
+| --- | --- | --- |
+| 部署频率 | 单位时间内上生产的次数 | 批量大小与流程阻力 |
+| 变更前置时间 | 从提交到上线的时间 | 流水线里的等待与人工关卡 |
+| 变更失败率 | 上线后需要回滚/热修的比例 | 测试与灰度是否真的有效 |
+| 恢复时长（MTTR） | 出故障到恢复的时间 | 可观测性与回滚能力 |
 
-Additionally, DevOps was created to lower update failure rates, shorten recovery or remediation times, and promote faster releases. We’re naturally conditioned to link higher failure rates with increased release agility, but the pipeline helps boost reliability by wide margins.
+四个要**一起看**：只把部署频率拉高、失败率和恢复时长同时变差，那不是进步，是把风险从流程转移到了用户。DORA 按这四项把团队分成 elite / high / medium / low 四档，elite 组的典型画像是「按需发布（一天多次）、故障以分钟到小时计恢复」——注意这来自长期流程建设，不是买一套工具就能到。
 
-The DevOps Research and Assessment (DORA) group evaluates how successfully organizations implement these processes. Companies are either designated as low, medium, high, or elite performers. As expected, low performers release exceptionally infrequently, take a long time to fix issues, and experience failures more often. The opposite is true for elite performers—the best of the best, including household names like Google, PayPal, and Netflix. These companies have embraced DevOps completely and may deploy over 100 times daily.
+## 四、谁在做：三个容易混的岗位
 
-## What Does a DevOps Role Do?
+- **DevOps engineer**：最常见的叫法，职责边界因公司而异——有的偏流水线与基础设施，有的偏发布与运维自动化。它不是一个标准化职位，看到 JD 要先问清「你们现在卡在哪一段」。
+- **DevSecOps**：在 DevOps 上叠安全，核心是**把安全检查左移进流水线**——依赖漏洞扫描、镜像扫描、密钥与凭据检查、权限最小化，让安全从「上线前评审」变成「每次提交都跑」。
+- **SRE（site reliability engineer）**：借 DevOps 的方法论管理可靠性，把能自动化的工作自动化，用 SLI / SLO 和错误预算决定「这块该不该继续加功能」。它和 DevOps 共享同一套自动化哲学，只是目标从「交付速度」偏向「稳定性与成本」。
 
-Each company generally implements its own unique flavor of DevOps, which can also take the form of other job titles. After all, DevOps engineers can oversee different products, use different tech stacks, and have varied job responsibilities depending on where the organization is in its digital transformation journey and whether cross-departmental collaboration between operations and other teams is crucial to business agility.
+## 五、怎么做：实践清单
 
-For example, DevSecOps is the intersection of DevOps and security and focuses on managing security throughout the feedback loop, which includes identifying, resolving, and managing bugs, vulnerabilities, and other security risks. A site reliability engineer (SRE) is another role borrowing many DevOps methodologies, such as automating what can be automated, reducing tedious “busy work,” and freeing up time to focus on other tasks.
+1. **CI 必须是闸门**：每次提交都构建 + 单测 + 静态检查，红了就不许合。没有闸门的 CI 只是一台会跑的机器。
+2. **发布与部署分离**：制品一键上线，但「什么时候让用户看到」由开关 / 灰度和流量比例决定。这样回滚是改一个参数，不是重新部署。
+3. **基础设施即代码**：环境可重建、配置进版本库、变更走评审。手工改服务器是下一次事故的种子。
+4. **可观测性统一入口**：日志、指标、追踪收敛到一处，而不是「监控一个工具、日志一个工具、资产又一个工具」。碎片化的直接后果是排障时数据对不上、盲区互相盖住。
+5. **反馈要能推动改动**：收集反馈本身没有价值，把反馈走完一个闭环（定位 → 修 → 验证 → 记录）才有。卡在「收集了很多但没人处理」是最常见的伪闭环。
+6. **先补最短的板**：流水线还停在手工上传，就先做 CI；连监控都没有，就别先追求花哨的发布策略。DevOps 是一串依赖关系，跳步会得到一批「装了但没人用」的工具。
 
-## DevOps Best Practices
+## 六、文化这一层
 
-Regardless of job title, there are common DevOps principles applicable to many different types of roles and workplaces, including the synonymous principles of continuous integration and continuous delivery or deployment (CI/CD) and the shift-left philosophy of CI/CD encouraging frequent testing as early as possible.
+DevOps 表面是技术，底层是人：
 
-Traditionally, implementing strong CI/CD supported by adopting several purpose-built DevOps tools is how organizations try to optimize the full scope of development performance. However, implementing piecemeal solutions to address specific use cases and requirements—such as having a service management tool to react to incidents, a separate tool to monitor infrastructure performance, and another solution for managing assets—can lead to toolset creep, operational blind spots, and disjointed data.
+- **失败追流程，不追人**。同一类事故重复发生，说明流程缺一道闸门，而不是某个人不细心。
+- **跨职能沟通**：开发愿意为线上负责，运维愿意早期介入设计，测试从需求阶段就在场。
+- **小步快跑**：小批量发布天然比大爆炸安全——出问题时影响面小、定位快、回滚便宜。
+- **上线是常态**：当发布不再需要守夜和审批仪式，团队才敢真正频繁发布。
 
-To keep up with the demands and complexities of modern environments, operational-focused teams like DevOps are shifting to using full-stack observability solutions. Observability combines network, cloud, system, application, services, and database metrics into a single source of truth. Observability supports the ability to delve more easily deeper into performance analytics, identify greater workflow efficiencies and automation opportunities across organizations, and streamline the closed-loop management every DevOps practitioner holds near and dear.
+## 七、怎么判断「真做了」还是「只装了工具」
 
-Also, gather as much feedback as you can. Be sure to check in with your teams to ensure smooth progress on projects and builds.
+不看有没有 Jenkins / GitLab / Argo，看这五个问题：
 
-This comes with a caveat, however. I recommend being wary of hanging on to feedback without moving through the feedback loop. I’ve seen where getting bogged down can become counterproductive. Taking proactive and reactive steps to fix problems is essential, and you can do so by understanding how to interpret and relay findings.
+1. 从提交到生产，是不是一条命令（或一次合并）能走完？
+2. 上线出问题，能不能在几分钟内回滚到上一版？
+3. 线上「慢在哪、错在哪」，能不能从数据里直接查出来，而不是靠猜和日志翻页？
+4. 改一处配置、加一个环境变量，是否走版本库和评审？
+5. 有没有一个指标在盯着「发布频率 / 前置时间 / 失败率 / 恢复时长」？
 
-Last but certainly not least, remain mindful of your organizational goals. Perhaps you’ve aced observability but your early development pipeline is undeveloped. Know your strengths and weaknesses and strategize accordingly.
-
-## The Importance of Adopting a DevOps Culture
-
-Though DevOps is a technical methodology, it’s also an inherently human approach. DevOps embraces agility and problem-solving. Collaboration is central. Having a DevOps mindset encourages broader communication instead of sticking strictly to one discipline.
-
-This is antithetical to many organizations—especially traditional ones. Getting on board with DevOps might require a cultural shift or even a reorganization. Accordingly, there must be a focus on shedding blame for any failures. By focusing on the problem, you can prevent failures from recurring without alienating team members. Remember, each link in the chain is important.
-
-If there's one thing I've gathered from those intimately familiar with DevOps, it's development teams and operations teams must dive in headfirst to enjoy success. Though company culture doesn’t shift radically overnight, organizations can adjust their existing processes to implement these core DevOps best practices into everyday workflows. It's impossible to halfheartedly adopt these practices and gain the full scope of DevOps benefits in return. So, don't adopt DevOps because it's trendy; do it because the data for how DevOps can improve your development workflow shows clear benefits.
-
-While improving workflows is key to building stronger development processes, making sure you have the right insights across your IT infrastructure can be just as crucial. SolarWinds® Observability is designed to provide the centralized, comprehensive performance monitoring data and insights DevOps, ITOps, and security teams need to act quickly and more efficiently.
-
----
-
-[For more people to see, copy and paste.](https://orangematter.solarwinds.com/2022/03/21/what-is-devops/)
-
-**If there is a copyright issue, please contact me to delete.**
+五项里答「不能」超过两项，基本可以判定：工具装上了，链路还没连起来。

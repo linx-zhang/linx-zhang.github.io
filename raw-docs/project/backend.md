@@ -4,7 +4,7 @@ pin: 3
 
 # 深入后端：Cloudflare Worker + D1 的工程化
 
-后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**50 个文件、4602 行、33 个端点、7 张业务表、13 个 migration**。
+后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**56 个文件、5030 行、34 个路由装饰器（+ 根路由 = 35 个端点）、7 张业务表、15 个 migration**（另有 `tests/` 5 个文件 717 行，不计入运行时代码）。
 
 它要支撑的东西不算少：登录与角色、文章增删改查与相邻篇、评论、访问事件与匿名事件、备忘录、共享剪切板短链、邀请码、用户管理、重置密码、缓存与限流、定时清理。全部跑在一个 Worker 里，没有微服务、没有消息队列、没有 Redis。
 
@@ -44,12 +44,12 @@ _GEO_HEADERS = (
 
 | 目录 | 行数 | 职责 |
 | --- | --- | --- |
-| `src/api` | 2506 | 应用装配、路由、依赖、请求/响应模型 |
-| `scripts/agent` | 493 | 冒烟与运维脚本（不进 Worker 包） |
+| `src/api` | 2509 | 应用装配、路由、依赖、请求/响应模型 |
+| `scripts` | 873 | 文档校验、schema 导出、发文助手（其中 `scripts/agent` 500 行是冒烟与运维脚本，不进 Worker 包） |
+| `src/core` | 426 | 权限码表、JWT、常量、时间工具 |
 | `src/infra` | 398 | D1 访问、缓存、配置、密码哈希 |
-| `src/core` | 385 | 权限码表、JWT、常量、时间工具 |
 | `src/services` | 341 | 分析聚合等跨路由业务逻辑 |
-| `src/tasks` | 112 | 定时任务（事件保留、缓存清理） |
+| `src/tasks` | 167 | 定时任务（事件保留、缓存清理、memos 墓碑清理） |
 | `src/entry.py` | 62 | 运行时入口 |
 
 分层的判定标准很朴素：**能不能脱离 FastAPI 单独测试**。`core/*` 全部与框架无关（权限码表就是纯字典 + 一个 `has_permission`），`infra/*` 只依赖 D1 binding，路由层只做「校验 → 调服务 → 返回」。
@@ -190,7 +190,7 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 
 调用方传了这三个名字，直接 422，而不是「忽略它们然后返回第一页」——后者会被读成「第二页怎么还是第一页」，是最难查的一类静默错误。
 
-## 九、数据层：7 张表、13 个 migration
+## 九、数据层：7 张表、15 个 migration
 
 | 表 | 用途 |
 | --- | --- |
@@ -202,7 +202,7 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 | `memos` | 个人备忘录（self-scoped） |
 | `cache_entries` | 缓存行（key、value、过期时间） |
 
-13 个 migration 全是增量式，没有一次「推倒重建」的历史。两处值得记住的做法：
+15 个 migration 全是增量式，没有一次「推倒重建」的历史。三处值得记住的做法：
 
 - **迁移只加不删**：`0003_user_soft_delete` 加 `deleted_at`、`0009_token_invalidated_at` 加失效戳、`0010_list_order_indexes` 只加索引。回滚靠「代码兼容旧列」，而不是「数据库回退」。
 - **表结构大改时重建再改名**：`0012_activity_anonymous` 先建 `activity_events_v12`、灌数据、再改名，避免在原表上做破坏性 DDL。
@@ -227,13 +227,13 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 
 ## 十二、热点与技术债
 
-按行数，最大的三个文件是 `api/models.py`（478 行）、`api/routers/admin.py`（467 行）、`api/routers/posts.py`（306 行）。
+按行数，最大的三个文件是 `api/routers/admin.py`（470 行）、`api/models.py`（466 行）、`api/routers/posts.py`（306 行）。
 
-- `models.py` 478 行全是请求/响应模型与校验规则，行数多但结构单一，属于「长而可读」，暂不动。
-- `admin.py` 467 行装了 9 个端点：用户列表/详情/改/删/重置密码、邀请码增删查、批量删除。它是下一轮最该拆的：邀请码那三个端点完全可以独立成 `routers/invites.py`，拆分不需要改 URL。
+- `admin.py` 470 行装了 9 个端点：用户列表/改/删/重置密码、邀请码增删查、活动日志、分析汇总。它是下一轮最该拆的：邀请码那三个端点完全可以独立成 `routers/invites.py`，拆分不需要改 URL。
+- `models.py` 466 行全是请求/响应模型与校验规则，行数多但结构单一，属于「长而可读」，暂不动。
 - `posts.py` 的 `_filter_conditions` 已经复用，但列表与相邻篇仍是两段 SQL；如果再加「按标签筛选」，谓词复用是唯一不会漂移的写法。
 
-真正需要盯的不是行数，而是**契约漂移**：前端 `src/constants.ts` 里那些数字（分页 20、正文 2000、标题 200、评论 5000、剪切板 20000）每一个都对应后端一处约束，改后端忘了改前端，症状是 422 或者前端截断。这是跨仓项目的结构性成本，短期没有银弹，只能靠注释与冒烟脚本兜着。
+真正需要盯的不是行数，而是**契约漂移**：前端 `src/constants.ts` 里那些数字（分页 20、正文 2000、标题 200、评论 5000、剪切板 20000）每一个都对应后端一处约束，改后端忘了改前端，症状是 422 或者前端截断。这条现在由前端 CI 的 `scripts/check-contract.mjs` 逐项比对挡住——但它只挡前端一侧，后端单独改模型时后端仓库不会红。
 
 ## 小结
 

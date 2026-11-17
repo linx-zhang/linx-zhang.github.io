@@ -8,7 +8,7 @@ pin: 2
 
 这种约束下，前端架构要解决的不是「怎么把页面画出来」，而是三件更硬的事：**在只有静态文件的环境里保住路由与深链**、**把接口契约收敛到一个入口**、**在没有框架兜底的情况下让列表、浮层、权限这些高频结构只有一份实现**。
 
-先给结论：105 个文件、15851 行（`.tsx` 8133 / `.ts` 2292 / `.css` 5426），25 个页面级样式文件，19 个自研组件、4 个通用 hook。规模不大，但每一层都只留一个出口。
+先给结论：112 个文件、17655 行（`.tsx` 8817 / `.ts` 2960 / `.css` 5878），25 个页面级样式文件，19 个自研组件、4 个通用 hook。规模不大，但每一层都只留一个出口。
 
 ## 一、约束反过来决定架构
 
@@ -126,7 +126,7 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 
 ## 六、样式：全局层 + 页面层
 
-25 个 CSS 文件、5297 行，结构是「两层」：
+25 个 CSS 文件、5878 行，结构是「两层」：
 
 - `styles/layers.css` + `styles/shared.css`：跨页面共用的按钮、错误提示、根级重置。
 - 各页面自己的 `*.css`：只写本页布局。
@@ -137,7 +137,7 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 
 同理，`html { scrollbar-gutter: stable }` 是为了修一个很隐蔽的抖动：列表从「短（无滚动条）」切到「长（有滚动条）」时，居中容器会被滚动条宽度推着左右抖——筛选、翻页、空态来回切最容易看见。
 
-页面样式里体量最大的是 `pages/Admin/Admin.css`（1186 行）、`Tools.css`（788 行）、`Space.css`（632 行）、`Blog.css`（570 行）。这四个页面本身就是多个分区的复合体，样式集中在一处反而比拆成十几个文件更好定位——这是有意识的取舍，不是没整理。
+页面样式里体量最大的是 `pages/Admin/Admin.css`（1186 行）、`Tools.css`（962 行）、`Space.css`（632 行）、`Blog.css`（604 行）。这四个页面本身就是多个分区的复合体，样式集中在一处反而比拆成十几个文件更好定位——这是有意识的取舍，不是没整理。
 
 ## 七、体积：懒加载的账
 
@@ -146,14 +146,14 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 | 产物 | 体积 | 说明 |
 | --- | --- | --- |
 | `MarkdownView-*.js` | 917.8 KB | `react-markdown` + `rehype-raw` + `prism` 全在它里面 |
-| `index-*.js` | 336.8 KB | 首屏主包：React、Router、布局、首页、列表、空间、后台外壳 |
-| `SqlTool-*.js` | 260.4 KB | SQL 工具按需加载 |
-| `index-*.css` | 52.5 KB | 全局 + 首屏页面样式 |
+| `index-*.js` | 344.6 KB | 首屏主包：React、Router、布局、首页、列表、空间、后台外壳 |
+| `SqlTool-*.js` | 260.5 KB | SQL 工具按需加载 |
+| `index-*.css` | 58.1 KB | 全局 + 首屏页面样式 |
 | `MarkdownView-*.css` | 35.2 KB | `github-markdown-css` + `prism-one-light` |
 
-13 个 JS chunk 合计约 1584.8 KB，其中 MarkdownView 一个就占了 58%。这块钱花得值：它只在打开文章、知识库阅读、写作预览时出现，首屏不碰它。反过来，主包 336.8 KB 里有相当一部分是「常用页不闪占位」的代价——空间、工具箱、后台外壳都静态进包，换来的是切页零等待。
+17 个 JS chunk 合计约 1810.5 KB，其中 MarkdownView 一个就占了 51%。这块钱花得值：它只在打开文章、知识库阅读、写作预览时出现，首屏不碰它。反过来，主包 344.6 KB 里有相当一部分是「常用页不闪占位」的代价——空间、工具箱、后台外壳都静态进包，换来的是切页零等待。
 
-CSS 合计约 103.0 KB，主包 52.5 KB、MarkdownView 35.2 KB，基本和页面体量对应。
+CSS 合计约 109.3 KB，主包 58.1 KB、MarkdownView 35.2 KB，基本和页面体量对应。
 
 ## 八、几个写进代码里的约定
 
@@ -165,9 +165,9 @@ CSS 合计约 103.0 KB，主包 52.5 KB、MarkdownView 35.2 KB，基本和页面
 
 ## 九、热点与下一步
 
-按行数排，前五名里有四个是样式：`Admin.css` 1186、`Tools.css` 788、`Space.css` 632、`Blog.css` 570；逻辑侧最大的是 `Space/index.tsx` 537 行、`Blog/PostDetail.tsx` 472 行、`Blog/index.tsx` 398 行。
+按行数排，前五名里有四个是样式：`Admin.css` 1186、`Tools.css` 962、`Space.css` 632、`Blog.css` 604；逻辑侧最大的是 `Space/index.tsx` 557 行、`Blog/PostDetail.tsx` 503 行、`Blog/index.tsx` 398 行。
 
-`Space/index.tsx` 537 行里混了「备忘录列表 + 筛选 + 新建/编辑表单 + 到期日选择 + 删除确认」五件事，是最值得下一步拆的：把表单状态与提交逻辑抽成 `useMemoEditor`，页面只留编排。`Admin.css` 1186 行则是后台五个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
+`Space/index.tsx` 557 行里混了「备忘录列表 + 筛选 + 新建/编辑表单 + 到期日选择 + 删除确认」五件事，是最值得下一步拆的：把表单状态与提交逻辑抽成 `useMemoEditor`，页面只留编排。`Admin.css` 1186 行则是后台五个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
 
 ## 十、取舍清单
 

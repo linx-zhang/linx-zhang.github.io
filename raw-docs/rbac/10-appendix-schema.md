@@ -86,8 +86,8 @@ order: 11
 
 ### `_role` — 58 行
 
-| 字段 | 类型 |
-|---|---|
+| 字段 | 类型 | 备注 |
+|---|---|---|
 | id | int | PK |
 | name | varchar(150) | `UNIQUE role_name_org` |
 | code | varchar(255) | 语义码 / 随机 6 位码 |
@@ -136,10 +136,10 @@ order: 11
 
 ### `_role_prop` — 33 行
 
-| 字段 | 类型 |
-|---|---|
-| roleId | int → `_role.id`（FK，RESTRICT） |
-| propId | int → `_prop.id`（FK，RESTRICT） |
+| 字段 | 类型 | 备注 |
+|---|---|---|
+| roleId | int → `_role.id`（FK，RESTRICT） | |
+| propId | int → `_prop.id`（FK，RESTRICT） | |
 | mask | int | 全部为 0 |
 
 `PRIMARY KEY (roleId, propId)`；`KEY(propId)`
