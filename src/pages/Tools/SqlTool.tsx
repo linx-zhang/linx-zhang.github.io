@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useCopy } from '@/hooks/useCopy'
 import Select from '@/components/Select'
 import { format } from 'sql-formatter'
@@ -23,9 +23,25 @@ export default function SqlTool() {
   const [error, setError] = useState('')
   const [language, setLanguage] = useState<string>('sql')
   const [keywordCase, setKeywordCase] = useState<'upper' | 'lower'>('upper')
+  const [full, setFull] = useState(false)
   const { isCopied, copy } = useCopy()
 
   const tokens = useMemo(() => (output ? tokenizeSql(output) : []), [output])
+
+  /** 全屏时锁住页面滚动，Esc 退出——和 JSON 工具体验保持一致 */
+  useEffect(() => {
+    if (!full) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFull(false)
+    }
+    window.addEventListener('keydown', onKey)
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = previous
+    }
+  }, [full])
 
   const run = () => {
     setError('')
@@ -114,10 +130,17 @@ export default function SqlTool() {
           />
         </div>
 
-        <div className="tool-pane">
+        <div className={full ? 'tool-pane is-full' : 'tool-pane'}>
           <div className="tool-pane-head">
             <span>输出</span>
-            {output && <span className="tool-meta">{output.length} 字符</span>}
+            <div className="tool-pane-tools">
+              {output && <span className="tool-meta">{output.length} 字符</span>}
+              {output && (
+                <button type="button" className="tool-mini" onClick={() => setFull((prev) => !prev)}>
+                  {full ? '退出全屏' : '全屏'}
+                </button>
+              )}
+            </div>
           </div>
           {output ? (
             <div className="tool-code-scroll">
