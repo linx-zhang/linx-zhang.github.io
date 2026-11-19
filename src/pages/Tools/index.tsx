@@ -9,6 +9,7 @@ const TimestampTool = lazy(() => import('./TimestampTool'))
 const RandomTool = lazy(() => import('./RandomTool'))
 const ClipTool = lazy(() => import('./ClipTool'))
 const HashTool = lazy(() => import('./HashTool'))
+const CalendarTool = lazy(() => import('./CalendarTool'))
 
 interface ToolMeta {
   slug: string
@@ -84,6 +85,21 @@ const TOOLS: ToolMeta[] = [
     hint: '秒 / 毫秒 ↔ 本地时间',
     detail: '数字时间戳和日期互转，自动判断单位，也能手动锁定按秒还是按毫秒。',
     icon: untilIcon,
+  },
+  {
+    slug: 'calendar',
+    label: '万年历',
+    Component: CalendarTool,
+    hint: '农历 · 节气 · 节日',
+    detail: '月视图带农历与节气，点任意一天看当天农历、干支与距下一个节日还有几天。',
+    icon: (
+      <ToolIcon>
+        <rect x="5.8" y="6.6" width="12.4" height="11.6" rx="2" />
+        <path d="M5.8 10.4h12.4" />
+        <path d="M9.2 4.8v2.6M14.8 4.8v2.6" />
+        <path d="M9 13.6h2.4M12.9 13.6h2.2" />
+      </ToolIcon>
+    ),
   },
   {
     slug: 'random',

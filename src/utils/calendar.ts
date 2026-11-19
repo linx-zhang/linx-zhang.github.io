@@ -45,10 +45,13 @@ export function addMonths(month: Date, delta: number): Date {
   return new Date(month.getFullYear(), month.getMonth() + delta, 1, 12)
 }
 
-/** 42 格日期表（含上月尾部与下月头部），首格为所在周的周日 */
-export function monthGrid(month: Date): string[] {
+/**
+ * 42 格日期表（含上月尾部与下月头部）。
+ * @param weekStart 首格是周几：0 为周日（DatePicker / 区间选择沿用），1 为周一（万年历）
+ */
+export function monthGrid(month: Date, weekStart: 0 | 1 = 0): string[] {
   const first = new Date(month.getFullYear(), month.getMonth(), 1, 12)
-  const start = addDays(toDay(first), -first.getDay())
+  const start = addDays(toDay(first), -((first.getDay() - weekStart + 7) % 7))
   return Array.from({ length: MONTH_GRID_CELLS }, (_, index) => addDays(start, index))
 }
 

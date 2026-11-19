@@ -32,7 +32,7 @@
 .tools-grid {
   display: grid;
   /* 4 列：容器 928px 下每格 224px，提示文案正好一行；6 列会压到 145px 把文案挤成三行。
-     固定列数而不是 auto-fit，避免窄一点就多算一列。工具涨到 8 个时正好 4+4 排满。 */
+     固定列数而不是 auto-fit，避免窄一点就多算一列。7 个工具时排 4+3。 */
   grid-template-columns: repeat(4, 1fr);
   gap: 0.7rem;
   margin-top: 1.4rem;
@@ -1009,4 +1009,218 @@ a.tool-button {
 
 .hash-verdict.is-miss {
   color: #b91c1c;
+}
+
+/* ===== 万年历 =====
+   宽屏左侧月历 + 右侧当天详情，窄屏上下堆叠。
+   单元格用发丝分隔线而不是卡片阴影，和全站克制的灰调一致。 */
+.cal-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .cal-wrap {
+    grid-template-columns: minmax(0, 620px) 260px;
+    max-width: 940px;
+    align-items: start;
+  }
+}
+
+.cal-main {
+  min-width: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.9rem 1rem 1rem;
+  background: #fff;
+}
+
+.cal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.cal-month {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cal-month-text {
+  min-width: 7.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* 翻月按钮：方形 32px，比文字箭头更好点 */
+.cal-nav {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cal-nav:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+  color: #1f2937;
+}
+
+.cal-week,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.cal-week span {
+  padding: 0.3rem 0;
+  text-align: center;
+  font-size: 0.74rem;
+  color: #9ca3af;
+}
+
+.cal-week .is-weekend {
+  color: #b6bcc6;
+}
+
+/* 格子之间只用极浅的分隔线，避免 42 个描边框互相打架 */
+.cal-grid {
+  border-top: 1px solid #f1f2f4;
+  border-left: 1px solid #f5f6f7;
+}
+
+.cal-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 62px;
+  padding: 0.35rem 0.2rem;
+  border: none;
+  border-right: 1px solid #f5f6f7;
+  border-bottom: 1px solid #f1f2f4;
+  background: transparent;
+  color: #1f2937;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cal-cell:hover {
+  background: #f9fafb;
+}
+
+.cal-cell-day {
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.cal-cell-lunar {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  color: #9ca3af;
+}
+
+/* 节日比节气更需要被看见：一个偏红、一个偏绿，普通农历日保持灰色 */
+.cal-cell-lunar.is-festival {
+  color: #b45309;
+}
+
+.cal-cell-lunar.is-jieqi {
+  color: #15803d;
+}
+
+.cal-cell.is-outside .cal-cell-day,
+.cal-cell.is-outside .cal-cell-lunar {
+  color: #c7ccd3;
+}
+
+/* 今天只加一圈描边，不抢选中态 */
+.cal-cell.is-today {
+  box-shadow: inset 0 0 0 1px #1f2937;
+  border-radius: 6px;
+}
+
+/* 选中态是唯一的实心底 */
+.cal-cell.is-selected {
+  background: #1f2937;
+  border-radius: 6px;
+}
+
+.cal-cell.is-selected .cal-cell-day,
+.cal-cell.is-selected .cal-cell-lunar,
+.cal-cell.is-selected .cal-cell-lunar.is-festival,
+.cal-cell.is-selected .cal-cell-lunar.is-jieqi {
+  color: #fff;
+}
+
+.cal-cell.is-selected:hover {
+  background: #111827;
+}
+
+.cal-detail {
+  align-self: start;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem 1.1rem 1.15rem;
+  background: #fff;
+}
+
+.cal-detail-solar {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.cal-detail-lunar {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.cal-detail-badge {
+  display: inline-block;
+  margin: 0.8rem 0 0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 0.78rem;
+}
+
+.cal-detail-next {
+  margin: 0.8rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+@media (max-width: 420px) {
+  .cal-main {
+    padding: 0.8rem 0.6rem 0.85rem;
+  }
+
+  .cal-cell {
+    min-height: 54px;
+  }
+
+  .cal-cell-lunar {
+    font-size: 0.66rem;
+  }
 }

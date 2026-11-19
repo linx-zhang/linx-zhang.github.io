@@ -14,7 +14,7 @@ function GlobalNav() {
       <NavLink to="/blog" className="nav-item">博客</NavLink>
       <NavLink to="/tools" className="nav-item">工具箱</NavLink>
       {/* 空间未登录也能看日期与说明，所以对所有人开放；简历入口在首页卡片 */}
-      <NavLink to="/space" className="nav-item">空间</NavLink>
+      <NavLink to="/space" className="nav-item">个人空间</NavLink>
       {hasAny(...ADMIN_AREA_PERMISSIONS) && (
         <NavLink to="/admin" className="nav-item">管理后台</NavLink>
       )}

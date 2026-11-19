@@ -13,14 +13,16 @@ import { useResource } from '@/hooks/useResource'
 import { MEMO_BODY_MAX } from '@/constants'
 import { formatDate, localDayEndUtc } from '@/utils/format'
 import { today, WEEKDAYS } from '@/utils/calendar'
+import { dayExtrasLabel } from '@/utils/lunar'
 import './Space.css'
 
 type Filter = 'all' | 'pending' | 'done'
 
-/** "M 月 D 日 · 星期四" */
+/** "M 月 D 日 · 星期四 · 农历十月十一 · 今日小雪" */
 function todayLabel(): string {
   const now = new Date()
-  return `${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${WEEKDAYS[now.getDay()]}`
+  const base = `${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${WEEKDAYS[now.getDay()]}`
+  return `${base}${dayExtrasLabel(today())}`
 }
 
 function dueMeta(dueAt: string): { text: string; tone: 'today' | 'late' | 'later' } {
@@ -242,8 +244,10 @@ export default function Space() {
     return (
       <div className="space-page">
         <header className="space-header">
-          <h1>个人空间</h1>
-          <p className="space-meta">{todayLabel()} · 未登录</p>
+          <Link className="space-meta space-date" to={`/tools/calendar?date=${today()}`} title="打开万年历">
+            {todayLabel()}
+          </Link>
+          <p className="space-tagline">只属于你的备忘录，别人看不到。</p>
         </header>
         <div className="space-gate">
           <p>登录后才可以记录和查看自己的备忘录与待办。</p>
@@ -251,7 +255,6 @@ export default function Space() {
             登录
           </button>
         </div>
-        <p className="space-foot">只属于你的备忘录，别人看不到。</p>
       </div>
     )
   }
@@ -261,12 +264,12 @@ export default function Space() {
   return (
     <div className="space-page">
       <header className="space-header">
-        <h1>个人空间</h1>
-        <p className="space-meta">
+        <Link className="space-meta space-date" to={`/tools/calendar?date=${today()}`} title="打开万年历">
           {todayLabel()}
           {summary && ` · ${summary.pending} 条待办`}
           {summary && summary.due > 0 && `，${summary.due} 条已到期`}
-        </p>
+        </Link>
+        <p className="space-tagline">只属于你的备忘录，别人看不到。</p>
       </header>
 
       {/* 快捷入口整条只给管理员：user:read:any 只有 admin 持有，普通用户空间里不显示这一行 */}
@@ -550,7 +553,6 @@ export default function Space() {
         </div>
       )}
 
-      <p className="space-foot">只属于你的备忘录，别人看不到。</p>
       {dialog}
     </div>
   )

@@ -6,16 +6,46 @@
   color: #1f2937;
 }
 
-.space-header h1 {
-  font-size: 1.35rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+/* 页头一行：左侧日期与农历，右侧一句说明；窄屏自动折行 */
+.space-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  flex-wrap: wrap;
 }
 
 .space-meta {
   margin-top: 0.25rem;
   color: #9ca3af;
   font-size: 0.8rem;
+}
+
+/* 日期行即万年历入口：保持小字灰色的观感，只在下划线提示可点 */
+.space-date {
+  display: inline-block;
+  color: #9ca3af;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+}
+
+.space-date:hover {
+  color: #4b5563;
+  border-bottom-color: #d1d5db;
+}
+
+/* 说明文字只做辅助信息，比日期更轻，颜色与字号都要退一级。
+   min-width:0 让它能在窄屏被压缩换行，而不是顶出容器。 */
+.space-tagline {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-top: 0.25rem;
+  color: #b6bcc6;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 
 /* 快捷入口：几格都用 flex，只有 1-3 个时也不会留下空列 */
@@ -569,6 +599,8 @@
 }
 
 .space-gate {
+  box-sizing: border-box;
+  width: 100%;
   max-width: 380px;
   margin: 3rem auto;
   padding: 1.6rem 1.4rem;
@@ -589,10 +621,16 @@
   line-height: 1.6;
 }
 
-.space-foot {
-  margin-top: 1.4rem;
-  color: #9ca3af;
-  font-size: 0.74rem;
+/* 窄屏：日期在上、说明在下，避免把一行挤到视口外 */
+@media (max-width: 480px) {
+  .space-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .space-tagline {
+    text-align: left;
+  }
 }
 
 @media (min-width: 768px) {
@@ -606,8 +644,12 @@
     display: none;
   }
 
-  .space-header h1 {
-    font-size: 1.5rem;
+  .space-meta {
+    font-size: 0.85rem;
+  }
+
+  .space-tagline {
+    font-size: 0.75rem;
   }
 
   .space-dock {
