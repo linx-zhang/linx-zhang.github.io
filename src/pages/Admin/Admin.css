@@ -647,6 +647,8 @@
   .user-item {
     display: flex;
     flex-direction: column;
+    /* 基类是 grid 的 align-items: center，改成 flex 后会继续沿用，把每个字段横向居中；这里改回 stretch */
+    align-items: stretch;
     padding: 0.9rem 1rem;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
@@ -654,26 +656,37 @@
   }
   .user-cell {
     padding: 0.2rem 0;
+    text-align: left;
   }
-  .user-role-cell {
-    order: 10;
+  /* 第一格是头像 + 昵称 + 邮箱，等同卡片的标题行，不给它挂「用户」标签 */
+  .user-email {
+    margin-bottom: 0.35rem;
+    font-size: 0.95rem;
   }
   .user-actions {
     order: 20;
     width: 100%;
+    margin-top: 0.35rem;
+    justify-content: flex-start;
   }
   .user-cell.user-actions::before {
     display: none;
   }
-  .user-role-row {
-    flex-wrap: nowrap;
-  }
+  /* 用户卡与文章/日志同一套写法：标签与值同一行，「角色 xxx / 注册时间 xxx」 */
   .user-cell::before {
     content: attr(data-label);
-    display: block;
-    margin-bottom: 0.2rem;
+    display: inline-block;
+    min-width: 4.5rem;
     color: #6b7280;
     font-size: 0.75rem;
+  }
+  .user-email::before {
+    display: none;
+  }
+  .user-role-row {
+    display: inline-flex;
+    max-width: calc(100% - 4.5rem);
+    flex-wrap: nowrap;
   }
   .user-filter {
     flex: 1 1 100%;
