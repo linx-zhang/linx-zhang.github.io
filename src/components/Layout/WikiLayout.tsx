@@ -24,7 +24,10 @@ function Highlight({ text, keyword }: { text: string; keyword: string }) {
 }
 
 export default function WikiLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // 窄屏（≤768px）侧栏是浮层，展开会盖住正文，所以默认收起；宽屏默认展开
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => !(typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches),
+  );
   const { docs } = useDocList();
   const [keyword, setKeyword] = useState('');
 
@@ -68,7 +71,7 @@ export default function WikiLayout() {
     setCollapsed((current) => ({ ...current, [category]: !current[category] }));
 
   return (
-    <div className="wiki-layout">
+    <div className={`wiki-layout ${sidebarOpen ? '' : 'is-collapsed'}`}>
       {/* 侧边栏 (打印时隐藏) */}
       <aside className={`wiki-sidebar no-print ${sidebarOpen ? 'open' : 'closed'}`}>
         {/* 标题 + 搜索固定在侧栏顶部，长目录滚动时不会把入口带走 */}
@@ -152,6 +155,20 @@ export default function WikiLayout() {
           </nav>
         )}
       </aside>
+
+      {/* 收起态的浮动按钮：侧栏已经收成 0 宽，按钮得挂在外面才点得到 */}
+      {!sidebarOpen && (
+        <button
+          type="button"
+          className="wiki-rail-toggle no-print"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="展开知识库目录"
+          aria-expanded={false}
+          title="展开知识库目录"
+        >
+          ▶
+        </button>
+      )}
 
       {/* 主内容区 */}
       <main className="wiki-main">

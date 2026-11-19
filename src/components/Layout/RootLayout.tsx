@@ -32,6 +32,8 @@ export default function RootLayout() {
     <div className="root-container">
       <header className="global-header no-print">
         <div className="header-inner">
+          {/* 站点名只在窄屏出现：那里导航会换到第二行，第一行空着会显得没头 */}
+          <span className="header-brand">Linx Zhang</span>
           <GlobalNav />
           <AuthMenu />
         </div>

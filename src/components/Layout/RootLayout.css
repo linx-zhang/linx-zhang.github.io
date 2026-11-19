@@ -25,6 +25,13 @@ body {
   gap: 1rem;
   flex-wrap: wrap;
 }
+/* 站点名只在窄屏出现，见下方媒体查询 */
+.header-brand {
+  display: none;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+}
 .nav {
   display: flex;
   gap: 1.5rem;
@@ -33,6 +40,8 @@ body {
   text-decoration: none;
   color: #4b5563;
   font-weight: 500;
+  /* 中文会在任意字间断行：不加 nowrap 时，窗口一窄就变成一个字一行 */
+  white-space: nowrap;
   border-bottom: 2px solid transparent;
   padding-bottom: 2px;
 }
@@ -55,12 +64,41 @@ body {
   font-size: 0.9rem;
   border-top: 1px solid #e5e7eb;
 }
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .global-header {
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem 0;
+  }
+  /* 窄屏拆两行：第一行站点名 + 登录，第二行导航通栏 */
+  .header-inner {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+  }
+  .header-brand {
+    display: block;
+    order: 1;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .auth-menu {
+    order: 2;
   }
   .nav {
-    gap: 1rem;
+    order: 3;
+    flex-basis: 100%;
+    gap: 1.25rem;
+    padding-bottom: 0.6rem;
+    flex-wrap: nowrap;
+    /* 入口再多也不换行：横向滚动，滚动条隐藏，避免顶栏底下多一条灰线 */
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+  .nav a {
+    flex: 0 0 auto;
   }
 }
 @media print {

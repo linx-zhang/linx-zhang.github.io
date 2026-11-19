@@ -5,9 +5,9 @@
   --wiki-gutter: 280px;
 }
 
-/* 侧栏宽度：正文右侧的镜像留白跟着它变，折叠后不会偏 */
+/* 侧栏宽度：收起后不留空列，正文拿回全部宽度（浮动按钮占的那点内侧留白见 .is-collapsed .wiki-main） */
 .wiki-layout:has(> .wiki-sidebar.closed) {
-  --wiki-gutter: 44px;
+  --wiki-gutter: 0px;
 }
 
 /* 侧栏固定宽度，只负责导航；右侧一列正文，避免多层容器叠加 */
@@ -26,8 +26,10 @@
   flex-shrink: 0; /* ✅ 关键：禁止flex挤压侧边栏 */
 }
 .wiki-sidebar.closed {
-  width: 44px;
-  padding: 18px 4px;
+  /* 真的收起：不留 44px 空白带，也不留右边那条竖线 */
+  width: 0;
+  padding: 0;
+  border-right: none;
 }
 .wiki-sidebar .sidebar-head {
   display: flex;
@@ -267,6 +269,42 @@
   background: #efefef;
   border-color: #b8c0cc;
   color: #1f2937;
+}
+
+/* 收起态浮动按钮：跟着滚动停在左上角，不占版面宽度 */
+.wiki-rail-toggle {
+  position: fixed;
+  left: 8px;
+  top: calc(var(--root-header-height, 64px) + 12px);
+  z-index: 20;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+/* 窄屏顶栏是两行、比 64px 高，按钮要往下让一截，别压住导航 */
+@media (max-width: 640px) {
+  .wiki-rail-toggle {
+    top: 92px;
+  }
+}
+.wiki-rail-toggle:hover {
+  border-color: #b8c0cc;
+  color: #1f2937;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+}
+/* 收起态正文左侧让出一小条，避免浮动按钮压在行首 */
+.wiki-layout.is-collapsed .wiki-main {
+  padding-left: 48px;
 }
 
 /* 正文：只有一层 padding + 一个内容列；滚动交给页面本身，侧栏靠 sticky 跟随 */
