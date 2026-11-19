@@ -1211,6 +1211,21 @@ a.tool-button {
   color: #6b7280;
 }
 
+/* 待办入口：万年历只负责跳一转，数据仍在个人空间 */
+.cal-detail-link {
+  display: inline-block;
+  margin-top: 0.9rem;
+  color: #6b7280;
+  font-size: 0.78rem;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.cal-detail-link:hover {
+  color: #1f2937;
+  border-bottom-color: #d1d5db;
+}
+
 @media (max-width: 420px) {
   .cal-main {
     padding: 0.8rem 0.6rem 0.85rem;

@@ -621,6 +621,17 @@
   line-height: 1.6;
 }
 
+/* ===== 视图切换（页头右侧的小分段，和筛选条不是一套） ===== */
+.space-view {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-top: 0.2rem;
+  padding: 2px;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #f9fafb;
+}
+
 /* 窄屏：日期在上、说明在下，避免把一行挤到视口外 */
 @media (max-width: 480px) {
   .space-header {
@@ -632,6 +643,270 @@
     text-align: left;
   }
 }
+
+.space-view button {
+  min-height: 28px;
+  padding: 0 0.6rem;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.space-view button[aria-pressed='true'] {
+  background: #fff;
+  color: #1f2937;
+  box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+/* ===== 月历 ===== */
+.space-cal {
+  margin-top: 1.1rem;
+}
+
+.space-cal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.space-cal-month {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.space-cal-nav {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.space-cal-nav:hover {
+  background: #f9fafb;
+}
+
+.space-cal-month-text {
+  min-width: 7.2em;
+  color: #1f2937;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 周标题固定 7 列，与下面的网格共用同一套列宽 */
+.space-cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-top: 0.7rem;
+  padding: 0 2px;
+  color: #9ca3af;
+  font-size: 0.74rem;
+  text-align: center;
+}
+
+.space-cal-week .is-weekend {
+  color: #b6bcc6;
+}
+
+.space-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 0.3rem;
+}
+
+/* 单元格：上边数字、下边圆点；高度用 aspect-ratio 跟着列宽走，窄屏也不塌 */
+.space-cal-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  aspect-ratio: 1 / 1;
+  min-height: 40px;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  cursor: pointer;
+}
+
+.space-cal-cell:hover {
+  background: #f9fafb;
+}
+
+.space-cal-cell.is-outside {
+  color: #c7ccd4;
+}
+
+.space-cal-cell.is-today {
+  border-color: #d1d5db;
+  font-weight: 600;
+}
+
+.space-cal-cell.is-selected {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #fff;
+}
+
+/* 选中的格子里的圆点要反白，否则深底上看不见 */
+.space-cal-cell.is-selected .space-cal-marks span {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.space-cal-cell.is-selected .space-cal-marks span.is-done {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.space-cal-cell.is-selected .space-cal-marks em {
+  color: #fff;
+}
+
+.space-cal-day {
+  font-size: 0.88rem;
+  line-height: 1;
+}
+
+.space-cal-marks {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 6px;
+}
+
+.space-cal-marks span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2563eb;
+}
+
+.space-cal-marks span.is-done {
+  background: #cbd2da;
+}
+
+.space-cal-cell.has-late .space-cal-marks span:not(.is-done) {
+  background: #dc2626;
+}
+
+.space-cal-marks em {
+  color: #6b7280;
+  font-size: 0.62rem;
+  font-style: normal;
+}
+
+/* 选中那天的条目：和列表行同一套勾选框，只是更紧 */
+.space-cal-day-panel {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #eef0f3;
+}
+
+.space-cal-day-panel h2 {
+  margin-bottom: 0.55rem;
+  color: #4b5563;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.space-cal-empty {
+  color: #9ca3af;
+  font-size: 0.82rem;
+}
+
+.space-cal-day-panel ul,
+.space-cal-undated ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  list-style: none;
+}
+
+.space-cal-day-panel li,
+.space-cal-undated li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0;
+  font-size: 0.9rem;
+}
+
+/* 已完成整条淡一档，但不划线：划线和列表里的删除按钮容易混 */
+.space-cal-day-panel li.is-done .space-cal-text,
+.space-cal-undated li.is-done .space-cal-text {
+  color: #b6bcc6;
+}
+
+.space-cal-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.space-cal-done {
+  flex: 0 0 auto;
+  color: #b6bcc6;
+  font-size: 0.72rem;
+}
+
+/* 未排到期日：默认折叠，只有一行开关 */
+.space-cal-undated {
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #eef0f3;
+}
+
+.space-cal-undated-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 0.2rem;
+  border: none;
+  background: none;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.space-cal-undated-toggle:hover {
+  color: #1f2937;
+}
+
+.space-cal-undated-toggle span {
+  color: #9ca3af;
+  font-size: 0.76rem;
+}
+
+@media (min-width: 768px) {
+  /* 宽屏格子不跟着列宽长成 90px 见方（那样一行就把整屏吃掉），压到固定 62px */
+  .space-cal-grid {
+    gap: 6px;
+  }
+
+  .space-cal-cell {
+    aspect-ratio: auto;
+    height: 62px;
+    max-width: 110px;
+  }
+}
+
 
 @media (min-width: 768px) {
   .space-page {

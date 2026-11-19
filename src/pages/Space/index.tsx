@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import DatePicker from '@/components/DatePicker'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import { errorMessage } from '@/api/errors'
@@ -14,9 +14,11 @@ import { MEMO_BODY_MAX } from '@/constants'
 import { formatDate, localDayEndUtc } from '@/utils/format'
 import { today, WEEKDAYS } from '@/utils/calendar'
 import { dayExtrasLabel } from '@/utils/lunar'
+import SpaceCalendar from './SpaceCalendar'
 import './Space.css'
 
 type Filter = 'all' | 'pending' | 'done'
+type View = 'list' | 'calendar'
 
 /** "M 月 D 日 · 星期四 · 农历十月十一 · 今日小雪" */
 function todayLabel(): string {
@@ -47,6 +49,15 @@ export default function Space() {
 
   const [filter, setFilter] = useState<Filter>('all')
 
+  // 视图支持 ?view=calendar 直接进来（万年历下方有「查看我的待办」入口）
+  const [params] = useSearchParams()
+  const [view, setView] = useState<View>(() => (params.get('view') === 'calendar' ? 'calendar' : 'list'))
+  // ?date=YYYY-MM-DD 只当天进月历时用一次；格式不对就当没传
+  const initialDay = useMemo(() => {
+    const raw = params.get('date')
+    return raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : undefined
+  }, [params])
+
   /**
    * 列表用「追加型」状态机：只有 loadMore 会追加，reload 一定清空回第 1 页。
    * 这正是此前「同一页被追加两遍」的根因——旧实现在 reload 时只 bump 了 key，
@@ -62,6 +73,27 @@ export default function Space() {
     silent: true,
   })
   const summary = summaryQuery.data
+
+  /**
+   * 月历要「整月的到期点」，和列表视图的按页追加不是一回事：这里一次把全部条目取回来
+   * （个人备忘录量级很小，100/页、最多 5 页足够），只在切到日历视图时才发请求。
+   * 顺手把 done 的筛选去掉——月历要把已完成的也画出来，只是颜色淡一档。
+   */
+  const calendarQuery = useResource<Memo[]>(
+    async () => {
+      const rows: Memo[] = []
+      let offset = 0
+      for (let page = 0; page < 5; page += 1) {
+        const res = await memoApi.list(undefined, 100, offset)
+        rows.push(...res.items)
+        if (!res.has_next || res.items.length === 0) break
+        offset += res.items.length
+      }
+      return rows
+    },
+    [user?.id],
+    { enabled: user !== null && view === 'calendar' },
+  )
 
   const [body, setBody] = useState('')
   // 输入框里的到期日只按「本地哪一天」保管，落库前换算成 UTC 时刻
@@ -94,6 +126,8 @@ export default function Space() {
   const refresh = () => {
     list.reload()
     summaryQuery.reload()
+    // 月历视图下新建/删除也要跟着变；列表视图里它没开，reload 只是白记一个 key
+    calendarQuery.reload()
   }
 
   const switchFilter = (next: Filter) => {
@@ -197,6 +231,27 @@ export default function Space() {
     }
   }
 
+  /**
+   * 月历里的勾选：改的是 calendarQuery 那一份，同时把列表里的同一行对齐（applyMemo）。
+   * 两个视图共用一次请求结果，谁也不该在切回去以后显示旧状态。
+   */
+  const toggleDoneInCalendar = async (memo: Memo) => {
+    const nextDone = !memo.done
+    const rows = calendarQuery.data
+    if (rows) {
+      calendarQuery.setData(rows.map((item) => (item.id === memo.id ? { ...item, done: nextDone } : item)))
+    }
+    try {
+      const updated = await memoApi.update(memo.id, { done: nextDone })
+      const current = calendarQuery.data ?? []
+      calendarQuery.setData(current.map((item) => (item.id === updated.id ? updated : item)))
+      applyMemo(updated)
+      summaryQuery.reload()
+    } catch {
+      calendarQuery.reload()
+    }
+  }
+
   const remove = (memo: Memo) => {
     confirm({
       title: '删除这条备忘录？',
@@ -268,6 +323,14 @@ export default function Space() {
           {todayLabel()}
         </Link>
         <p className="space-tagline">只属于你的备忘录，别人看不到。</p>
+        <div className="space-view" role="group" aria-label="视图">
+          <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>
+            列表
+          </button>
+          <button type="button" aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}>
+            日历
+          </button>
+        </div>
       </header>
 
       {/* 快捷入口整条只给管理员：user:read:any 只有 admin 持有，普通用户空间里不显示这一行 */}
@@ -285,8 +348,11 @@ export default function Space() {
         </nav>
       )}
 
-      <div className="space-dock">
-        {!expanded ? (
+      {/* 视图切换只换渲染，不换数据来源：列表走分页追加，月历走一次性全量 */}
+      {view === 'list' ? (
+        <>
+          <div className="space-dock">
+            {!expanded ? (
           <button
             type="button"
             className="space-compose-trigger"
@@ -549,6 +615,17 @@ export default function Space() {
             </button>
           )}
         </div>
+      )}
+        </>
+      ) : (
+        <SpaceCalendar
+          memos={calendarQuery.data ?? []}
+          status={calendarQuery.status}
+          error={calendarQuery.error}
+          initialDay={initialDay}
+          onRetry={calendarQuery.reload}
+          onToggleDone={(memo) => void toggleDoneInCalendar(memo)}
+        />
       )}
 
       {dialog}

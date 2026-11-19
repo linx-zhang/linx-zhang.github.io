@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   addMonths,
   dayNumber,
@@ -122,6 +122,10 @@ export default function CalendarTool() {
             </p>
           )
         )}
+        {/* 万年历只讲节气与节日，待办留在个人空间：这里只给一句话的跳转，不搬数据过来 */}
+        <Link className="cal-detail-link" to={`/space?view=calendar&date=${selected}`}>
+          查看我的待办 →
+        </Link>
       </section>
     </div>
   )

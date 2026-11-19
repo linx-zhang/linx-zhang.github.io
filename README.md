@@ -118,6 +118,7 @@ npm run test
 - `/wiki/*` 由 `Docs` 组件通过 `useParams()['*']` 解析多级 slug
 - `/admin` 的 tab 条用查询参数深链：`?tab=posts`（默认）、`?tab=users`、`?tab=activity`、`?tab=analytics`；邀请码是独立分区 `?tab=invites`，不占 tab 条，入口在用户页标题行「邀请码 →」，从邀请码页可「← 返回用户管理」
 - `/space` 放在 `RootLayout` 内（沿用全站导航与页脚），未登录时只渲染页内登录门，不用 `RequirePermission` 踢回；导航「个人空间」项对所有访客常驻（未登录也能看日期、农历与说明）
+- `/space` 两种视图：默认「列表」（分页追加），「日历」按 `due_at` 画月网格（周一开头，蓝点待办 / 灰点已完成 / 红点逾期），点某天看当天条目并可直接勾完成；没有到期日的条目收在「未排到期日」折叠区。`?view=calendar` 可深链，万年历详情的「查看我的待办」就链到 `/space?view=calendar&date=<当天>`
 - `/profile` 不包裹 `RootLayout`，因此没有全站导航与页脚
 
 ---
