@@ -291,12 +291,6 @@
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
-/* 窄屏顶栏是两行、比 64px 高，按钮要往下让一截，别压住导航 */
-@media (max-width: 640px) {
-  .wiki-rail-toggle {
-    top: 92px;
-  }
-}
 .wiki-rail-toggle:hover {
   border-color: #b8c0cc;
   color: #1f2937;

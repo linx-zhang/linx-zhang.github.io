@@ -37,6 +37,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 ## ✨ 核心特性
 
 - **分层路由**：`RootLayout` 提供全站导航、账号菜单与页脚；`WikiLayout` 提供知识库侧边栏；`/profile` 是脱离布局的独立页面
+- **窄屏布局**：≤640px 时顶栏拆两行（站点名 + 登录在上、导航通栏在下），导航禁止换行、超出时横向滚动且隐藏滚动条；知识库侧栏在 ≤768px 默认收起，收起后由左上角浮动按钮展开（侧栏真正做到 0 宽，不留空白列）
 - **账号体系**：登录 / 注册（邀请码）、权限码驱动的菜单与操作按钮、个人资料弹窗（昵称 / 名 / 姓 / 头像，保存后顶栏即时更新）
 - **博客**：文章列表（标题 / 作者模糊筛选、「我的」开关按 `author_id` 精确过滤，条件全部进 URL）、详情、Markdown 渲染、评论与回复、页内写作面板（可切全屏：左写右预览、底部操作条常驻、Esc 退出）
 - **管理后台**：文章列表与批量删除、用户管理（资料与账号分段的编辑弹窗、管理员重置密码：可手动指定或自动生成，并一次性展示生效密码）、邀请码（独立分区，入口在用户页标题行）、活跃日志、访问分析
@@ -116,7 +117,7 @@ npm run test
 - 路由表直接写在 `src/main.tsx`，路径常量集中在 `src/routes.ts`；**Docs / Blog / PostDetail 是 `lazy()` 按需加载**（外面套 `Suspense` + `RouteFallback`），工具箱的每个工具组件也在 `Tools/index.tsx` 里各自 `lazy()`，其余页面静态引入
 - `/wiki/*` 由 `Docs` 组件通过 `useParams()['*']` 解析多级 slug
 - `/admin` 的 tab 条用查询参数深链：`?tab=posts`（默认）、`?tab=users`、`?tab=activity`、`?tab=analytics`；邀请码是独立分区 `?tab=invites`，不占 tab 条，入口在用户页标题行「邀请码 →」，从邀请码页可「← 返回用户管理」
-- `/space` 放在 `RootLayout` 内（沿用全站导航与页脚），未登录时只渲染页内登录门，不用 `RequirePermission` 踢回；导航「空间」项只在 `user` 存在时出现
+- `/space` 放在 `RootLayout` 内（沿用全站导航与页脚），未登录时只渲染页内登录门，不用 `RequirePermission` 踢回；导航「个人空间」项对所有访客常驻（未登录也能看日期、农历与说明）
 - `/profile` 不包裹 `RootLayout`，因此没有全站导航与页脚
 
 ---
@@ -340,7 +341,7 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 
 **视觉改动**
 
-11. 侧栏宽度与正文居中留白共用 `--wiki-gutter`（定义在 `.wiki-layout`，折叠时 44px），改宽度只改这一处，别两头写死。
+11. 侧栏宽度与正文居中留白共用 `--wiki-gutter`（定义在 `.wiki-layout`，展开 280px、收起 0），改宽度只改这一处，别两头写死；收起态另由 `.is-collapsed .wiki-main` 让出左侧 48px，给浮动展开按钮腾位置。
 12. 纯代码文档被缩窄的根因是「纵向 flex + `margin: auto` → shrink-to-fit」，`.doc-markdown` 必须同时有 `width: 100%` 和 `max-width: 760px`。
 
 **数据接口**

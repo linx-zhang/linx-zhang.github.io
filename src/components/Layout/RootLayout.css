@@ -3,6 +3,10 @@
   padding: 0;
   box-sizing: border-box;
 }
+/* 顶栏高度：知识库侧栏的 sticky 上限、收起态浮动按钮的落点都按它算，只在窄屏改一次 */
+:root {
+  --root-header-height: 64px;
+}
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   color: #1f2937;
@@ -65,6 +69,10 @@ body {
   border-top: 1px solid #e5e7eb;
 }
 @media (max-width: 640px) {
+  /* 顶栏变两行，高度跟着涨：浮动按钮与侧栏 sticky 上限都靠这个变量对齐 */
+  :root {
+    --root-header-height: 92px;
+  }
   .global-header {
     padding: 0.75rem 1rem 0;
   }

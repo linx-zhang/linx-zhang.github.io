@@ -81,7 +81,12 @@ export default function WikiLayout() {
             <NavLink to="/wiki" end className="sidebar-title">
               知识库目录
             </NavLink>
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="toggle-btn">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="toggle-btn"
+              aria-label="收起知识库目录"
+              aria-expanded={sidebarOpen}
+            >
               {sidebarOpen ? '◀' : '▶'}
             </button>
           </div>
