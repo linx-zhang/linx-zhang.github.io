@@ -266,8 +266,6 @@ export default function Space() {
       <header className="space-header">
         <Link className="space-meta space-date" to={`/tools/calendar?date=${today()}`} title="打开万年历">
           {todayLabel()}
-          {summary && ` · ${summary.pending} 条待办`}
-          {summary && summary.due > 0 && `，${summary.due} 条已到期`}
         </Link>
         <p className="space-tagline">只属于你的备忘录，别人看不到。</p>
       </header>
