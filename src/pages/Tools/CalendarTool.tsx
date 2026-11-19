@@ -9,7 +9,7 @@ import {
   startOfMonth,
   today,
 } from '@/utils/calendar'
-import { cellLabel, describeDetail } from '@/utils/lunar'
+import { cellLabel, describeDetail, holidayTag } from '@/utils/lunar'
 import './Tools.css'
 
 /** 万年历按周一开头排，与 WEEKDAYS 的默认顺序（周日开头）相反 */
@@ -78,6 +78,7 @@ export default function CalendarTool() {
         <div className="cal-grid">
           {cells.map((day) => {
             const label = cellLabel(day)
+            const offTag = holidayTag(day)
             const outside = isOutsideMonth(day, cursor)
             const isToday = day === todayKey
             const isSelected = day === selected
@@ -95,9 +96,12 @@ export default function CalendarTool() {
                 type="button"
                 className={classes}
                 aria-current={isToday ? 'date' : undefined}
-                aria-label={`${parseDay(day).getMonth() + 1} 月 ${dayNumber(day)} 日 ${label.text}`}
+                aria-label={`${parseDay(day).getMonth() + 1} 月 ${dayNumber(day)} 日 ${label.text}${
+                  offTag ? `，${offTag === '休' ? '放假' : '调休上班'}` : ''
+                }`}
                 onClick={() => pick(day)}
               >
+                {offTag && <span className={`cal-cell-holiday is-${offTag === '休' ? 'off' : 'work'}`}>{offTag}</span>}
                 <span className="cal-cell-day">{dayNumber(day)}</span>
                 <span className={`cal-cell-lunar is-${label.kind ?? 'plain'}`}>{label.text}</span>
               </button>
@@ -111,16 +115,19 @@ export default function CalendarTool() {
         <p className="cal-detail-lunar">
           农历 {detail.lunarText} · {detail.yearText}
         </p>
-        {detail.special ? (
+        {/* 节日徽章在放假日会让位给下面那行假期说明，避免同一天出现两条「国庆节」 */}
+        {detail.special && detail.holiday?.kind !== 'off' && (
           <p className="cal-detail-badge">
             {detail.specialKind === 'jieqi' ? '节气' : '节日'} · {detail.special}
           </p>
-        ) : (
-          detail.next && (
-            <p className="cal-detail-next">
-              距{detail.next.name}还有 {detail.next.days} 天（{detail.next.day.slice(5).replace('-', ' 月 ')} 日）
-            </p>
-          )
+        )}
+        {detail.holiday && (
+          <p className={`cal-detail-holiday is-${detail.holiday.kind}`}>{detail.holiday.text}</p>
+        )}
+        {!detail.special && detail.next && (
+          <p className="cal-detail-next">
+            距{detail.next.name}还有 {detail.next.days} 天（{detail.next.day.slice(5).replace('-', ' 月 ')} 日）
+          </p>
         )}
         {/* 万年历只讲节气与节日，待办留在个人空间：这里只给一句话的跳转，不搬数据过来 */}
         <Link className="cal-detail-link" to={`/space?view=calendar&date=${selected}`}>

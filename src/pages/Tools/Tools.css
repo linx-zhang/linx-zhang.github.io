@@ -1104,6 +1104,8 @@ a.tool-button {
 }
 
 .cal-cell {
+  /* 给右上角的休/班角标一个定位参照 */
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1143,6 +1145,36 @@ a.tool-button {
 
 .cal-cell-lunar.is-jieqi {
   color: #15803d;
+}
+
+/* 休/班角标：只占角上一点点，不跟日期、农历抢横向空间 */
+.cal-cell-holiday {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  padding: 0 3px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  line-height: 1.35;
+}
+
+.cal-cell-holiday.is-off {
+  background: #fdecec;
+  color: #b91c1c;
+}
+
+.cal-cell-holiday.is-work {
+  background: #eceef1;
+  color: #5b6472;
+}
+
+.cal-cell.is-selected .cal-cell-holiday {
+  background: #ffffff26;
+  color: #fff;
+}
+
+.cal-cell.is-outside .cal-cell-holiday {
+  opacity: 0.5;
 }
 
 .cal-cell.is-outside .cal-cell-day,
@@ -1195,7 +1227,9 @@ a.tool-button {
 }
 
 .cal-detail-badge {
-  display: inline-block;
+  /* 块级 + 宽度随内容：奖章独占一行，标题行不会和下面的待办入口挤在同一行盒里 */
+  display: block;
+  width: fit-content;
   margin: 0.8rem 0 0;
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
@@ -1211,9 +1245,32 @@ a.tool-button {
   color: #6b7280;
 }
 
+/* 假期 / 调休：与节日徽章同一层，放假日整行由它代表 */
+.cal-detail-holiday {
+  display: block;
+  width: fit-content;
+  margin: 0.8rem 0 0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.cal-detail-holiday.is-off {
+  background: #fdecec;
+  color: #b91c1c;
+}
+
+.cal-detail-holiday.is-work {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
 /* 待办入口：万年历只负责跳一转，数据仍在个人空间 */
 .cal-detail-link {
-  display: inline-block;
+  /* 块级 + 宽度随内容：无论上面是奖章、距离提示还是一段文字，入口都落自己一行，悬停下划线只到文字宽度 */
+  display: block;
+  width: fit-content;
   margin-top: 0.9rem;
   color: #6b7280;
   font-size: 0.78rem;

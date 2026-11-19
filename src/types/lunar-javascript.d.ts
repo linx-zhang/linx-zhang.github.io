@@ -32,4 +32,22 @@ declare module 'lunar-javascript' {
   }
 
   export const Solar: SolarStatic
+
+  /** 法定节假日与调休（数据内置在库里，国务院公布新一年安排后靠升级包更新） */
+  export interface Holiday {
+    /** 假期名，如「国庆节」；补班日也带这个名 */
+    getName(): string
+    /** true = 调休上班（补班），false = 放假 */
+    isWork(): boolean
+    /** 这段假期所属的正日子，YYYY-MM-DD；补班日指向被补的那一天 */
+    getTarget(): string
+    /** 当前这一天的 YYYY-MM-DD */
+    getDay(): string
+  }
+
+  export const HolidayUtil: {
+    /** 支持 'YYYY-MM-DD' 字符串或 (year, month, day)；没有安排时返回 null */
+    getHoliday(date: string): Holiday | null
+    getHoliday(year: number, month: number, day: number): Holiday | null
+  }
 }

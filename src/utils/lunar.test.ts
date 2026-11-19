@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cellLabel, dayExtrasLabel, describeDay, describeDetail, nextSpecial } from './lunar'
+import { cellLabel, dayExtrasLabel, describeDay, describeDetail, holidayLabel, holidayOf, holidayRun, holidayTag, nextSpecial } from './lunar'
 
 /**
  * 固定日期断言：节日/节气/农历换算各一条，防止换库或升级后静默漂。
@@ -104,5 +104,61 @@ describe('describeDetail', () => {
     expect(detail.lunarText).toBe('十月十一')
     expect(detail.yearText).toBe('丙午年 · 马')
     expect(detail.next).toMatchObject({ name: '小雪', days: 3 })
+  })
+})
+
+/**
+ * 法定节假日：数据来自 lunar-javascript 内置的国务院放假安排。
+ * 这些日期是 2026 年真实安排，换库升级后要重新核对，别直接改断言凑绿。
+ */
+describe('holidayOf / holidayRun', () => {
+  it('国庆连休的中间一天：休假，区间 10-01 到 10-07', () => {
+    const run = holidayRun('2026-10-03')
+    expect(run).toMatchObject({ name: '国庆节', work: false, from: '2026-10-01', to: '2026-10-07', days: 7 })
+  })
+
+  it('补班日：work 为 true，target 指向被补的那天', () => {
+    const info = holidayOf('2026-10-10')
+    expect(info).toMatchObject({ name: '国庆节', work: true, target: '2026-10-01' })
+  })
+
+  it('单日假期不编区间：库里给的是几天就报几天（中秋 2026 是 3 天）', () => {
+    expect(holidayLabel('2026-09-25')).toEqual({
+      kind: 'off',
+      text: '休假 · 中秋节（9 月 25 日 – 9 月 27 日，共 3 天）',
+    })
+  })
+
+  it('元旦 2026 是 1 月 1–3 日三天假', () => {
+    expect(holidayLabel('2026-01-01')?.text).toBe('休假 · 元旦节（1 月 1 日 – 1 月 3 日，共 3 天）')
+  })
+
+  it('补班日的说明带上被补的日期', () => {
+    expect(holidayLabel('2026-10-10')).toEqual({ kind: 'work', text: '调休上班 · 国庆节（补 10 月 1 日的班）' })
+  })
+
+  it('普通工作日没有安排', () => {
+    expect(holidayOf('2026-11-19')).toBeNull()
+    expect(holidayTag('2026-11-19')).toBeUndefined()
+    expect(holidayLabel('2026-11-19')).toBeNull()
+  })
+
+  it('角标：休假「休」、补班「班」', () => {
+    expect(holidayTag('2026-10-03')).toBe('休')
+    expect(holidayTag('2026-10-10')).toBe('班')
+  })
+
+  it('数据边界：2027 有安排，2028 起库里没有（返回 null 而不是报错）', () => {
+    expect(holidayOf('2027-10-01')).toMatchObject({ name: '国庆节' })
+    expect(holidayOf('2028-10-01')).toBeNull()
+  })
+
+  it('describeDetail 把假期说明一并带出，供详情卡渲染', () => {
+    const detail = describeDetail('2026-09-25')
+    expect(detail.special).toBe('中秋节')
+    expect(detail.holiday).toEqual({
+      kind: 'off',
+      text: '休假 · 中秋节（9 月 25 日 – 9 月 27 日，共 3 天）',
+    })
   })
 })
