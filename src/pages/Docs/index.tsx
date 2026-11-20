@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import MarkdownView from '@/components/MarkdownView'
 import { useDocList } from '@/utils/useDocs'
@@ -20,7 +21,6 @@ function isHeightMessage(data: unknown): data is WikiHeightMessage {
     typeof candidate.height === 'number'
   )
 }
-
 /** 已渲染过的 md 文本按 slug 缓存，来回切换分类不用重复请求 */
 const markdownCache = new Map<string, string>()
 
@@ -83,6 +83,8 @@ export default function Docs() {
 
   const doc = slug ? docs?.find((item) => item.slug === slug) : undefined
   const { text: markdown, error: markdownError } = useMarkdownSource(doc)
+  /** HTML 文档只有点「全屏」时才整页接管；平时仍嵌在知识库页面里 */
+  const appMode = doc?.type === 'html' && fullscreen
 
   const exitFullscreen = useCallback(() => {
     const next = new URLSearchParams(searchParams)
@@ -103,7 +105,7 @@ export default function Docs() {
     return () => window.removeEventListener('message', handleMessage)
   }, [])
 
-  // 全屏阅读时 Esc 退出，并锁住背景滚动
+  // 全屏阅读 / HTML 整页接管时 Esc 退出，并锁住背景滚动
   useEffect(() => {
     if (!fullscreen) return
     const onKeyDown = (event: KeyboardEvent) => {
@@ -149,25 +151,50 @@ export default function Docs() {
   const height = measured && measured.slug === doc.slug ? measured.height : null
   const wide = Boolean(doc.standalone) || fullscreen
 
-  const body =
-    doc.type === 'md' ? (
-      markdownError ? (
-        <p className="doc-body-error">{markdownError}</p>
-      ) : markdown === null ? (
-        <p className="doc-body-loading">正在加载正文…</p>
-      ) : (
-        <MarkdownView content={markdown} className="doc-markdown" rawHtml />
-      )
-    ) : (
-      <iframe
-        key={doc.slug}
-        className={`doc-iframe ${doc.standalone ? 'doc-iframe--app' : 'doc-iframe--auto'}`}
-        src={doc.href}
-        title={doc.title}
-        // 全屏时按整屏高度由 CSS 决定，别让上报出来的内容高度把它顶长
-        style={doc.standalone || fullscreen || height === null ? undefined : { height: `${height}px` }}
-      />
+  // 全屏的 HTML 文档直接占满视口，站点导航与面包屑都不参与，避免两套版式互相打架
+  if (appMode) {
+    return createPortal(
+      <div className="doc-app">
+        <iframe
+          key={doc.slug}
+          className="doc-app-iframe"
+          src={doc.href}
+          title={doc.title}
+        />
+        <button
+          type="button"
+          className="doc-app-exit"
+          onClick={exitFullscreen}
+          aria-label="退出全屏"
+          title="退出全屏（Esc）"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path d="M4 4l8 8M12 4l-8 8" />
+          </svg>
+        </button>
+      </div>,
+      document.body,
     )
+  }
+
+  const body = doc.type === 'md' ? (
+    markdownError ? (
+      <p className="doc-body-error">{markdownError}</p>
+    ) : markdown === null ? (
+      <p className="doc-body-loading">正在加载正文…</p>
+    ) : (
+      <MarkdownView content={markdown} className="doc-markdown" rawHtml />
+    )
+  ) : (
+    <iframe
+      key={doc.slug}
+      className={`doc-iframe ${doc.standalone ? 'doc-iframe--app' : 'doc-iframe--auto'}`}
+      src={doc.href}
+      title={doc.title}
+      // 非全屏时由静态页上报高度撑开，全屏时交给外层容器
+      style={doc.standalone || height === null ? undefined : { height: `${height}px` }}
+    />
+  )
 
   const page = (
     <article
