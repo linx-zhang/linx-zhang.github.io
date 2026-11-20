@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>把工资切成十档：LOL 段位是尺子，不是地形</title>
+<meta name="description" content="用 LOL 段位比例当标尺，把全国与深圳的工资分布切成十档，再用生活成本线重切成六档。含官方数据来源与实测图表。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2317201C'/%3E%3Cg stroke='%23ECEEE8' stroke-width='2'%3E%3Cpath d='M8 6v20M14 6v8M20 6v13M26 6v8'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<script src="https://fastly.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  :root {
+    --paper: #ECEEE8;
+    --paper-2: #E3E6DF;
+    --ink: #17201C;
+    --muted: #56615B;
+    --rule: rgba(23, 32, 28, 0.16);
+    --rule-strong: rgba(23, 32, 28, 0.34);
+    --cn: #1E5C4B;
+    --sz: #99402F;
+    --gold: #A9812F;
+    --serif: "Noto Serif SC", "Songti SC", "SimSun", serif;
+    --sans: "Noto Sans SC", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 56px 32px 72px;
+  }
+  @media (max-width: 640px) {
+    .page { padding: 32px 18px 48px; }
+    body { font-size: 15.5px; }
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .meta-row span:last-child { margin-left: auto; }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.28;
+    letter-spacing: -0.01em;
+    margin: 30px 0 6px;
+    text-wrap: balance;
+  }
+  h1 .sub {
+    display: block;
+    font-size: 0.62em;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 10px;
+    letter-spacing: 0;
+  }
+  .dek {
+    font-size: 17px;
+    line-height: 1.9;
+    color: #2C3833;
+    max-width: 40em;
+    margin: 18px 0 34px;
+  }
+  @media (max-width: 640px) { .dek { font-size: 15.5px; } }
+
+  /* ===== 头图：段位构成条 ===== */
+  .hero-figure { margin: 0 0 12px; }
+  .tierbar {
+    display: flex;
+    height: 46px;
+    width: 100%;
+    border: 1px solid var(--rule-strong);
+    border-bottom: none;
+    overflow: hidden;
+  }
+  .seg {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #F4F6F2;
+    border-right: 1px solid rgba(236, 238, 232, 0.35);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .seg:last-child { border-right: none; }
+  .seg.light { color: #17201C; }
+  .bracket-row {
+    display: flex;
+    border: 1px solid var(--rule-strong);
+    background: var(--paper-2);
+    font-family: var(--sans);
+    font-size: 12px;
+    line-height: 1.6;
+    color: #2C3833;
+  }
+  .bracket-left {
+    width: 64.5%;
+    padding: 6px 10px;
+    border-right: 1px solid var(--rule-strong);
+  }
+  .bracket-right {
+    width: 35.5%;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  @media (max-width: 560px) {
+    .bracket-row { flex-wrap: wrap; }
+    .bracket-left { width: 100%; border-right: none; }
+    .bracket-right { width: 100%; border-top: 1px solid var(--rule-strong); }
+  }
+  .tail-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    padding: 7px 2px 0;
+  }
+  figcaption {
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-top: 8px;
+    padding-left: 1px;
+  }
+
+  main { margin-top: 52px; }
+  section { margin: 0 0 56px; }
+  h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 25px;
+    line-height: 1.5;
+    margin: 0 0 18px;
+  }
+  h2 .num {
+    display: inline;
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-right: 2px;
+    letter-spacing: 0.02em;
+  }
+  h2 .num::after { content: "、"; }
+  @media (max-width: 640px) {
+    h2 { font-size: 21px; }
+  }
+
+  p { margin: 0 0 18px; }
+  p.lead-strong { color: #0F1714; }
+  a { color: var(--cn); text-decoration: none; border-bottom: 1px solid rgba(30, 92, 75, 0.32); }
+  a:hover { border-bottom-color: var(--cn); }
+  sup.ref {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-left: 2px;
+    line-height: 0;
+    vertical-align: super;
+  }
+  .note {
+    background: var(--paper-2);
+    padding: 18px 20px;
+    margin: 22px 0;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #2C3833;
+  }
+  .note strong { font-weight: 500; color: #0F1714; }
+  .note p { margin: 0 0 10px; }
+  .note p:last-child { margin-bottom: 0; }
+
+  ul.plain { margin: 0 0 18px; padding-left: 1.1em; }
+  ul.plain li { margin-bottom: 9px; }
+
+  /* ===== 表格 ===== */
+  .tbl-block { margin: 26px 0 30px; }
+  .tbl-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .tbl-head .flag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .flag-cn { color: var(--cn); }
+  .flag-sz { color: var(--sz); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 14px;
+  }
+  th {
+    font-weight: 500;
+    text-align: right;
+    padding: 8px 8px 9px;
+    border-bottom: 1px solid var(--rule-strong);
+    color: #2C3833;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+  th:first-child { text-align: left; }
+  td {
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--rule);
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  td:first-child {
+    text-align: left;
+    font-family: var(--sans);
+    font-size: 13.5px;
+  }
+  td.em { color: var(--muted); }
+  tr.emph td { background: rgba(30, 92, 75, 0.06); }
+  .tbl-note { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.7; }
+  @media (max-width: 560px) {
+    table { font-size: 12.5px; }
+    td { font-size: 11.5px; padding: 8px 5px; }
+    th { font-size: 11px; padding: 7px 5px; }
+  }
+
+  /* ===== 图表 ===== */
+  figure.chart { margin: 30px 0 34px; }
+  .chart-holder { position: relative; }
+  .logticks {
+    position: absolute;
+    left: 0; right: 0; bottom: 6px;
+    height: 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .logticks span {
+    position: absolute;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  .chart-box {
+    width: 100%;
+    height: 420px;
+    background: transparent;
+  }
+  .chart-box.short { height: 430px; }
+  @media (max-width: 640px) { .chart-box, .chart-box.short { height: 380px; } }
+  .chart-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .chart-key i {
+    display: inline-block;
+    width: 18px;
+    height: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* ===== 双标尺（20 万落在哪） ===== */
+  .ruler-block { margin: 28px 0 34px; }
+  .ruler-row { margin-bottom: 22px; }
+  .ruler-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .ruler-label b { font-weight: 500; color: #0F1714; }
+  .ruler {
+    position: relative;
+    height: 26px;
+    border-top: 1px solid var(--rule-strong);
+  }
+  .ruler .tick {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 5px;
+    background: var(--rule-strong);
+  }
+  .ruler .mark {
+    position: absolute;
+    top: -7px;
+    width: 2px;
+    height: 20px;
+    background: var(--sz);
+  }
+  .ruler .mark.cn { background: var(--cn); }
+  .ruler .mark-label {
+    position: absolute;
+    top: 10px;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .ruler .mark-label.hot { color: var(--sz); }
+  .ruler .end {
+    position: absolute;
+    top: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .ruler .end.l { left: 0; }
+  .ruler .end.r { right: 0; }
+
+  footer.foot {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule-strong);
+  }
+  footer.foot h3 {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    margin: 0 0 12px;
+    color: #2C3833;
+  }
+  ol.refs {
+    margin: 0;
+    padding-left: 1.4em;
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: var(--muted);
+  }
+  ol.refs li { margin-bottom: 7px; }
+  ol.refs a { border-bottom-color: rgba(30, 92, 75, 0.24); }
+  .sign {
+    margin-top: 26px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="meta-row">
+    <span>工资 · 分布 · 城市坐标</span>
+    <span>数据版本 2026-11</span>
+  </div>
+
+  <h1>把工资切成十档<span class="sub">LOL 段位是尺子，不是地形</span></h1>
+
+  <p class="dek">2026 年 11 月，我把国家统计局、人社部、深圳人社局的三份公开数据摊在一起，想弄明白月薪一万在深圳到底排在什么位置。下面是算出来的结果，以及算的过程中撞到的几处错位。</p>
+
+  <figure class="hero-figure">
+    <div class="tierbar" role="img" aria-label="按 LOL 段位比例划分的在职人群构成：黑铁 3.5%、青铜 16%、白银 22%、黄金 23%、铂金 18%、翡翠 12.7%、钻石 4%、大师 0.7%、宗师 0.05%、王者 0.02%">
+      <div class="seg light" style="width:3.5%; background:#C6CCC5;"></div>
+      <div class="seg light" style="width:16%; background:#B7C0B8;">青铜</div>
+      <div class="seg light" style="width:22%; background:#A7B3AA;">白银</div>
+      <div class="seg light" style="width:23%; background:#97A799;">黄金</div>
+      <div class="seg" style="width:18%; background:#6F8A7C;">铂金</div>
+      <div class="seg" style="width:12.7%; background:#3C6653;">翡翠</div>
+      <div class="seg" style="width:4%; background:#274F40;"></div>
+      <div class="seg" style="width:0.75%; background:#173028;"></div>
+      <div class="seg" style="width:0.05%; background:#99402F;"></div>
+      <div class="seg" style="width:0.02%; background:#7A2718;"></div>
+    </div>
+    <div class="bracket-row">
+      <div class="bracket-left">黄金及以下 · 64.5% 的人在这儿</div>
+      <div class="bracket-right"><span>翡翠及以上 4.8%</span><span>大师以上 0.77%</span></div>
+    </div>
+    <div class="tail-key">
+      <span>黑铁 3.5%</span><span>钻石 4.0%</span><span>大师 0.7%</span><span>宗师 0.05%</span><span>王者 0.02%</span>
+    </div>
+    <figcaption>段位比例按 2026 年 10 月常驻排位玩家的分布取整；这十条边界就是后面切工资的那把尺子。</figcaption>
+  </figure>
+
+  <main>
+
+    <!-- ===== 一 ===== -->
+    <section>
+      <h2><span class="num">一</span><span>先把口径钉死</span></h2>
+      <p>这类题目最容易犯的错，是把“我按官方数据算的”讲成“官方公布的”。先把边界切出来，后面才谈得上可核。</p>
+      <p>官方确实公开的有这些：</p>
+      <ul class="plain">
+        <li><strong>国家统计局</strong><sup class="ref">1</sup>（2025 年，城镇单位）：非私营单位年平均工资 129441 元，私营单位 71590 元，规模以上企业 106080 元；分岗位看，中层及以上管理人员 210016 元、专业技术人员 155491 元、办事人员 94936 元、社会生产服务和生活服务人员 79857 元、生产制造及有关人员 80739 元。</li>
+        <li><strong>人社部</strong><sup class="ref">2</sup>（企业薪酬调查，2024 年）：给的是分位值，但按职业中类和岗位等级切。可以拿来当参考点的是管理类员工岗（P10 3.60、P25 4.80、P50 6.62、P75 9.98、P90 15.68 万）、中级技能（P50 7.32 万）、中层管理岗（P50 9.60 万）。</li>
+        <li><strong>深圳市统计局</strong><sup class="ref">3</sup>（2025 年）：非私营单位 191367 元，在岗职工 193881 元，私营单位 99220 元。</li>
+        <li><strong>深圳市人社局</strong><sup class="ref">4</sup>（2025 年人力资源市场工资价位）：这张表是我最想要的——全行业直接给了五个分位值，P10 55200、P25 70479、P50 96100、P75 154213、P90 249800 元。</li>
+      </ul>
+      <p>官方没有公开的，是全国在职员工、全行业、连续百分位的总表。人社部那张按职业和岗位层级切，不是全口径人口；统计局给的是平均数，不带分位。</p>
+      <p>所以下面两张表要分开看：<strong>深圳那张是官方分位值直接取，全国那张是按官方锚点拟合</strong>。这个区别决定了它们各自能被引用到什么程度。</p>
+    </section>
+
+    <!-- ===== 二 ===== -->
+    <section>
+      <h2><span class="num">二</span><span>全国：中位数落在 6.6 万</span></h2>
+      <p>全国版没有现成的分位表，只能拟合。做法不复杂，但每一步都能被核：以人社部 2024 年的岗位/职业分位值为骨架，在 6 万到 16 万区间找一条贴合官方点位的曲线（中位数 6.6 万、P75 10 万、P90 16 万），再按 LOL 常驻排位玩家的段位边界——3.5 / 19.5 / 41.5 / 64.5 / 82.5 / 95.2 / 99.2 / 99.93 分位——切段。底部用全国最低工资量级做地板，免得曲线在尾部穿到负数区间。</p>
+
+      <div class="tbl-block">
+        <div class="tbl-head"><span>全国 · 拟合版</span><span class="flag flag-cn">视窗：在职人群</span></div>
+        <table>
+          <colgroup><col style="width:18%"><col style="width:20%"><col style="width:20%"><col style="width:21%"><col style="width:21%"></colgroup>
+          <thead>
+            <tr><th>段位</th><th>占在职人群</th><th>高于本档</th><th>税前年薪（万元）</th><th>折算月薪（元）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>黑铁</td><td>3.5%</td><td>96.5%</td><td>1.8 ～ 2.4</td><td>1500 ～ 2000</td></tr>
+            <tr><td>青铜</td><td>16%</td><td>80.5%</td><td>2.4 ～ 4.3</td><td>2000 ～ 3570</td></tr>
+            <tr><td>白银</td><td>22%</td><td>58.5%</td><td>4.3 ～ 6.0</td><td>3570 ～ 4970</td></tr>
+            <tr><td>黄金</td><td>23%</td><td>35.5%</td><td>6.0 ～ 8.3</td><td>4970 ～ 6920</td></tr>
+            <tr><td>铂金</td><td>18%</td><td>17.5%</td><td>8.3 ～ 12.2</td><td>6920 ～ 10190</td></tr>
+            <tr><td>翡翠</td><td>12.7%</td><td>4.8%</td><td>12.2 ～ 21.6</td><td>10190 ～ 17980</td></tr>
+            <tr><td>钻石</td><td>4.0%</td><td>0.77%</td><td>21.6 ～ 38.7</td><td>17980 ～ 32260</td></tr>
+            <tr><td>大师</td><td>0.7%</td><td>0.07%</td><td>38.7 ～ 70.4</td><td>32260 ～ 58640</td></tr>
+            <tr><td>宗师</td><td>0.05%</td><td>0.02%</td><td>70.4 ～ 91.9</td><td>58640 ～ 76620</td></tr>
+            <tr><td>王者</td><td>0.02%</td><td>—</td><td>91.9 ～ 125.7</td><td>76620 ～ 104790</td></tr>
+          </tbody>
+        </table>
+        <div class="tbl-note">口径：税前年收入，含奖金与个人缴纳的社保公积金；不含个体户与自由职业者。「高于本档」是收入高于该档上限的人占多少，黑铁 96.5% 即 96.5% 的人赚得比黑铁上限多。</div>
+      </div>
+
+      <p>几个能拿去核的位置：中位数 6.6 万（月 5500）与人社部管理类员工岗 P50 6.62 万几乎重合；P90 16 万比川渝地区 2024 年的 14.3 万高一点，因为全国口径被东部拉上去；P99 约 36 万，落在人社部高层管理岗 P90（41 万）与高级职称 P90（33 万）之间。这几处对得上，只说明方向没错，不代表表有多精确。</p>
+    </section>
+
+    <!-- ===== 三 ===== -->
+    <section>
+      <h2><span class="num">三</span><span>深圳：直接取官方分位值</span></h2>
+      <p>深圳这一版不用拟合。人社局那张表把全行业五个分位值摆在那儿，中间用对数线性插值，两端按最近一段的斜率外推，底部钉在 2700 元/月——2026 年 9 月起深圳的最低工资，折算年 3.24 万。<sup class="ref">5</sup></p>
+
+      <div class="tbl-block">
+        <div class="tbl-head"><span>深圳 · 官方分位</span><span class="flag flag-sz">视窗：在岗职工</span></div>
+        <table>
+          <colgroup><col style="width:18%"><col style="width:20%"><col style="width:20%"><col style="width:21%"><col style="width:21%"></colgroup>
+          <thead>
+            <tr><th>段位</th><th>占在职人群</th><th>高于本档</th><th>税前年薪（万元）</th><th>折算月薪（元）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>黑铁</td><td>3.5%</td><td>96.5%</td><td>3.2 ～ 4.5</td><td>2700 ～ 3720</td></tr>
+            <tr><td>青铜</td><td>16%</td><td>80.5%</td><td>4.5 ～ 6.5</td><td>3720 ～ 5450</td></tr>
+            <tr><td>白银</td><td>22%</td><td>58.5%</td><td>6.5 ～ 8.7</td><td>5450 ～ 7260</td></tr>
+            <tr><td>黄金</td><td>23%</td><td>35.5%</td><td>8.7 ～ 12.5</td><td>7260 ～ 10390</td></tr>
+            <tr><td>铂金</td><td>18%</td><td>17.5%</td><td>12.5 ～ 19.0</td><td>10390 ～ 15800</td></tr>
+            <tr><td>翡翠</td><td>12.7%</td><td>4.8%</td><td>19.0 ～ 33.9</td><td>15800 ～ 28290</td></tr>
+            <tr><td>钻石</td><td>4.0%</td><td>0.77%</td><td>33.9 ～ 61.9</td><td>28290 ～ 51550</td></tr>
+            <tr><td>大师</td><td>0.7%</td><td>0.07%</td><td>61.9 ～ 114.2</td><td>51550 ～ 95180</td></tr>
+            <tr><td>宗师</td><td>0.05%</td><td>0.02%</td><td>114.2 ～ 150.3</td><td>95180 ～ 125240</td></tr>
+            <tr><td>王者</td><td>0.02%</td><td>—</td><td>150.3 ～ 207.2</td><td>125240 ～ 172680</td></tr>
+          </tbody>
+        </table>
+        <div class="tbl-note">深圳全行业五个官方分位：P10 5.52 万、P25 7.05 万、P50 9.61 万、P75 15.42 万、P90 24.98 万。<sup class="ref">4</sup></div>
+      </div>
+
+      <p>深圳的中位数是 9.61 万（月 8000），正好压在黄金档的起点上。把同一条线放到全国表里，落在铂金的起点。两个人说同一句“我黄金”，年收入差三万多。段位没算错，是坐标换了。</p>
+      <p>同城内还有两个参照：信息传输、软件和信息技术服务业 P50 是 16.24 万，金融业 P50 是 21.62 万。<sup class="ref">4</sup>行业选对，比在段位表里往上挪一档管用。</p>
+    </section>
+
+    <!-- ===== 四 ===== -->
+    <section>
+      <h2><span class="num">四</span><span>段位真正给的，是稀缺感</span></h2>
+      <p>“你在第 82 分位”这句话，说完对方还得在脑子里换算一遍；“你在翡翠”不用换算。段位把百分位翻成一个有画面、有顺序、还带点情绪的词，晋级和掉段，打过排位的人都懂。</p>
+      <p>更实用的是它的比例和直觉对得上。下面这张图里，柱子是每一档占了多少人，折线是收入高于这一档上限的人还剩多少——越往上越少，到顶只剩万分之二。</p>
+
+      <figure class="chart">
+        <div class="chart-key">
+          <span><i style="background:#3C6653"></i>各段位占比（下轴，%）</span>
+          <span><i style="background:#99402F"></i>高于本档的人（上轴，%）</span>
+        </div>
+        <div id="chart-tiers" class="chart-box"></div>
+        <figcaption>黄金及以下 64.5%，翡翠及以上 4.8%，大师以上 0.77%，王者 0.02%——万分之二。</figcaption>
+      </figure>
+
+      <p>从铂金 18% 到翡翠 12.7%，再到钻石 4.0%、大师 0.7%，每上一格，人数掉一个量级。这种“越往上越稀”的形状，和我们看工资分布时的感受是同一件事：绝大多数人挤在中间，顶部是一条细长的尾巴。</p>
+      <p>所以段位当尺子是合格的：它量的是稀缺度，读数也直观。问题出在下一步——拿它去量日子。</p>
+    </section>
+
+    <!-- ===== 五 ===== -->
+    <section>
+      <h2><span class="num">五</span><span>可它的边界是游戏平衡划的，不是生活成本划的</span></h2>
+      <p>我按段位边界切完之后，把每一格拿去对现实，碰到三处对不上的地方。</p>
+
+      <p><strong>底下那格是撞墙，不是缓坡。</strong>段位把最下面的 3.5% 单独划成黑铁，可工资的底部不是“低一点”，是被最低工资和就业形态截断的。深圳 2700 元/月这条线一卡，底部就不是平滑下滑，而是撞在墙上。所以深圳黑铁只有 3.2～4.5 万，格子很窄；全国拟合出来的黑铁（1.8～2.4 万），现实中多半是非正规就业、兼职、季节性用工，这批人根本不在“单位就业人员”的口径里。</p>
+
+      <p><strong>中间两格把最关键的一条线抹平了。</strong>白银加黄金覆盖 45% 的人，全国对应 4.3～8.3 万、深圳对应 6.5～12.5 万。这 45% 里混着两种完全不同的生活：月薪 5000 和月薪 8000，在深圳不是一个物种。前者扣完房租基本月光，后者能存下两三千。“能不能开始存钱”这条线，恰好被段位边界切没了。</p>
+
+      <p><strong>顶上那格太粗。</strong>大师以上只占 0.77%，却囊括了全国 38.7～125.7 万，跨度 3.2 倍。40 万、70 万、120 万在现实里是三种生活结构——雇不雇人、买不买房、有没有第二套房——段位把它们压成一格。人数在高处按“比例”切，生活品质在高处按“资产”分层，两套逻辑接不上。</p>
+
+      <p>三处放在一起，结论就一句：段位是稀缺度的好刻度，是生活品质的坏刻度。它能回答“多少人在我上面”，回答不了“我过得怎么样”。</p>
+    </section>
+
+    <!-- ===== 六 ===== -->
+    <section>
+      <h2><span class="num">六</span><span>换成按成本线切的六档</span></h2>
+      <p>既然段位不适合量生活，节点就自己造。原则只有一条：每条边界都要能被一笔账算出来，不能靠一个百分比规定。</p>
+      <p>于是把十档压成六档，边界全部由深圳的实际成本结构反推，再用官方分位值标出每档有多少人。</p>
+
+      <div class="tbl-block">
+        <div class="tbl-head"><span>按成本线切的六档</span><span class="flag flag-sz">基准：深圳</span></div>
+        <table>
+          <colgroup><col style="width:15%"><col style="width:34%"><col style="width:18%"><col style="width:15%"><col style="width:18%"></colgroup>
+          <thead>
+            <tr><th>档位</th><th>判据（能干什么）</th><th>年收入线</th><th>折合月薪</th><th>人群中位置</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>① 赤字档</td><td>覆盖不了房租、吃饭、通勤，要家里补贴或借贷</td><td>&lt; 6.5 万</td><td>&lt; 5400</td><td>底部约 19%</td></tr>
+            <tr><td>② 结余档</td><td>能自养，每月还能存下 20% 以上</td><td>6.5 ～ 10 万</td><td>5400 ～ 8300</td><td>19% ～ 52%</td></tr>
+            <tr><td>③ 保障档</td><td>租得体面、买商业保险、每年能出去一次</td><td>10 ～ 20 万</td><td>8300 ～ 16700</td><td>52% ～ 84%</td></tr>
+            <tr><td>④ 积累档</td><td>首付、育儿、换车这些长期项能排进计划</td><td>20 ～ 35 万</td><td>16700 ～ 29200</td><td>84% ～ 96%</td></tr>
+            <tr><td>⑤ 配置档</td><td>改善型消费，换工作有了“可以不干”的余地</td><td>35 ～ 60 万</td><td>29200 ～ 50000</td><td>96% ～ 99%</td></tr>
+            <tr><td>⑥ 资本档</td><td>资本性收入开始与劳动收入同量级</td><td>&gt; 60 万</td><td>&gt; 50000</td><td>顶部 1% 内</td></tr>
+          </tbody>
+        </table>
+        <div class="tbl-note">边界不是官方发布值，是按深圳租金、通勤、社保、首付与育儿成本反推的；百分比一列由官方分位值定位。</div>
+      </div>
+
+      <p>这六条线每条都能单独验。6.5 万那条对着深圳单间租金、外卖与自炊、通勤和社保算；20 万那条对着首付储蓄速度和育儿成本算；60 万那条对着“投资收益能不能覆盖日常开支”算。共同点是换城市要重算，而不是换个段位名字。</p>
+      <p>全国同口径大致往下挪一档：自养线 3～4 万（看城市）、结余线 5 万、保障线 8～10 万、积累线 15 万、配置线 30 万、资本线 50 万。</p>
+    </section>
+
+    <!-- ===== 七 ===== -->
+    <section>
+      <h2><span class="num">七</span><span>两套刻度叠起来，能看出什么</span></h2>
+      <p>先把十档在两座城市里并排放一次。同一条段位边界，两地的月薪区间差得很明显，越往上差得越多。</p>
+
+      <figure class="chart">
+        <div class="chart-key">
+          <span><i style="background:#1E5C4B"></i>全国（拟合）月薪区间</span>
+          <span><i style="background:#99402F"></i>深圳（官方分位）月薪区间</span>
+          <span>横轴为对数刻度</span>
+        </div>
+        <div class="chart-holder">
+          <div id="chart-range" class="chart-box short"></div>
+          <div class="logticks" id="range-ticks"></div>
+        </div>
+        <figcaption>同样叫“黄金”，全国是 4970～6920 元/月，深圳是 7260～10390 元/月；到了“王者”，全国上限 10.5 万/月，深圳 17.3 万/月。</figcaption>
+      </figure>
+
+      <p><strong>一、黄金是个幻觉段位。</strong>全国黄金 6.0～8.3 万，横跨“刚过自养线”到“开始能存钱”；深圳黄金 8.7～12.5 万，横跨“能存钱”到“能过体面”。游戏里只差一档，生活里差的是“要不要为下个月房租发愁”。段位让人以为快上岸了，成本线会告诉你还差一整档。</p>
+
+      <p><strong>二、生活品质的分水岭在 20 万上下，段位把它埋在了翡翠和钻石交界。</strong>深圳 20 万落在 84 分位，全国 20 万落在 94 分位——同一笔钱，两个坐标差一个多段位。所以“20 万够不够”问的是城市，不是排名。</p>
+
+      <div class="ruler-block">
+        <div class="ruler-row">
+          <div class="ruler-label"><span><b>深圳</b> 年收入 20 万的位置</span><span>84 分位</span></div>
+          <div class="ruler" role="img" aria-label="深圳分布中 20 万位于 84 分位">
+            <div class="mark" style="left:84%"></div>
+            <div class="mark-label hot" style="left:84%">P84 · 20 万</div>
+            <div class="tick" style="left:0%"></div><div class="tick" style="left:25%"></div><div class="tick" style="left:50%"></div><div class="tick" style="left:75%"></div><div class="tick" style="left:100%"></div>
+          </div>
+        </div>
+        <div class="ruler-row">
+          <div class="ruler-label"><span><b>全国</b> 年收入 20 万的位置</span><span>94 分位</span></div>
+          <div class="ruler" role="img" aria-label="全国分布中 20 万位于 94 分位">
+            <div class="mark cn" style="left:94%"></div>
+            <div class="mark-label" style="left:94%">P94 · 20 万</div>
+            <div class="tick" style="left:0%"></div><div class="tick" style="left:25%"></div><div class="tick" style="left:50%"></div><div class="tick" style="left:75%"></div><div class="tick" style="left:100%"></div>
+          </div>
+        </div>
+      </div>
+
+      <p><strong>三、越往上，“人数”越解释不了“生活”。</strong>深圳 60 万已经进了前 1%，可这格往上还有 100 万、150 万，段位表只给了大师、宗师、王者三个名字，现实是三种资产结构。用段位描述顶部，有点像用班级名次描述一个人的家境。</p>
+    </section>
+
+    <!-- ===== 八 ===== -->
+    <section>
+      <h2><span class="num">八</span><span>这套东西的代价</span></h2>
+      <p>两张表至少有三处硬伤，写出来免得被当成精确数据引用。</p>
+      <p><strong>年份和口径不齐。</strong>统计局的平均工资是 2025 年，人社部薪酬调查是 2024 年，深圳人社局工资价位的调查期是 2024 全年、2026 年 4 月发布，三者抽样人群也不同（统计局是法人单位就业人员，人社部是企业从业人员，都不含个体户和自由职业者）。拼在一张表上，误差至少一个百分点级别，取整到“万”已经是能容忍的极限。</p>
+      <p><strong>全国那一版不是官方原始分位。</strong>中位数、P75、P90 是按官方点位拟合的，可以拿去核对，但不能写成“官方数据”。深圳那版是官方分位值直接取，可信度高一个档；不过五个分位之间用的是对数线性插值，中间值有平滑误差。</p>
+      <p><strong>“税前总包”本身有欺骗性。</strong>所有数字都是税前、含奖金补贴、含个人缴纳的社保公积金，不是到手。深圳税前 1 万，到手大约 7800，交完房租，感受和表上的“黄金”完全对不上。这张表描述的是你在劳动力市场上的标价，不是你手里的钱。</p>
+    </section>
+
+    <!-- ===== 九 ===== -->
+    <section>
+      <h2><span class="num">九</span><span>小结</span></h2>
+      <p>三句话：</p>
+      <ul class="plain">
+        <li>段位可以用，先弄清它测什么。它测稀缺度，不测生活；比例自洽，边界不自洽。</li>
+        <li>生活品质的节点得由成本线定义，而且必须按城市重算。深圳六条线是 6.5 / 10 / 20 / 35 / 60 万，全国大致 4 / 5 / 10 / 15 / 30 万，两者不能混用。</li>
+        <li>真正有用的对照是“我在本城第几分位”加“我落在哪条成本线之上”。只看段位会高估自己，只看月薪绝对值会低估城市差异。</li>
+      </ul>
+      <p>把工资塞进游戏段位，等于用一个熟悉的错误去替换一个陌生的正确。它能让对话开始，不能让判断结束。</p>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <h3>关键数据参考</h3>
+    <ol class="refs">
+      <li>国家统计局，《2025 年城镇单位就业人员年平均工资情况》，2026-05-15。<a href="https://www.stats.gov.cn/sj/zxfb/202605/t20260515_1963707.html" target="_blank" rel="noopener">stats.gov.cn/sj/zxfb/202605/t20260515_1963707.html</a></li>
+      <li>人力资源和社会保障部，《企业薪酬调查信息（2024 年）》，2025-06-27。分岗位等级工资价位表。<a href="https://www.mohrss.gov.cn/SYrlzyhshbzb/laodongguanxi_/fwyd/202506/t20250627_544623.html" target="_blank" rel="noopener">mohrss.gov.cn/…/t20250627_544623.html</a></li>
+      <li>深圳市统计局，《2025 年深圳市城镇单位就业人员年平均工资情况》，2026-07-24。<a href="https://tjj.sz.gov.cn/zwgk/zfxxgkml/tjsj/tjgb/content/post_12907747.html" target="_blank" rel="noopener">tjj.sz.gov.cn/…/post_12907747.html</a></li>
+      <li>深圳市人力资源和社会保障局，《深圳市 2025 年人力资源市场工资价位及行业人工成本信息》（PDF），2026-04-14。全行业 P10 55200 / P25 70479 / P50 96100 / P75 154213 / P90 249800 元。<a href="https://hrss.sz.gov.cn/xxgk/tjsj/zxtj/content/post_12735120.html" target="_blank" rel="noopener">hrss.sz.gov.cn/…/post_12735120.html</a></li>
+      <li>深圳市人力资源和社会保障局，《关于调整我市最低工资标准的通知》，2026-08-26：自 2026-09-01 起全日制月最低工资 2700 元。<a href="https://hrss.sz.gov.cn/gkmlpt/content/12/12954/mpost_12954870.html" target="_blank" rel="noopener">hrss.sz.gov.cn/…/mpost_12954870.html</a></li>
+      <li>段位分布（第三方统计，2026-10 样本，各站口径略有差异）：<a href="https://op.gg/lol/statistics/tiers" target="_blank" rel="noopener">OP.GG · Ranked Tier Stats</a>、<a href="https://www.esportstales.com/league-of-legends/rank-distribution-percentage-of-players-by-tier" target="_blank" rel="noopener">Esports Tales · Rank Distribution</a></li>
+    </ol>
+    <div class="sign">图表与拟合由本文作者整理，数值取整到万；引用请以原始公告为准。</div>
+  </footer>
+</div>
+<script>
+  /* ===== 数据（与正文两张表逐格一致） ===== */
+  const TIERS = [
+    { name: '黑铁', share: 3.5,  cum: 96.5 },
+    { name: '青铜', share: 16,   cum: 80.5 },
+    { name: '白银', share: 22,   cum: 58.5 },
+    { name: '黄金', share: 23,   cum: 35.5 },
+    { name: '铂金', share: 18,   cum: 17.5 },
+    { name: '翡翠', share: 12.7, cum: 4.8 },
+    { name: '钻石', share: 4.0,  cum: 0.77 },
+    { name: '大师', share: 0.7,  cum: 0.07 },
+    { name: '宗师', share: 0.05, cum: 0.02 },
+    { name: '王者', share: 0.02, cum: null }
+  ];
+
+  const CN_RANGE = [
+    [1500, 2000], [2000, 3570], [3570, 4970], [4970, 6920], [6920, 10190],
+    [10190, 17980], [17980, 32260], [32260, 58640], [58640, 76620], [76620, 104790]
+  ];
+  const SZ_RANGE = [
+    [2700, 3720], [3720, 5450], [5450, 7260], [7260, 10390], [10390, 15800],
+    [15800, 28290], [28290, 51550], [51550, 95180], [95180, 125240], [125240, 172680]
+  ];
+
+  const INK = '#17201C';
+  const MUTED = '#56615B';
+  const RULE = 'rgba(23,32,28,0.28)';
+  const CN = '#1E5C4B';
+  const SZ = '#99402F';
+  const RAMP = ['#C9CEC7', '#BBC3BA', '#ACB7AD', '#9CA99E', '#8A9B8E',
+                '#74897B', '#5C7A68', '#446A56', '#2C5242', '#17382E'];
+
+  const baseText = {
+    fontFamily: '"Noto Sans SC", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif',
+    color: MUTED
+  };
+
+  function fmtYuan(v) {
+    if (v >= 10000) {
+      const w = v / 10000;
+      return (Math.round(w * 10) / 10).toString().replace('.0', '') + ' 万';
+    }
+    return v.toLocaleString('en-US');
+  }
+
+  /* ===== 图一：占比 + 高于本档 ===== */
+  (function () {
+    const el = document.getElementById('chart-tiers');
+    if (!el || !window.echarts) return;
+    const chart = echarts.init(el, null, { renderer: 'canvas' });
+    chart.setOption({
+      textStyle: baseText,
+      animationDuration: 700,
+      grid: { left: 58, right: 64, top: 48, bottom: 34 },
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: '#F7F8F4',
+        borderColor: 'rgba(23,32,28,0.35)',
+        borderWidth: 1,
+        padding: [8, 11],
+        textStyle: { color: INK, fontSize: 12.5, lineHeight: 20 },
+        formatter: function (p) {
+          const t = TIERS[p.dataIndex];
+          if (!t) return '';
+          return t.name + '　占在职人群 <b>' + t.share + '%</b><br/>高于本档 <b>' +
+            (t.cum === null ? '—' : t.cum + '%') + '</b>';
+        }
+      },
+      xAxis: [
+        {
+          type: 'value', min: 0, max: 26, position: 'bottom',
+          axisLine: { lineStyle: { color: RULE } },
+          axisTick: { show: false },
+          splitLine: { show: false },
+          axisLabel: { color: MUTED, fontSize: 11, formatter: '{value}%', showMaxLabel: false }
+        },
+        {
+          type: 'value', min: 0, max: 100, position: 'top',
+          axisLine: { lineStyle: { color: 'rgba(153,64,47,0.35)' } },
+          axisTick: { show: false },
+          splitLine: { show: false },
+          axisLabel: { color: 'rgba(153,64,47,0.9)', fontSize: 11, formatter: '{value}' }
+        }
+      ],
+      yAxis: {
+        type: 'category', inverse: true,
+        data: TIERS.map(function (t) { return t.name; }),
+        axisLine: { lineStyle: { color: RULE } },
+        axisTick: { show: false },
+        axisLabel: { color: INK, fontSize: 12.5 }
+      },
+      series: [
+        {
+          name: '占比', type: 'bar', barWidth: 13,
+          itemStyle: {
+            color: function (p) { return RAMP[p.dataIndex]; }
+          },
+          data: TIERS.map(function (t) { return t.share; }),
+          label: {
+            show: true, position: 'right', distance: 7,
+            color: MUTED, fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 11,
+            formatter: function (p) { return p.value + '%'; }
+          },
+          z: 3
+        },
+        {
+          name: '高于本档的人', type: 'line', xAxisIndex: 1, yAxisIndex: 0,
+          data: TIERS.map(function (t) { return t.cum; }),
+          symbol: 'circle', symbolSize: 5,
+          lineStyle: { color: SZ, width: 1.3, type: 'solid' },
+          itemStyle: { color: SZ, borderColor: '#ECEEE8', borderWidth: 1 },
+          connectNulls: false,
+          tooltip: { show: false },
+          z: 4
+        }
+      ]
+    });
+    window.addEventListener('resize', function () { chart.resize(); });
+    if (window.ResizeObserver) new ResizeObserver(function () { chart.resize(); }).observe(el);
+  })();
+
+  /* ===== 图二：全国 / 深圳 同段位月薪区间 ===== */
+  (function () {
+    const el = document.getElementById('chart-range');
+    if (!el || !window.echarts) return;
+    const chart = echarts.init(el, null, { renderer: 'canvas' });
+
+    function makeSeries(label, color, ranges, dy) {
+      return {
+        name: label,
+        type: 'custom',
+        encode: { x: [1, 2], y: 0 },
+        data: ranges.map(function (r, i) { return { value: [i, r[0], r[1]] }; }),
+        renderItem: function (params, api) {
+          const y = api.coord([api.value(1), api.value(0)])[1];
+          const x0 = api.coord([api.value(1), api.value(0)])[0];
+          const x1 = api.coord([api.value(2), api.value(0)])[0];
+          const h = 10;
+          return {
+            type: 'rect',
+            shape: { x: x0, y: y - h / 2 + dy, width: Math.max(x1 - x0, 1.5), height: h },
+            style: { fill: color, opacity: 0.92 }
+          };
+        },
+        z: 3
+      };
+    }
+
+    chart.setOption({
+      textStyle: baseText,
+      animationDuration: 700,
+      grid: { left: 58, right: 34, top: 26, bottom: 30 },
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: '#F7F8F4',
+        borderColor: 'rgba(23,32,28,0.35)',
+        borderWidth: 1,
+        padding: [8, 11],
+        textStyle: { color: INK, fontSize: 12.5, lineHeight: 20 },
+        formatter: function (p) {
+          const v = p.value;
+          return TIERS[v[0]].name + '　' + p.seriesName + '<br/><b>' +
+            fmtYuan(v[1]) + ' ～ ' + fmtYuan(v[2]) + ' 元/月</b>';
+        }
+      },
+      xAxis: {
+        type: 'log', min: 1200, max: 220000,
+        axisLine: { lineStyle: { color: RULE } },
+        axisTick: { show: false },
+        splitLine: { show: true, lineStyle: { color: 'rgba(23,32,28,0.08)', type: 'dashed' } },
+        axisLabel: { show: false },
+        axisPointer: { label: { show: false } }
+      },
+      yAxis: {
+        type: 'category', inverse: true,
+        data: TIERS.map(function (t) { return t.name; }),
+        axisLine: { lineStyle: { color: RULE } },
+        axisTick: { show: false },
+        axisLabel: { color: INK, fontSize: 12.5 }
+      },
+      series: [
+        makeSeries('全国', CN, CN_RANGE, -6),
+        makeSeries('深圳', SZ, SZ_RANGE, 6)
+      ]
+    });
+
+    const ticksEl = document.getElementById('range-ticks');
+    const TICK_VALUES = [2000, 5000, 10000, 20000, 50000, 100000];
+    function drawTicks() {
+      if (!ticksEl) return;
+      ticksEl.innerHTML = '';
+      TICK_VALUES.forEach(function (v) {
+        const px = chart.convertToPixel({ xAxisIndex: 0 }, v);
+        if (typeof px !== 'number' || !isFinite(px)) return;
+        const span = document.createElement('span');
+        span.style.left = px + 'px';
+        span.textContent = v >= 10000 ? (v / 10000) + '万' : v;
+        ticksEl.appendChild(span);
+      });
+    }
+    drawTicks();
+
+    function resizeB() { chart.resize(); drawTicks(); }
+    window.addEventListener('resize', resizeB);
+    if (window.ResizeObserver) new ResizeObserver(resizeB).observe(el);
+  })();
+</script>
+</body>
+</html>
