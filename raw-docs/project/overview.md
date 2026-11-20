@@ -38,7 +38,7 @@ pin: 1
 
 1. `npm run wiki`（`dev` / `build` 前自动触发）扫描 `raw-docs/**/*.{md,markdown,html}`
 2. Markdown 原样复制成 `public/wiki/<slug>.md`，**构建期不预渲染 HTML**；标题、摘要、分类、二级主题、置顶权重抽出来写进索引
-3. HTML 产成 `public/wiki/<slug>.html`：缺 `<html>` 的片段会补外壳，外链脚本在构建期下载到本地再改写路径
+3. HTML 产成 `public/wiki-files/<slug>.html`：缺 `<html>` 的片段会补外壳，外链脚本在构建期下载到本地再改写路径；放 `/wiki-files` 是为了避开 Pages 对 `/wiki/<slug>` 的 `.html` 兜底，否则直连会绕过 SPA
 4. 产出 `public/wiki/index.json`，前端运行时 `fetch` 清单：md 取源文本用 `MarkdownView` 就地渲染，html 用 `iframe` 直连
 
 两个约定：

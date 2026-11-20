@@ -26,7 +26,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - Bundle: 分包做在「重依赖」上，而不是按页面铺开。页面级只懒加载三个把 react-markdown / Prism / rehype 带进来的页面（Docs / Blog / PostDetail）；工具箱的七个工具组件各自 `lazy()`（JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool / CalendarTool），写作面板里的 MarkdownView 也是懒加载。Home、DocsHome、Space、Admin、Tools 入口、Profile 仍在主包（`docs/assets/index-*.js`），切常用页不闪占位。
 - Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
 - Print Rule: 所有非打印 UI 加 className="no-print"，@media print 隐藏；简历页使用 A4 版式。
-- Markdown/HTML Loading: 文档不再经 import.meta.glob 内联进 bundle。构建期 `scripts/build-wiki.mjs` 把 `raw-docs` 下的 md 复制成 `public/wiki/<slug>.md`（运行时用 MarkdownView 渲染，不预渲染 HTML），html 原样保真产成 `public/wiki/<slug>.html`（缺 `<html>` 的片段补壳，外链脚本改本地 `/wiki/vendor/`），并产出 `public/wiki/index.json`。前端运行时 `fetch('/wiki/index.json')` 取清单：md 取源文本就地渲染、正文列居中，html 用 iframe 直连（应用型页面固定 85vh，片段式由 `postMessage` 上报高度自适应）。硬约定：html 文档禁止外链 CDN。
+- Markdown/HTML Loading: 文档不再经 import.meta.glob 内联进 bundle。构建期 `scripts/build-wiki.mjs` 把 `raw-docs` 下的 md 复制成 `public/wiki/<slug>.md`（运行时用 MarkdownView 渲染，不预渲染 HTML），html 原样保真产成 `public/wiki-files/<slug>.html`（缺 `<html>` 的片段补壳，外链脚本改本地 `/wiki/vendor/`），并产出 `public/wiki/index.json`。**HTML 必须放在 SPA 路由之外**：GitHub Pages 会把 `/wiki/<slug>` 解析成 `/wiki/<slug>.html`，产物留在 `/wiki` 下会让直连/刷新被静态文件截走。前端运行时 `fetch('/wiki/index.json')` 取清单：md 取源文本就地渲染、正文列居中，html 用 iframe 直连（应用型页面固定 85vh，片段式由 `postMessage` 上报高度自适应）。硬约定：html 文档禁止外链 CDN。
 -->
 
 # linx-zhang.github.io
@@ -44,7 +44,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **管理后台**：文章列表与批量删除、用户管理（资料与账号分段的编辑弹窗、管理员重置密码：可手动指定或自动生成，并一次性展示生效密码）、邀请码（独立分区，入口在用户页标题行）、活跃日志、访问分析
 - **自定义基础组件**：Select、DateRangePicker、ConfirmDialog、Modal、Avatar 均为自研，未引入第三方 UI 库
 - **活跃采集**：登录后 60 秒心跳、路由级 `page_view`、离开时 `page_leave`（带停留时长，`fetch` + `keepalive` 携带 Bearer）
-- **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki/<slug>.html`，站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
+- **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki-files/<slug>.html`（放在 SPA 路由之外，避免 Pages 的 `.html` 兜底抢走 `/wiki/<slug>`），站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
 - **GitHub 风格排版**：`github-markdown-css` + `react-markdown` + `prism-one-light`
 - **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
 - **工具箱**：`/tools` 七张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v1/v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）、万年历（农历 / 节气 / 放假调休，可跳到空间看当天待办）
@@ -288,17 +288,17 @@ linx-zhang.github.io/
 
 - 扫描 `raw-docs/**/*.{md,markdown,html}`，`.py` 等附件不参与
 - **Markdown**：原样复制成 `public/wiki/<slug>.md`（frontmatter 只给构建用，不进正文），**不再预渲染 HTML**；标题、摘要从源文本解析出来写进索引
-- **HTML**：仍产成 `public/wiki/<slug>.html`，原样保真拷贝；两种情况会处理——
+- **HTML**：仍产成 `public/wiki-files/<slug>.html`（与 SPA 路由 `/wiki/<slug>` 解耦，否则 Pages 会把直连/刷新解析到同名 `.html`），原样保真拷贝；两种情况会处理——
   - 文件里没有 `<html>`（片段式文档）：补 `doctype/html/head/meta/title` 外壳，摘掉外链 `<link rel="stylesheet">`，套上同款排版样式
   - 引用了外链脚本（CDN）：构建期下载一次存到 `.cache/wiki-vendor/`，改写为 `/wiki/vendor/<file>` 本地路径
-- 产出 `public/wiki/index.json`：`slug / title / type / category / topic / filePath / href / standalone / pin`（md 的 `href` 指向 `.md`，html 的指向 `.html`）
+- 产出 `public/wiki/index.json`：`slug / title / type / category / topic / filePath / href / standalone / pin`（md 的 `href` 指向 `/wiki/<slug>.md`，html 的指向 `/wiki-files/<slug>.html`）
 - **分类与置顶**：`category` 取 slug 第一段（`project` / `notes`），`topic` 取第二段（`python` / `cpp`…）；md 文件头可写 `pin: 1`（正整数越小越靠前），列表排序「置顶在前 + 其余按标题字典序」，分类 chip 按篇数降序
 
 ### 2. 运行期：索引 + 分类型渲染
 
 - `src/utils/docs.ts` 的 `loadDocList()` 拉 `/wiki/index.json`（并发共用一次请求、成功后内存缓存），`src/utils/useDocs.ts` 的 `useDocList()` 提供加载/错误状态，`DocsHome`、`WikiLayout`、`Docs` 三处共用
 - **md**：`Docs` 页 `fetch('/wiki/<slug>.md')` 后交给 `src/components/MarkdownView` 渲染（按 slug 内存缓存，来回翻不重复请求），正文列 760px 居中
-- **html**：`<iframe src="/wiki/<slug>.html">` 直连；完整应用型页面（`standalone: true`）固定 `85vh` 页内自滚，片段式页面由页面 `postMessage({ type: 'linx-wiki-height' })` 上报高度撑满
+- **html**：`<iframe src="/wiki-files/<slug>.html">` 直连；完整应用型页面（`standalone: true`）固定 `85vh` 页内自滚，片段式页面由页面 `postMessage({ type: 'linx-wiki-height' })` 上报高度撑满
 - 全屏阅读：详情页「全屏阅读」进入 `?full=1`，整屏白底、`Esc` 或「退出全屏」返回。md 收成 720px 居中窄栏；html 文档保留宽布局（最宽 1240px、iframe 铺满整屏高度），应用页也能直接全屏跑，不必跳出站外。目录列表里两种文档的行内操作都是「全屏」，要原文另点「源文件」。
 
 ### 3. 硬约定
@@ -330,6 +330,7 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 2. md 一律运行时渲染，**不要**再给 md 建期预渲染 HTML；只有「完整应用页」才用 `.html`（iframe 直连 + 全屏）。
 3. html 文档禁止外链 CDN；片段式 html 会被补壳，别手写 `<html>` 外壳。
 4. md 的 `href` 指向 `.md`，旧 `/wiki/<slug>.html` 分享链接失效——这是既有取舍，不是 bug。
+5. html 产物固定写 `public/wiki-files/`，不要挪回 `public/wiki/`：Pages 会把 `/wiki/<slug>` 解析到 `/wiki/<slug>.html`，文件一回去，直连与刷新就绕过 SPA 了。
 
 **发布**
 
@@ -341,7 +342,7 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 
 8. 探针只用 **GET**：`HEAD` 对已删除的路径也回 200，会得出错误结论。
 9. 看 `/wiki` 应返回约 600 字节 SPA 外壳；`/assets/index-*.js`、`/wiki/<slug>.md` 应 200。
-10. 直接访问 `/wiki/notes/js/finance-simulator`（带不带 `?full=1`）会被 Pages 补成 `.html` 命中静态页、绕过 SPA；验证应用页要从站内点进去。
+10. HTML 文档产物在 `/wiki-files/<slug>.html`，直接访问 `/wiki/notes/js/finance-simulator`（带不带 `?full=1`）现在会落到 404.html 的 SPA，属正常；探针改看 `/wiki-files/notes/js/finance-simulator.html` 是否 200。
 
 **视觉改动**
 

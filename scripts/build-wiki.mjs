@@ -1,7 +1,10 @@
 // 构建期只做两件事：
 //   md/markdown -> public/wiki/<slug>.md（原样复制，站内运行时用 MarkdownView 渲染，不再预渲染 HTML）
-//   html        -> public/wiki/<slug>.html（原样保真；缺 <html> 的片段补壳；外链脚本改本地 vendor）
+//   html        -> public/wiki-files/<slug>.html（原样保真；缺 <html> 的片段补壳；外链脚本改本地 vendor）
 // 同时产出 public/wiki/index.json 供站内列表运行时读取。
+//
+// HTML 产物必须放在 SPA 路由之外（/wiki-files）：GitHub Pages 会把 /wiki/<slug> 解析到
+// /wiki/<slug>.html，文件一旦留在 /wiki 下，直连或刷新知识库页会被静态文件截走，SPA 不渲染。
 //
 // 约定（见 docs/wiki-convention.md）：HTML 文档禁止外链 CDN，所有资源必须相对路径或内联。
 
@@ -11,6 +14,8 @@ import path from 'node:path'
 const ROOT = path.resolve(import.meta.dirname, '..')
 const SRC_DIR = path.join(ROOT, 'raw-docs')
 const OUT_DIR = path.join(ROOT, 'public', 'wiki')
+// HTML 文档单独一个目录，避免与 SPA 路由 /wiki/<slug> 撞车（见文件头注释）
+const HTML_DIR = path.join(ROOT, 'public', 'wiki-files')
 const VENDOR_CACHE = path.join(ROOT, '.cache', 'wiki-vendor')
 const EXTS = ['.md', '.markdown', '.html']
 
@@ -276,6 +281,8 @@ async function main() {
 
   await fs.rm(OUT_DIR, { recursive: true, force: true })
   await fs.mkdir(OUT_DIR, { recursive: true })
+  await fs.rm(HTML_DIR, { recursive: true, force: true })
+  await fs.mkdir(HTML_DIR, { recursive: true })
 
   for (const file of files) {
     const slug = slugOf(file)
@@ -284,7 +291,7 @@ async function main() {
       ? await buildHtmlDoc(file, slug, warnings)
       : await buildMarkdown(file, slug)
 
-    const outFile = path.join(OUT_DIR, `${slug}${isHtml ? '.html' : '.md'}`)
+    const outFile = path.join(isHtml ? HTML_DIR : OUT_DIR, `${slug}${isHtml ? '.html' : '.md'}`)
     await fs.mkdir(path.dirname(outFile), { recursive: true })
     await fs.writeFile(outFile, isHtml ? built.html : built.markdown, 'utf8')
 
@@ -304,8 +311,8 @@ async function main() {
       // 二级目录（notes/python、notes/cpp…）单独带出来，列表 meta 行才有话可说
       topic: slugParts.length > 2 ? slugParts[1] : '',
       filePath: `/${relative(ROOT, file)}`,
-      // md 的 href 是运行时取来渲染的源文本；html 的是可独立打开的页面
-      href: `/wiki/${slug}${isHtml ? '.html' : '.md'}`,
+      // md 的 href 是运行时取来渲染的源文本；html 的是可独立打开的页面（放在路由之外的目录）
+      href: isHtml ? `/wiki-files/${slug}.html` : `/wiki/${slug}.md`,
       standalone: Boolean(built.standalone),
       // 置顶权重：0 表示不置顶，正整数越小越靠前（frontmatter `pin: 1`）
       pin: built.pin ?? 0,

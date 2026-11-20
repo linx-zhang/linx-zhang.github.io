@@ -1,5 +1,6 @@
 // 文档清单不再 import.meta.glob 全量内联进 bundle，改为读取构建期生成的 /wiki/index.json。
-// md 的 href 指向 /wiki/<slug>.md（运行时 fetch 后渲染），html 的 href 指向 /wiki/<slug>.html（iframe 直连）。
+// md 的 href 指向 /wiki/<slug>.md（运行时 fetch 后渲染），html 的 href 指向 /wiki-files/<slug>.html（iframe 直连）。
+// html 必须放在 /wiki-files：Pages 会把 /wiki/<slug> 兜底解析到 /wiki/<slug>.html，产物留在 /wiki 下会绕过 SPA。
 
 export interface DocItem {
   slug: string
