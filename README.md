@@ -13,7 +13,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /blog/:id : PostDetail 文章详情与评论
   - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；tab 条通过 ?tab=posts|users|activity|analytics 深链（默认 posts），邀请码是独立分区 ?tab=invites，不占 tab 条，入口在用户页标题行
   - /space : 个人空间（备忘录 / 待办），未登录只显示页内登录门；导航「空间」项仅在登录后渲染
-  - /tools : 工具箱入口（6 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip / hash）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
+  - /tools : 工具箱入口（7 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip / hash）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
 - Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 只在 401 时清 token 并广播该事件（403 是「没有这个权限」的业务结果，不清登录态）；登录/注册这类端点传 `skipAuthReset: true`，避免「凭据错」被当成 token 失效把登录框关掉。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self、clip:delete:own|delete:any。
 - User profile: users 有 nickname / first_name / last_name / avatar_url；展示名优先级 昵称 → 「名 姓」→ 邮箱前缀，已删除用户为「已注销」。GET /auth/me 与登录/注册响应带这四字段（无值为 null）；PATCH /auth/me 走 account:update:self，只接受这四字段（传 email/role 会 422），返回完整用户对象（含 permissions）；PATCH /admin/users/{id} 同时接受四字段与 email/role。
@@ -21,7 +21,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - Shared CSS: 跨页共用的控件样式（.blog-button / .comment-submit / .comment-error 等）统一放 src/styles/shared.css 并由 src/main.tsx 引入，跟随主包加载——懒加载页面（Blog）的 CSS 不会在别的页面加载，控件样式写进页面 CSS 会导致 /admin 这类页面出现无样式裸文字按钮。
 - Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
 - Space memos: src/api/memos.ts 调 /memos（GET 列表 / GET /memos/summary 计数 / POST / PATCH / DELETE），全部 self-scoped，owner 由 token 决定。`due_at` 存 **UTC 时刻** `YYYY-MM-DD HH:MM:SS`（前端把「本地那一天的 23:59:59」换算成 UTC 再上送，后端只做字符串比较），列表里标红「今天到期 / 已过期」，不发提醒；勾选完成写入 `done_at`，取消勾选后端清空它；删除是软删除（`deleted_at`）。列表按 offset 累加「加载更多」，计数单独走 summary 接口，列表本身不带 total。
-- Tools: src/pages/Tools/index.tsx 是一张注册表（slug / 图标 / 标题 / 副标题 / hooks 自带的 Component），新增工具只需加一条 + 一条路由。JSON / SQL / 时间戳 / UUID+密码 / 文件哈希 / 万年历这六个工具纯本地计算（哈希走 `hash-wasm`，8MB 分块读完再算，WASM 直到真的开始算才 `import()`；万年历走 `lunar-javascript`，农历、节气、节日与法定放假/调休都按天缓存，页头与工具页共用 src/utils/lunar.ts）；共享剪切板走后端 src/api/clips.ts（POST /clips 生成 32 位 uuid4 短链、GET /clips/:code 免登录读、DELETE /clips/:code 撤销），内容存 D1 的 cache_entries（`clip:` 前缀、24h TTL），GET 有每 ip 60 次/分 + 每 code 120 次/分的独立预算（429 rate_limited）。复制反馈统一走 src/hooks/useCopy（工具按钮）与 src/utils/clipboard（Markdown 代码块、后台复制），不再各自写 navigator.clipboard。
+- Tools: src/pages/Tools/index.tsx 是一张注册表（slug / 图标 / 标题 / 副标题 / hooks 自带的 Component），新增工具只需加一条 + 一条路由。JSON / SQL / 时间戳 / UUID+密码 / 文件哈希 / 万年历这七个工具纯本地计算（哈希走 `hash-wasm`，8MB 分块读完再算，WASM 直到真的开始算才 `import()`；万年历走 `lunar-javascript`，农历、节气、节日与法定放假/调休都按天缓存，页头与工具页共用 src/utils/lunar.ts）；共享剪切板走后端 src/api/clips.ts（POST /clips 生成 32 位 uuid4 短链、GET /clips/:code 免登录读、DELETE /clips/:code 撤销），内容存 D1 的 cache_entries（`clip:` 前缀、24h TTL），GET 有每 ip 60 次/分 + 每 code 120 次/分的独立预算（429 rate_limited）。复制反馈统一走 src/hooks/useCopy（工具按钮）与 src/utils/clipboard（Markdown 代码块、后台复制），不再各自写 navigator.clipboard。
 - 放假与调休（万年历）：`lunar-javascript` 的 `HolidayUtil` 内置国务院放假安排，数据在库里、不联网、不调 API；本站用它画格子角标（`休` / `班`）和详情卡那行「休假 · 国庆节（10 月 1 日 – 10 月 7 日，共 7 天）」。库目前覆盖 **2001–2027**，更远的年份 `getHoliday` 返回 null，页面按「没有安排」静默处理（不会报错、也不会瞎标）。国务院每年 11–12 月公布次年安排，届时 `npm update lunar-javascript` 升版本即可，不用改代码。
 - Bundle: 分包做在「重依赖」上，而不是按页面铺开。页面级只懒加载三个把 react-markdown / Prism / rehype 带进来的页面（Docs / Blog / PostDetail）；工具箱的七个工具组件各自 `lazy()`（JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool / CalendarTool），写作面板里的 MarkdownView 也是懒加载。Home、DocsHome、Space、Admin、Tools 入口、Profile 仍在主包（`docs/assets/index-*.js`），切常用页不闪占位。
 - Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
@@ -47,7 +47,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki/<slug>.html`，站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
 - **GitHub 风格排版**：`github-markdown-css` + `react-markdown` + `prism-one-light`
 - **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
-- **工具箱**：`/tools` 六张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v1/v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）
+- **工具箱**：`/tools` 七张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v1/v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）、万年历（农历 / 节气 / 放假调休，可跳到空间看当天待办）
 - **GitHub Pages 部署**：`.github/workflows/build.yml` 在 push `main` 时 lint + test + build，用 `upload-pages-artifact` / `deploy-pages` 发布 `docs/`，产物不入库；`public/404.html` 兜底 SPA 深链刷新
 
 ---
@@ -80,7 +80,7 @@ npm run preview
 # 运行 oxlint
 npm run lint
 
-# 跑单元测试（vitest，5 个文件 38 例）
+# 跑单元测试（vitest，11 个文件 120 例）
 npm run test
 ```
 
@@ -176,7 +176,7 @@ npm run test
 
 ## 🧰 工具箱
 
-`/tools` 是入口页（六张图标卡，容器 928px 下按 4 列排），点任意一张进入独占整页的工具；`/tools/<slug>` 与 `/tools/clip/<code>` 共用同一个 `Tools` 组件，靠 `slug` / `code` 分派。
+`/tools` 是入口页（七张图标卡，容器 928px 下按 4 列排），点任意一张进入独占整页的工具；`/tools/<slug>` 与 `/tools/clip/<code>` 共用同一个 `Tools` 组件，靠 `slug` / `code` 分派。
 
 | slug | 工具 | 数据来源 |
 | --- | --- | --- |
@@ -186,6 +186,7 @@ npm run test
 | `random` | UUID（v1 / v4 / v7）与密码生成 | 本地（crypto） |
 | `clip` | 共享剪切板：贴日志生成免登录短链 | 后端 `/clips` + D1 cache |
 | `hash` | 文件哈希：拖放 / 点选文件，MD5・SHA-1・SHA-256・SHA-512 多选 | 本地（`hash-wasm`，8MB 分块，WASM 按需 `import()`） |
+| `calendar` | 万年历：月视图带农历、节气、节日与放假 / 调休角标 | 本地（`lunar-javascript`，按天缓存） |
 
 ### 共享剪切板的接口约定
 
@@ -243,7 +244,7 @@ linx-zhang.github.io/
 │  │  ├─ Blog/              # 列表 + 写作面板、详情 + 评论
 │  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ResetPasswordDialog / ActivityTab / AnalyticsTab）
 │  │  ├─ Space/             # 个人空间（备忘录 / 待办 + 自绘日历）
-│  │  ├─ Tools/             # 工具箱：index.tsx 注册表 + JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool
+│  │  ├─ Tools/             # 工具箱：index.tsx 注册表 + JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool / CalendarTool
 │  │  └─ Profile/           # 独立简历页（PDF 导出）
 │  ├─ hooks/
 │  │  ├─ useCopy.ts         # 复制按钮统一反馈（copiedKey 区分同屏多个按钮）
@@ -259,6 +260,7 @@ linx-zhang.github.io/
 │     ├─ clipboard.ts       # copyText()：clipboard API + execCommand 兜底
 │     ├─ format.ts          # 日期 / 文本格式化
 │     ├─ calendar.ts        # 自绘日历的日期计算
+│     ├─ lunar.ts           # 农历 / 节气 / 节日与放假调休（lunar-javascript，按天缓存）
 │     └─ markdownEdit.ts    # 写作面板的文本编辑命令实现
 ├─ scripts/
 │  ├─ build-wiki.mjs        # 构建期镜像 raw-docs（md → .md 副本、html → 静态页）+ index.json
@@ -363,10 +365,12 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 
 ## 🌐 部署到 GitHub Pages
 
-1. 执行 `npm run build` 生成 `/docs` 目录产物
-2. 提交并推送至仓库 `main` 分支
-3. 在仓库 Settings → Pages 中配置：Source 选 Deploy from a branch，Branch 选 `main` / `/docs`
-4. 等待部署完成后访问对应域名
+1. 把改动推送到 `main`（**不要提交 `docs/`**，它已在 `.gitignore` 里）
+2. `.github/workflows/build.yml` 在 push `main` 时跑 `npm ci` → oxlint → vitest → 契约校验 → 构建 → 产物完整性检查，任何一步红就不发布；job `deploy` 只在 `main` 上把 artifact 发给 Pages
+3. 仓库 Settings → Pages 的 Source 固定为 **GitHub Actions**（不是 Deploy from a branch，也没有 `main /docs` 这个分支目录配置）
+4. 等待 Actions 的 `deploy` job 完成，访问 `https://linx-zhang.github.io`
+
+本地 `npm run build` 只用于自测；它写出的 `docs/` 与 CI 构建的那份等价，但不参与发布。
 
 ### SPA 深链兜底（404.html）
 

@@ -21,7 +21,7 @@ push 到 `main` 触发 `.github/workflows/build.yml`，job `build` 依次执行�
 |---|---|---|
 | 1 | 装依赖 | `npm ci`（node 22 + npm 缓存） |
 | 2 | 静态检查 | `npm run lint` → **oxlint** |
-| 3 | 单元测试 | `npm test` → **vitest run**（当前 111 例） |
+| 3 | 单元测试 | `npm test` → **vitest run**（当前 120 例） |
 | 4 | 契约漂移 | `git clone --depth 1 .../cf-api-worker.git /tmp/cf-api-worker` 后 `node scripts/check-contract.mjs --api /tmp/cf-api-worker` |
 | 5 | 构建 | `npm run build` = **`tsc -b`** + `node scripts/build-docs.mjs` |
 | 6 | 产物完整 | `docs/index.html`、`docs/404.html`、`docs/wiki/index.json`、`docs/assets/` 存在 |
@@ -112,3 +112,4 @@ node scripts/check-contract.mjs --api "D:\this_code\cloudflare-workers\api-worke
 
 - 已否决：pickle→JSON（用户原话"随意 py 对象都可以保存"）、CSS 拆分与 hex 变量化、目录命名改造、原生 `input[type=date]`。
 - 站内时间统一 UTC datetime；博客编辑必须支持全屏。
+
