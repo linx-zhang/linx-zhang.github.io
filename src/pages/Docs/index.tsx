@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import MarkdownView from '@/components/MarkdownView'
@@ -87,10 +87,70 @@ export default function Docs() {
   const appMode = doc?.type === 'html' && fullscreen
 
   const exitFullscreen = useCallback(() => {
-    const next = new URLSearchParams(searchParams)
-    next.delete('full')
-    setSearchParams(next, { replace: true })
-  }, [searchParams, setSearchParams])
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('full')
+        return next
+      },
+      { replace: true },
+    )
+  }, [setSearchParams])
+
+  // 事件回调和 iframe 里的监听都读 ref，避免闭包里拿到过期的 full 状态
+  const fullscreenRef = useRef(fullscreen)
+  useEffect(() => {
+    fullscreenRef.current = fullscreen
+  }, [fullscreen])
+
+  /**
+   * 全屏时正文是 iframe，点进去之后焦点在 iframe 自己的 window 里，
+   * 键盘事件不会冒泡到父窗口——父页面上的 Esc 监听因此永远收不到。
+   * 同源可以直接在 iframe 内挂监听，跨域拿不到 contentWindow 就只留右上角按钮。
+   */
+  const frameListeners = useRef(new Map<Window, (event: KeyboardEvent) => void>())
+
+  const bindFrameEscape = useCallback(
+    (frame: HTMLIFrameElement | null) => {
+      if (!frame) return
+      let frameWindow: Window | null = null
+      try {
+        frameWindow = frame.contentWindow
+      } catch {
+        return
+      }
+      if (!frameWindow || frameListeners.current.has(frameWindow)) return
+      const handler = (keyEvent: KeyboardEvent) => {
+        if (keyEvent.key === 'Escape' && fullscreenRef.current) exitFullscreen()
+      }
+      try {
+        frameWindow.addEventListener('keydown', handler, true)
+      } catch {
+        /* 跨域 iframe 无法监听，退出按钮仍然可用 */
+        return
+      }
+      frameListeners.current.set(frameWindow, handler)
+    },
+    [exitFullscreen],
+  )
+
+  // 从普通页点「全屏阅读」不会重新 load iframe，所以进入全屏时补挂一次；退出时统一摘掉
+  useEffect(() => {
+    if (!fullscreen) return
+    document
+      .querySelectorAll<HTMLIFrameElement>('.doc-app-iframe, .doc-iframe')
+      .forEach((frame) => bindFrameEscape(frame))
+    return () => {
+      for (const [frameWindow, handler] of frameListeners.current) {
+        try {
+          frameWindow.removeEventListener('keydown', handler, true)
+        } catch {
+          /* 窗口已经被导航走了，监听本来就不存在了 */
+        }
+      }
+      frameListeners.current.clear()
+    }
+  }, [fullscreen, bindFrameEscape])
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -160,6 +220,7 @@ export default function Docs() {
           className="doc-app-iframe"
           src={doc.href}
           title={doc.title}
+          onLoad={(event) => bindFrameEscape(event.currentTarget)}
         />
         <button
           type="button"
@@ -191,6 +252,7 @@ export default function Docs() {
       className={`doc-iframe ${doc.standalone ? 'doc-iframe--app' : 'doc-iframe--auto'}`}
       src={doc.href}
       title={doc.title}
+      onLoad={(event) => bindFrameEscape(event.currentTarget)}
       // 非全屏时由静态页上报高度撑开，全屏时交给外层容器
       style={doc.standalone || height === null ? undefined : { height: `${height}px` }}
     />
