@@ -27,8 +27,9 @@ dist-ssr
 .trae-html-share-packages/
 .screenshots/
 
-# 知识库构建产物（scripts/build-wiki.mjs 生成，随 vite build 拷进 docs/wiki）
+# 知识库构建产物（scripts/build-wiki.mjs 生成，随 vite build 拷进 docs/wiki 与 docs/wiki-files）
 /public/wiki/
+/public/wiki-files/
 /.cache/
 
 # 构建中转目录（scripts/build-docs.mjs 用）
