@@ -27,6 +27,8 @@ export interface DatePickerProps {
   triggerClassName?: string
   /** 触发器左侧图标 */
   icon?: React.ReactNode
+  /** 选中值后面那句提示，默认是备忘录的「到期」；周期用「开始 / 用完」 */
+  suffix?: string
 }
 
 const PANEL_MIN_WIDTH = 330
@@ -51,6 +53,7 @@ export default function DatePicker({
   ariaLabel,
   triggerClassName,
   icon,
+  suffix = '到期',
 }: DatePickerProps) {
   /**
    * 「今天」每次渲染现算，不再在挂载时捕一次。
@@ -166,7 +169,7 @@ export default function DatePicker({
       >
         {icon}
         <span className={value ? 'date-trigger-value' : 'date-trigger-value is-empty'}>
-          {value ? `${value.slice(5)} 到期` : placeholder}
+          {value ? `${value.slice(5)}${suffix ? ` ${suffix}` : ''}` : placeholder}
         </span>
       </button>
 

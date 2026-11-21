@@ -4,7 +4,7 @@ pin: 2
 
 # 深入前端：静态托管上的单页应用
 
-这个站点的前端没有服务端渲染，也没有运维面板：构建产物不再入库，`push` 到 `main` 后由 GitHub Actions 跑 lint + test + build，直接把 artifact 发到 Pages。所有「像后端」的能力——账号、文章、评论、备忘录、共享剪切板、访问统计——都在浏览器里发出，跨域打到 Cloudflare Worker。
+这个站点的前端没有服务端渲染，也没有运维面板：构建产物不再入库，`push` 到 `main` 后由 GitHub Actions 跑 lint + test + build，直接把 artifact 发到 Pages。所有「像后端」的能力——账号、文章、评论、备忘录、日常消耗品、共享剪切板、访问统计——都在浏览器里发出，跨域打到 Cloudflare Worker。
 
 这种约束下，前端架构要解决的不是「怎么把页面画出来」，而是三件更硬的事：**在只有静态文件的环境里保住路由与深链**、**把接口契约收敛到一个入口**、**在没有框架兜底的情况下让列表、浮层、权限这些高频结构只有一份实现**。
 
@@ -57,7 +57,7 @@ GitHub Pages 对 `/blog/36` 这类路径没有对应文件，会返回 404 页�
 
 ## 三、数据层：一个函数收口
 
-`src/api/client.ts` 是全站唯一的数据传输入口，`auth` / `blog` / `admin` / `memos` / `clips` 这些模块只提供类型化的接口函数，不自己拼 `fetch`。
+`src/api/client.ts` 是全站唯一的数据传输入口，`auth` / `blog` / `admin` / `memos` / `consumables` / `clips` 这些模块只提供类型化的接口函数，不自己拼 `fetch`。
 
 收口带来的第一件事是把错误语义定死：
 
@@ -137,7 +137,7 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 
 同理，`html { scrollbar-gutter: stable }` 是为了修一个很隐蔽的抖动：列表从「短（无滚动条）」切到「长（有滚动条）」时，居中容器会被滚动条宽度推着左右抖——筛选、翻页、空态来回切最容易看见。
 
-页面样式里体量最大的是 `pages/Admin/Admin.css`（1186 行）、`Tools.css`（962 行）、`Space.css`（632 行）、`Blog.css`（604 行）。这四个页面本身就是多个分区的复合体，样式集中在一处反而比拆成十几个文件更好定位——这是有意识的取舍，不是没整理。
+页面样式里体量最大的是 `pages/Space/Space.css`（1614 行）、`pages/Admin/Admin.css`（1186 行）、`Tools.css`（962 行）、`Blog.css`（604 行）。这几个页面本身就是多个分区的复合体，样式集中在一处反而比拆成十几个文件更好定位——这是有意识的取舍，不是没整理。个人空间现在是「备忘录 + 消耗品」两个板块共用一个 `Space.css`，模块 tab 与卡片布局都在这一份里。
 
 ## 七、体积：懒加载的账
 
@@ -165,9 +165,9 @@ CSS 合计约 109.3 KB，主包 58.1 KB、MarkdownView 35.2 KB，基本和页面
 
 ## 九、热点与下一步
 
-按行数排，前五名里有四个是样式：`Admin.css` 1186、`Tools.css` 962、`Space.css` 632、`Blog.css` 604；逻辑侧最大的是 `Space/index.tsx` 557 行、`Blog/PostDetail.tsx` 503 行、`Blog/index.tsx` 398 行。
+按行数排，前五名里四个是样式：`Space.css` 1614、`Admin.css` 1186、`Tools.css` 962、`Blog.css` 604；逻辑侧最大的是 `Space/SpaceConsumables.tsx` 915 行、`Space/index.tsx` 690 行、`Blog/PostDetail.tsx` 503 行、`Blog/index.tsx` 398 行。
 
-`Space/index.tsx` 557 行里混了「备忘录列表 + 筛选 + 新建/编辑表单 + 到期日选择 + 删除确认」五件事，是最值得下一步拆的：把表单状态与提交逻辑抽成 `useMemoEditor`，页面只留编排。`Admin.css` 1186 行则是后台五个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
+`SpaceConsumables.tsx` 915 行里混了「看板排序 + 新建表单 + 用完确认 + 详情修正 + 周期历史」五件事，是最值得下一步拆的：把详情与周期编辑抽成 `useConsumableEditor`，页面只留看板编排。`Space/index.tsx` 已经按模块拆过一轮（备忘录留在页面、消耗品独立组件），剩下的台账/筛选逻辑仍在页面里。`Admin.css` 1186 行则是后台五个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
 
 ## 十、取舍清单
 

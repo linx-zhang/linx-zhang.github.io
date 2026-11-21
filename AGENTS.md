@@ -21,7 +21,7 @@ push 到 `main` 触发 `.github/workflows/build.yml`，job `build` 依次执行�
 |---|---|---|
 | 1 | 装依赖 | `npm ci`（node 22 + npm 缓存） |
 | 2 | 静态检查 | `npm run lint` → **oxlint** |
-| 3 | 单元测试 | `npm test` → **vitest run**（当前 120 例） |
+| 3 | 单元测试 | `npm test` → **vitest run**（当前 134 例） |
 | 4 | 契约漂移 | `git clone --depth 1 .../cf-api-worker.git /tmp/cf-api-worker` 后 `node scripts/check-contract.mjs --api /tmp/cf-api-worker` |
 | 5 | 构建 | `npm run build` = **`tsc -b`** + `node scripts/build-docs.mjs` |
 | 6 | 产物完整 | `docs/index.html`、`docs/404.html`、`docs/wiki/index.json`、`docs/assets/` 存在 |
@@ -41,7 +41,7 @@ $env:Path = "C:\Users\LinxZhang\.local\bin;C:\Program Files\nodejs;C:\Windows\Sy
 $env:UV_PYTHON = "3.14"
 Set-Location -LiteralPath "D:\this_code\cloudflare-workers\api-worker"
 
-uv run --frozen pytest -q          # 当前 76 passed（含 tests/test_routes.py 的路由层用例）
+uv run --frozen pytest -q          # 当前 129 passed（含 tests/test_routes.py 的路由层用例）
 uv run --frozen ruff check src tests   # 当前 All checks passed
 
 # 只在改了 migrations/*.sql 时（不要加 --yes，会吐 help 并崩溃）
@@ -97,8 +97,9 @@ node scripts/check-contract.mjs --api "D:\this_code\cloudflare-workers\api-worke
 
 ## 5. 索引与清理任务现状
 
-- 存活行 partial index 已在线上（`0015_live_partial_indexes.sql`）：`idx_posts_live_created_id`、`idx_memos_live_user_created`、`idx_memos_live_user_done`、`idx_comments_live_post_created_id`。旧的全量索引保留（带 author/q/done 过滤的查询还要用）。
+- 存活行 partial index 已在线上：`idx_posts_live_created_id`、`idx_memos_live_user_created`、`idx_memos_live_user_done`、`idx_comments_live_post_created_id`（0015），以及消耗品的 `idx_consumable_items_live_user_created`、`idx_consumable_cycles_live_item_started`、`idx_consumable_cycles_live_item_ended`（0016）。旧的全量索引保留（带 author/q/done 过滤的查询还要用）。
 - `posts` 列表计划仍是 `SCAN ... USING INDEX idx_posts_live_created_id`——表只有几十行，规划器认为全扫更便宜，但扫的是只含存活行的索引，属预期。
+- 消耗品还有一条**唯一** partial index：`idx_consumable_cycles_open_item`（`item_id WHERE ended_on IS NULL AND deleted_at IS NULL`），保证一个物品同时只有一轮进行中；接口 409 只是友好提示，真正的兜底在这条索引。
 - cron 三段：activity 保留 30 天 → cache 清理 → memos 墓碑 90 天硬删（`src/tasks/memo_tombstone.py`）。memos 表是 AUTOINCREMENT，硬删后 id 依然永不复用。
 
 ## 6. 已知缺口（别误以为有闸门）

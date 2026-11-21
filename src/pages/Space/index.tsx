@@ -15,10 +15,16 @@ import { formatDate, localDayEndUtc } from '@/utils/format'
 import { today, WEEKDAYS } from '@/utils/calendar'
 import { dayExtrasLabel } from '@/utils/lunar'
 import SpaceCalendar from './SpaceCalendar'
+import SpaceConsumables from './SpaceConsumables'
 import './Space.css'
 
 type Filter = 'all' | 'pending' | 'done'
 type View = 'list' | 'calendar'
+/** 个人空间两个板块：备忘录（含日历）和日常消耗品 */
+type Module = 'memo' | 'consumables'
+
+/** 两个板块共用同一句：模块名由 tab 承担，这里只表达「只属于你」 */
+const SPACE_TAGLINE = '只属于你，别人看不到。'
 
 /** "M 月 D 日 · 星期四 · 农历十月十一 · 今日小雪" */
 function todayLabel(): string {
@@ -52,6 +58,9 @@ export default function Space() {
   // 视图支持 ?view=calendar 直接进来（万年历下方有「查看我的待办」入口）
   const [params] = useSearchParams()
   const [view, setView] = useState<View>(() => (params.get('view') === 'calendar' ? 'calendar' : 'list'))
+  const [module, setModule] = useState<Module>(() =>
+    params.get('tab') === 'consumables' ? 'consumables' : 'memo',
+  )
   // ?date=YYYY-MM-DD 只当天进月历时用一次；格式不对就当没传
   const initialDay = useMemo(() => {
     const raw = params.get('date')
@@ -65,11 +74,11 @@ export default function Space() {
    */
   const list = useInfiniteList<Memo>(
     (limit, offset) => memoApi.list(filter === 'all' ? undefined : filter === 'done', limit, offset),
-    { enabled: user !== null },
+    { enabled: user !== null && module === 'memo' },
   )
 
   const summaryQuery = useResource<MemoSummary>(() => memoApi.summary(), [user?.id], {
-    enabled: user !== null,
+    enabled: user !== null && module === 'memo',
     silent: true,
   })
   const summary = summaryQuery.data
@@ -92,7 +101,7 @@ export default function Space() {
       return rows
     },
     [user?.id],
-    { enabled: user !== null && view === 'calendar' },
+    { enabled: user !== null && module === 'memo' && view === 'calendar' },
   )
 
   const [body, setBody] = useState('')
@@ -315,10 +324,10 @@ export default function Space() {
           <Link className="space-meta space-date" to={`/tools/calendar?date=${today()}`} title="打开万年历">
             {todayLabel()}
           </Link>
-          <p className="space-tagline">只属于你的备忘录，别人看不到。</p>
+          <p className="space-tagline">{SPACE_TAGLINE}</p>
         </header>
         <div className="space-gate">
-          <p>登录后才可以记录和查看自己的备忘录与待办。</p>
+          <p>登录后才可以记录和查看自己的备忘录、待办与消耗品。</p>
           <button type="button" className="space-button space-button-primary" onClick={() => openLogin()}>
             登录
           </button>
@@ -335,16 +344,28 @@ export default function Space() {
         <Link className="space-meta space-date" to={`/tools/calendar?date=${today()}`} title="打开万年历">
           {todayLabel()}
         </Link>
-        <p className="space-tagline">只属于你的备忘录，别人看不到。</p>
-        <div className="space-view" role="group" aria-label="视图">
-          <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>
-            列表
-          </button>
-          <button type="button" aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}>
-            日历
-          </button>
-        </div>
+        <p className="space-tagline">{SPACE_TAGLINE}</p>
       </header>
+
+      {/* 两个板块共用页头那行日期；这里只切内容，不换数据来源 */}
+      <nav className="space-modules" role="tablist" aria-label="板块">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={module === 'memo'}
+          onClick={() => setModule('memo')}
+        >
+          备忘录
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={module === 'consumables'}
+          onClick={() => setModule('consumables')}
+        >
+          消耗品
+        </button>
+      </nav>
 
       {/* 快捷入口整条只给管理员：user:read:any 只有 admin 持有，普通用户空间里不显示这一行 */}
       {has('user:read:any') && (
@@ -361,8 +382,25 @@ export default function Space() {
         </nav>
       )}
 
-      {/* 视图切换只换渲染，不换数据来源：列表走分页追加，月历走一次性全量 */}
-      {view === 'list' ? (
+      {module === 'memo' ? (
+        <>
+          <div className="space-view-row">
+            <div className="space-view" role="group" aria-label="视图">
+              <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>
+                列表
+              </button>
+              <button
+                type="button"
+                aria-pressed={view === 'calendar'}
+                onClick={() => setView('calendar')}
+              >
+                日历
+              </button>
+            </div>
+          </div>
+
+          {/* 视图切换只换渲染，不换数据来源：列表走分页追加，月历走一次性全量 */}
+          {view === 'list' ? (
         <>
           <div className="space-dock">
             {!expanded ? (
@@ -640,6 +678,10 @@ export default function Space() {
           onToggleDone={(memo) => void toggleDoneInCalendar(memo)}
           onCreate={createFromCalendar}
         />
+      )}
+        </>
+      ) : (
+        <SpaceConsumables />
       )}
 
       {dialog}

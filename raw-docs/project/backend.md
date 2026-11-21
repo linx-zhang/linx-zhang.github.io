@@ -4,9 +4,9 @@ pin: 3
 
 # 深入后端：Cloudflare Worker + D1 的工程化
 
-后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**55 个文件、5540 行、34 个路由装饰器（+ 根路由 = 35 个端点）、7 张业务表、15 个 migration**（另有 `tests/` 7 个文件 1469 行、113 个用例，不计入运行时代码）。
+后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**38 个文件、5516 行、42 个路由装饰器（+ 根路由 = 43 个端点）、9 张业务表、16 个 migration**（另有 `tests/` 8 个文件 1746 行、129 个用例，不计入运行时代码）。
 
-它要支撑的东西不算少：登录与角色、文章增删改查与相邻篇、评论、访问事件与匿名事件、备忘录、共享剪切板短链、邀请码、用户管理、重置密码、缓存与限流、定时清理。全部跑在一个 Worker 里，没有微服务、没有消息队列、没有 Redis。
+它要支撑的东西不算少：登录与角色、文章增删改查与相邻篇、评论、访问事件与匿名事件、备忘录、日常消耗品、共享剪切板短链、邀请码、用户管理、重置密码、缓存与限流、定时清理。全部跑在一个 Worker 里，没有微服务、没有消息队列、没有 Redis。
 
 这篇讲的是「怎么用最小的基础设施把边界划清楚」：入口只做 glue、错误只有一种形状、权限只有一份码表、分页谓词只有一处实现、缓存留在同一个数据库里。
 
@@ -55,7 +55,7 @@ _GEO_HEADERS = (
 
 分层的判定标准很朴素：**能不能脱离 FastAPI 单独测试**。`core/*` 全部与框架无关（权限码表就是纯字典 + 一个 `has_permission`），`infra/*` 只依赖 D1 binding，路由层只做「校验 → 调服务 → 返回」。
 
-## 四、应用装配：八行注册表
+## 四、应用装配：九行注册表
 
 `api/app.py` 里没有任何业务代码，只有中间件、路由注册、异常处理器安装：
 
@@ -71,6 +71,7 @@ api.include_router(admin.router, prefix="/admin")
 api.include_router(activity.router, prefix="/activity")
 api.include_router(memos.router, prefix="/memos")
 api.include_router(clips.router, prefix="/clips")
+api.include_router(consumables.router, prefix="/consumables")
 
 app.include_router(api)
 ```
@@ -191,7 +192,7 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 
 调用方传了这三个名字，直接 422，而不是「忽略它们然后返回第一页」——后者会被读成「第二页怎么还是第一页」，是最难查的一类静默错误。
 
-## 九、数据层：7 张表、15 个 migration
+## 九、数据层：9 张表、16 个 migration
 
 | 表 | 用途 |
 | --- | --- |
@@ -201,14 +202,17 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 | `invite_codes` | 邀请码（角色、备注、创建人） |
 | `activity_events` | 访问事件（登录批量 + 匿名窗口） |
 | `memos` | 个人备忘录（self-scoped） |
+| `consumable_items` | 日常消耗品（名称、类别、可选数量/单位、提前提醒天数） |
+| `consumable_cycles` | 消耗品周期：一次开封→用完一行，`ended_on IS NULL` 表示进行中 |
 | `cache_entries` | 缓存行（key、value、过期时间） |
 
-15 个 migration 全是增量式，没有一次「推倒重建」的历史。三处值得记住的做法：
+16 个 migration 全是增量式，没有一次「推倒重建」的历史。四处值得记住的做法：
 
 - **迁移只加不删**：`0003_user_soft_delete` 加 `deleted_at`、`0009_token_invalidated_at` 加失效戳、`0010_list_order_indexes` 只加索引。回滚靠「代码兼容旧列」，而不是「数据库回退」。
 - **表结构大改时重建再改名**：`0012_activity_anonymous` 先建 `activity_events_v12`、灌数据、再改名，避免在原表上做破坏性 DDL。
+- **状态交给约束，不交给接口自觉**：`0016_consumables` 用 partial unique index（`item_id WHERE ended_on IS NULL AND deleted_at IS NULL`）保证一个物品同时只有一轮进行中；并发点两次也写不出两条。
 
-软删除是统一约定：`posts`、`users` 都靠 `deleted_at IS NULL` 过滤，列表、相邻篇、权限查询全都要带上这个条件——少写一处，就会出现「删掉的文章还能被翻到」。
+软删除是统一约定：`posts`、`users`、`memos`、`consumable_items` 都靠 `deleted_at IS NULL` 过滤，列表、相邻篇、权限查询全都要带上这个条件——少写一处，就会出现「删掉的文章还能被翻到」。消耗品的软删还要连带把它的周期一起标记，否则重建同名物品时会带出旧历史。
 
 ## 十、缓存与限流：留在同一个数据库
 

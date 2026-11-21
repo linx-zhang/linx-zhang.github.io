@@ -1,5 +1,7 @@
-// 后端 Worker 地址：切换环境只需改这一处
-export const API_BASE = 'https://linx-api-78i.pages.dev'
+// 后端 Worker 地址：切换环境只需改这一处。
+// 本地联调时用 `VITE_API_BASE=http://127.0.0.1:8787 npm run dev` 临时指到本机，
+// 默认（也就是构建产物）仍然走线上 Pages 代理。
+export const API_BASE = import.meta.env.VITE_API_BASE ?? 'https://linx-api-78i.pages.dev'
 
 /**
  * 业务接口统一挂在 `/api` 下（后端 `src/api/app.py` 的 API_PREFIX）。
