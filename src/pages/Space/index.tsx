@@ -252,6 +252,19 @@ export default function Space() {
     }
   }
 
+  /**
+   * 月历里「在选中的那天记一条」：到期时刻在这里统一换算成本地 23:59:59 的 UTC，
+   * 月历数据直接追加服务端返回值，省掉一次全量重取；列表与计数各刷新一次对齐。
+   */
+  const createFromCalendar = async (body: string, day: string) => {
+    const created = await memoApi.create({ body, due_at: localDayEndUtc(day) })
+    calendarQuery.setData([...(calendarQuery.data ?? []), created])
+    summaryQuery.reload()
+    // 新建的都是未完成，落在「已完成」筛选里看不见，和列表视图一样切回全部
+    if (filter === 'done') setFilter('all')
+    list.reload()
+  }
+
   const remove = (memo: Memo) => {
     confirm({
       title: '删除这条备忘录？',
@@ -625,6 +638,7 @@ export default function Space() {
           initialDay={initialDay}
           onRetry={calendarQuery.reload}
           onToggleDone={(memo) => void toggleDoneInCalendar(memo)}
+          onCreate={createFromCalendar}
         />
       )}
 

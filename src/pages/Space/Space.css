@@ -823,6 +823,121 @@
   font-weight: 600;
 }
 
+/* 选中日期的标题与「记一条」同一行：入口贴着它作用的那一天，不另起一块 */
+.space-cal-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.space-cal-day-head h2 {
+  margin-bottom: 0;
+}
+
+.space-cal-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.space-cal-add:hover,
+.space-cal-add:focus-visible {
+  border-color: #e5e7eb;
+  background: #f9fafb;
+  color: #1f2937;
+  outline: none;
+}
+
+.space-cal-add svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+
+/* 就地展开的输入区：和勾选列表同一列，看得到「加给哪一天」再动手 */
+.space-cal-compose {
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.6rem 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #fbfcfd;
+}
+
+.space-cal-compose-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.space-cal-compose-target {
+  color: #4b5563;
+  font-size: 0.76rem;
+}
+
+.space-cal-compose-target b {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.space-cal-compose-hint {
+  color: #b6bcc6;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.space-cal-compose textarea {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  max-height: 120px;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  resize: none;
+  outline: none;
+}
+
+.space-cal-compose textarea:focus {
+  border-color: #9ca3af;
+}
+
+.space-cal-compose textarea::placeholder {
+  color: #b6bcc6;
+}
+
+.space-cal-compose .space-error {
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+}
+
+.space-cal-compose-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
 .space-cal-empty {
   color: #9ca3af;
   font-size: 0.82rem;
@@ -904,6 +1019,13 @@
     aspect-ratio: auto;
     height: 62px;
     max-width: 110px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 窄屏放不下两行提示：到期日那行更重要，快捷键提示让位 */
+  .space-cal-compose-hint {
+    display: none;
   }
 }
 
