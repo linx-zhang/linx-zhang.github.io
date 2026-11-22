@@ -3,7 +3,7 @@
 You are a senior full-stack/frontend engineer maintaining this repository.
 - Repo: linx-zhang.github.io
 - Stack: Vite 8（Rolldown）+ React 19.3.1 + TypeScript（verbatimModuleSyntax）+ react-router-dom 7.18.5（BrowserRouter / Routes / Route 的 v6 风格 API）
-- Deployment: GitHub Pages，Pages source 设为 **GitHub Actions**。`.github/workflows/build.yml`（`build & deploy`）在 push `main` 时跑 `npm ci` → lint → test → build，校验产物后用 `upload-pages-artifact` + `deploy-pages` 发布；`npm run build` 仍写 `docs/`（build.outDir、emptyOutDir、base='/'），但 `docs/` 已进 `.gitignore`，产物不入库。SPA 深链刷新由 public/404.html 兜底：把原始路径写入 sessionStorage.spa-fallback-path 后回到根路径，src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复；`docs/.nojekyll` 仍由 `scripts/build-docs.mjs` 生成（Actions 走 artifact，不经过 Jekyll，留着它只让“把 docs/ 直接推上 Pages”的老路径依然可用）。
+- Deployment: GitHub Pages，Pages source 设为 **GitHub Actions**。`.github/workflows/build.yml`（`build & deploy`）在 push `main` 时跑 `npm ci` → lint → test → build，校验产物后用 `upload-pages-artifact` + `deploy-pages` 发布；`npm run build` 仍写 `docs/`（build.outDir、emptyOutDir、base='/'），但 `docs/` 已进 `.gitignore`，产物不入库。SPA 深链刷新由 public/404.html 兜底：把原始路径写入 sessionStorage.spa-fallback-path 后回到根路径，src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复。
 - Backend: Cloudflare Python Worker + FastAPI + D1，base 常量在 `src/api/client.ts` 的 `API_BASE`（硬编码，不读环境变量）。响应统一为 { code, detail, data }，前端 request<T>() 解包 data；错误抛 ApiError(status, code, detail)。
 - Core Routes（定义在 src/routes.ts 与 src/main.tsx）:
   - / : Home（RootLayout 内）
@@ -86,7 +86,6 @@ npm run test
 ```
 
 > `npm run build` 实际执行 `tsc -b && vite build`。构建走 `scripts/build-docs.mjs`：先建到 `docs_build`，校验通过再整目录替换 `docs/`。**构建前先停掉 `npm run dev`**——vite 的文件监听会锁住项目目录，导致目录替换报 `EPERM`。本地构建只为自测，上线由 Actions 做；`docs/` 已进 `.gitignore`，不要 `git add docs`。
-> 构建脚本同时会写一个空的 `docs/.nojekyll`：这条规则来自“把 `docs/` 直接推上 Pages”的老路径——Jekyll 会把 `docs/wiki/**/*.md` 再渲染一份同名 `.html`。现在发布走 Actions 的 artifact，不经过 Jekyll，`.nojekyll` 留着不占什么，但别再把它当成发布问题的解药。
 >
 > **注意**：新增或删除 `raw-docs/` 下的文件后，跑一次 `npm run wiki`（`dev` / `build` 会自动触发），再刷新浏览器。`public/wiki/` 是由源文件生成的，不要手工改。
 
@@ -337,7 +336,8 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 
 5. `npm run build` 前先停 `npm run dev`（vite 的文件监听会锁目录）。报 `EPERM: rename docs_build -> docs` 说明没停干净：停 dev → 若 `docs/` 已变成 `.docs-trash` 就把 `docs_build` 改回 `docs` → 删 `.docs-trash` → 重跑。
 6. 产物 `docs/` **不入库**（`.gitignore` 有 `/docs/`）。改完代码直接 commit + push 到 `main`，`.github/workflows/build.yml` 会跑 lint + test + build 并发布 Pages；本地 `npm run build` 只为自测，不要 `git add docs`，也不要手工回写产物。
-7. `docs/.nojekyll` 仍由构建脚本生成，不要手写也不要删（只对老的手工推 `docs/` 路径有意义）。
+7. 发布由 Actions 的 artifact 直出，不需要额外的 Pages 静态站点配置。
+
 
 **验证线上**
 
@@ -383,4 +383,4 @@ GitHub Pages 为纯静态托管，直接访问或刷新 `/wiki/xxx`、`/blog/xxx
 3. React Router 随后正常命中目标路由，用户不会停在 404 或白屏
 
 - 通过站内链接正常跳转时不会触发 404.html
-- `docs/.nojekyll` 必须存在，由构建脚本每次生成：GitHub Pages 默认跑 Jekyll，会把 `docs/wiki/**/*.md` 再渲染成同名 `.html`（症状是**已删除的路径仍然 GET 200、内容是渲染好的 HTML**）。它不在源码里手写，因为构建是「建到 `docs_build` 再整目录替换」，手写的那份下次 build 就没了。
+- 发布由 Actions 的 artifact 直出，不经过 Jekyll，产物不需要额外的静态站点标记文件。

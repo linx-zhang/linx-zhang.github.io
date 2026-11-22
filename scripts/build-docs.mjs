@@ -3,7 +3,7 @@
 // 这个位置曾被安全软件锁过（写同名文件一律 Access denied / os error 5），
 // 所以先生成到临时目录 docs_build，再整目录替换，避免撞上被锁的文件名。
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, renameSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = process.cwd();
@@ -69,10 +69,6 @@ try {
   copyFileSync(join(STAGE, 'index.html'), join(STAGE, 'wiki', 'index.html'));
   console.log('  ✓ docs/wiki/index.html ← docs/index.html');
 
-  // GitHub Pages 默认会跑 Jekyll，把 docs/wiki 下的 .md 再渲染成 .html（同名 URL 会命中 Jekyll 版本，
-  // 排版和站内不一致，还多出一份产物）。.nojekyll 关掉 Jekyll，让站点只发原始静态文件。
-  writeFileSync(join(STAGE, '.nojekyll'), '');
-  console.log('  ✓ docs/.nojekyll');
 
   if (existsSync(TRASH)) rmSync(TRASH, { recursive: true, force: true });
 
