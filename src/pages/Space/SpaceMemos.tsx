@@ -11,6 +11,7 @@ import { MEMO_BODY_MAX } from '@/constants'
 import { formatDate, localDayEndUtc } from '@/utils/format'
 import { today } from '@/utils/calendar'
 import SpaceCalendar from './SpaceCalendar'
+import SpaceSkeleton from './SpaceSkeleton'
 import { sortMemos } from './memoSort'
 import type { MemoFilter, MemoView } from './memoSort'
 import './SpaceMemos.css'
@@ -413,19 +414,7 @@ export default function SpaceMemos({ userId, view, initialDay }: Props) {
             </div>
           )}
 
-          {status === 'loading' && items.length === 0 && (
-            <div className="space-list" aria-busy="true" aria-label="加载中">
-              {[0, 1, 2].map((row) => (
-                <article key={row} className="space-memo space-skeleton">
-                  <span className="space-skeleton-box" />
-                  <div className="space-skeleton-lines">
-                    <span className="space-skeleton-line" />
-                    <span className="space-skeleton-line is-short" />
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+          {status === 'loading' && items.length === 0 && <SpaceSkeleton className="space-list" />}
 
           {status !== 'error' && items.length === 0 && status === 'ready' && (
             <div className="space-state">

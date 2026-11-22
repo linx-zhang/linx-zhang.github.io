@@ -60,6 +60,16 @@ beforeEach(() => {
 })
 
 describe('SpaceConsumables', () => {
+  it('加载中显示骨架，不把空列表当成没有记录', () => {
+    api.list.mockReturnValue(new Promise(() => {}))
+    const { container } = render(<SpaceConsumables />)
+
+    expect(screen.getByRole('status', { name: '加载中' })).toBeTruthy()
+    expect(screen.getByText('加载中…')).toBeTruthy()
+    expect(screen.queryByText('还没有记录')).toBeNull()
+    expect(container.querySelectorAll('.space-skeleton')).toHaveLength(3)
+  })
+
   it('把该买的排在最前，并显示状态与剩余天数', async () => {
     api.list.mockResolvedValue({
       items: [

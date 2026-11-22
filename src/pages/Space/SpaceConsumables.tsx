@@ -3,6 +3,7 @@ import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import type { Consumable } from '@/api/consumables'
 import ConsumableCard from './ConsumableCard'
 import ConsumableForm from './ConsumableForm'
+import SpaceSkeleton from './SpaceSkeleton'
 import { useConsumables } from './useConsumables'
 import './SpaceConsumables.css'
 
@@ -75,7 +76,9 @@ export default function SpaceConsumables() {
     <section className="space-consumables">
       <div className="space-consumables-bar">
         <p className="space-consumables-count">
-          {counts.total > 0 ? (
+          {status === 'loading' ? (
+            '加载中…'
+          ) : counts.total > 0 ? (
             <>
               {counts.total} 件{counts.due > 0 ? <em> · {counts.due} 件该补了</em> : null}
             </>
@@ -92,6 +95,10 @@ export default function SpaceConsumables() {
           {adding ? '收起' : '＋ 加一件'}
         </button>
       </div>
+
+      {items.length === 0 && status === 'loading' && (
+        <SpaceSkeleton className="space-item-list" />
+      )}
 
       {!adding && items.length === 0 && status === 'ready' && (
         <div className="space-state space-empty-consumables">

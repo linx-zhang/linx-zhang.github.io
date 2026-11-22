@@ -1,0 +1,61 @@
+/* 列表骨架：备忘录与消耗品共用，形状按各自列表的真实卡片 */
+
+.space-skeleton {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.space-skeleton-box,
+.space-skeleton-line {
+  display: block;
+  background: #eceff3;
+  animation: space-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.space-skeleton-box {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0.1rem 0.55rem 0 0.6rem;
+  border-radius: 50%;
+}
+
+.space-skeleton-lines {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+.space-skeleton-line {
+  height: 0.8rem;
+  width: 62%;
+  border-radius: 4px;
+}
+
+.space-skeleton-line.is-short {
+  width: 34%;
+}
+
+@keyframes space-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .space-skeleton-box,
+  .space-skeleton-line {
+    animation: none;
+  }
+}
