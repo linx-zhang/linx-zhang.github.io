@@ -200,7 +200,7 @@ export default function UsersTab() {
             <span>用户</span>
             <span>角色</span>
             <span>注册时间</span>
-            <span>最后活跃</span>
+            <span>最后活跃 ↓</span>
             {showActions && <span>操作</span>}
           </div>
           {items.map((item) => {

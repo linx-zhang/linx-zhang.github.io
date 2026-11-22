@@ -11,7 +11,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /wiki/* : Docs 文档详情（多级 slug）
   - /blog : Blog 列表 + 页内写作面板
   - /blog/:id : PostDetail 文章详情与评论
-  - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；tab 条通过 ?tab=posts|users|activity|analytics 深链（默认 posts），邀请码是独立分区 ?tab=invites，不占 tab 条，入口在用户页标题行
+  - /admin : 管理后台，RequirePermission 守卫 invite_code:read:any；tab 条通过 ?tab=users|posts|activity|analytics 深链（默认 users），邀请码是独立分区 ?tab=invites，不占 tab 条，入口在用户页标题行
   - /space : 个人空间（备忘录 / 待办 + 日常消耗品），未登录只显示页内登录门；导航「空间」项仅在登录后渲染
   - /tools : 工具箱入口（7 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip / hash）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
@@ -20,7 +20,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；DatePicker 单日选择；src/components/ConfirmDialog + useConfirm；src/components/Modal / DialogShell 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/MarkdownEditor 写作面板（工具栏命令在 commands.ts）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission、ListState、RouteFallback、ErrorBoundary。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
 - Shared CSS: 跨页共用的控件样式（.blog-button / .comment-submit / .comment-error 等）统一放 src/styles/shared.css 并由 src/main.tsx 引入，跟随主包加载——懒加载页面（Blog）的 CSS 不会在别的页面加载，控件样式写进页面 CSS 会导致 /admin 这类页面出现无样式裸文字按钮。
 - Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
-- Space memos: src/api/memos.ts 调 /memos（GET 列表 / GET /memos/summary 计数 / POST / PATCH / DELETE），全部 self-scoped，owner 由 token 决定。`due_at` 存 **UTC 时刻** `YYYY-MM-DD HH:MM:SS`（前端把「本地那一天的 23:59:59」换算成 UTC 再上送，后端只做字符串比较），列表里标红「今天到期 / 已过期」，不发提醒；勾选完成写入 `done_at`，取消勾选后端清空它；删除是软删除（`deleted_at`）。列表按 offset 累加「加载更多」，计数单独走 summary 接口，列表本身不带 total。
+- Space memos: src/api/memos.ts 调 /memos（GET 列表 / GET /memos/summary 计数 / POST / PATCH / DELETE），全部 self-scoped，owner 由 token 决定。`due_at` 存 **UTC 时刻** `YYYY-MM-DD HH:MM:SS`（前端把「本地那一天的 23:59:59」换算成 UTC 再上送，后端只做字符串比较），列表里标红「今天到期 / 已过期」，不发提醒；勾选完成写入 `done_at`，取消勾选后端清空它；删除是软删除（`deleted_at`）。列表顺序与后端一致：有到期日的按 `due_at` 升序（逾期的自然排最前），没有到期日的排后面、按创建时间倒序；「已完成」分段改按 `done_at` 倒序。列表按 offset 累加「加载更多」，计数单独走 summary 接口，列表本身不带 total。
 - Space consumables: src/api/consumables.ts 调 `/api/consumables`（GET 全量列表 / POST 新建并开第一轮 / PATCH / DELETE / GET cycles / POST cycles / POST finish / PATCH cycle）。口径是**周期为主**：一次「开封→用完」一行，日常只点一次「用完了」，再选「先不买」或「继续记」；下一轮预计天数取最近至多两轮实测均值。`started_on` / `ended_on` / `due_on` 是**本地日** `YYYY-MM-DD`，请求带 `today=本地日期`，服务端按它现算状态、剩余天数与进度；`quantity` / `unit` 只展示不参与计算。两个板块共用页头日期·星期·农历，`?tab=consumables` 切到消耗品。
 - Tools: src/pages/Tools/index.tsx 是一张注册表（slug / 图标 / 标题 / 副标题 / hooks 自带的 Component），新增工具只需加一条 + 一条路由。JSON / SQL / 时间戳 / UUID+密码 / 文件哈希 / 万年历这七个工具纯本地计算（哈希走 `hash-wasm`，8MB 分块读完再算，WASM 直到真的开始算才 `import()`；万年历走 `lunar-javascript`，农历、节气、节日与法定放假/调休都按天缓存，页头与工具页共用 src/utils/lunar.ts）；共享剪切板走后端 src/api/clips.ts（POST /clips 生成 32 位 uuid4 短链、GET /clips/:code 免登录读、DELETE /clips/:code 撤销），内容存 D1 的 cache_entries（`clip:` 前缀、24h TTL），GET 有每 ip 60 次/分 + 每 code 120 次/分的独立预算（429 rate_limited）。复制反馈统一走 src/hooks/useCopy（工具按钮）与 src/utils/clipboard（Markdown 代码块、后台复制），不再各自写 navigator.clipboard。
 - 放假与调休（万年历）：`lunar-javascript` 的 `HolidayUtil` 内置国务院放假安排，数据在库里、不联网、不调 API；本站用它画格子角标（`休` / `班`）和详情卡那行「休假 · 国庆节（10 月 1 日 – 10 月 7 日，共 7 天）」。库目前覆盖 **2001–2027**，更远的年份 `getHoliday` 返回 null，页面按「没有安排」静默处理（不会报错、也不会瞎标）。国务院每年 11–12 月公布次年安排，届时 `npm update lunar-javascript` 升版本即可，不用改代码。
@@ -118,7 +118,7 @@ npm run test
 
 - 路由表直接写在 `src/main.tsx`，路径常量集中在 `src/routes.ts`；**Docs / Blog / PostDetail 是 `lazy()` 按需加载**（外面套 `Suspense` + `RouteFallback`），工具箱的每个工具组件也在 `Tools/index.tsx` 里各自 `lazy()`，其余页面静态引入
 - `/wiki/*` 由 `Docs` 组件通过 `useParams()['*']` 解析多级 slug
-- `/admin` 的 tab 条用查询参数深链：`?tab=posts`（默认）、`?tab=users`、`?tab=activity`、`?tab=analytics`；邀请码是独立分区 `?tab=invites`，不占 tab 条，入口在用户页标题行「邀请码 →」，从邀请码页可「← 返回用户管理」
+- `/admin` 的 tab 条用查询参数深链：`?tab=users`（默认）、`?tab=posts`、`?tab=activity`、`?tab=analytics`；邀请码是独立分区 `?tab=invites`，不占 tab 条，入口在用户页标题行「邀请码 →」，从邀请码页可「← 返回用户管理」
 - `/space` 放在 `RootLayout` 内（沿用全站导航与页脚），未登录时只渲染页内登录门，不用 `RequirePermission` 踢回；导航「个人空间」项对所有访客常驻（未登录也能看日期、农历与说明）
 - `/space` 两种视图：默认「列表」（分页追加），「日历」按 `due_at` 画月网格（周一开头，蓝点待办 / 灰点已完成 / 红点逾期），点某天看当天条目并可直接勾完成；没有到期日的条目收在「未排到期日」折叠区。`?view=calendar` 可深链，万年历详情的「查看我的待办」就链到 `/space?view=calendar&date=<当天>`
 - `/profile` 不包裹 `RootLayout`，因此没有全站导航与页脚
@@ -145,7 +145,7 @@ npm run test
 | tab | 内容 |
 | --- | --- |
 | `posts` | 文章纯列表、全选与单次 `POST /posts/batch-delete` 批量删除 |
-| `users` | 用户搜索 / 角色筛选 / 分页；行内操作从左到右为「编辑」「重置密码」「删除」（危险操作固定行尾），角色下拉即时保存并支持失败回滚；「重置密码」先二次确认，可手动填写新密码（留空则由后端生成 16 位临时密码），成功后弹窗一次性展示生效的密码并可一键复制（关闭后无法再查看）；「编辑」弹窗只改资料与邮箱，保存只提交改动字段。标题行右侧是「邀请码 →」入口 |
+| `users` | 用户搜索 / 角色筛选 / 分页；默认按最近活跃倒序（没有活跃记录的按注册时间垫底）；行内操作从左到右为「编辑」「重置密码」「删除」（危险操作固定行尾），角色下拉即时保存并支持失败回滚；「重置密码」先二次确认，可手动填写新密码（留空则由后端生成 16 位临时密码），成功后弹窗一次性展示生效的密码并可一键复制（关闭后无法再查看）；「编辑」弹窗只改资料与邮箱，保存只提交改动字段。标题行右侧是「邀请码 →」入口 |
 | `invites` | 独立分区：邀请码创建、列表与撤销；不进 tab 条，只从用户页入口进入，页顶有「← 返回用户管理」 |
 | `activity` | 按用户、类型、日期范围筛选活跃日志；日期范围使用自定义 `DateRangePicker`，按本地日界转 ISO；匿名行在用户列显示「匿名 · ip」 |
 | `analytics` | 活动分析监控页（`GET /admin/analytics/summary`）：今日新增用户 / 活跃用户 / 匿名访客 / 页面浏览四张数字卡，近 7 / 30 天每日浏览柱图（纯 div，不引图表库），访问者表（身份、IP·地区、浏览次数、停留时长、最近时间），点一行展开该身份停留最久的 8 个页面与口径说明 |

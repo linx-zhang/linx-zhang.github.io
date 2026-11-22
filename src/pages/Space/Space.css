@@ -48,53 +48,13 @@
   overflow-wrap: anywhere;
 }
 
-/* 快捷入口：几格都用 flex，只有 1-3 个时也不会留下空列 */
-.space-quick {
-  display: flex;
-  margin-top: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #fff;
-}
-
-/* 三个入口等分整条，和后台 tab 条同一套「一格一格」的读法 */
-.space-quick a {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.15rem;
-  min-height: 60px;
-  padding: 0.6rem 0.7rem;
-  border-right: 1px solid #e5e7eb;
-  color: #1f2937;
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.space-quick a:last-child {
-  border-right: none;
-}
-
-.space-quick a span {
-  color: #9ca3af;
-  font-size: 0.74rem;
-  font-weight: 400;
-}
-
-.space-quick a:hover {
-  background: #f9fafb;
-}
-
 /* 列表头：分段筛选 */
 .space-list-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem 0.75rem;
+  flex-wrap: wrap;
   margin-top: 1.1rem;
 }
 
@@ -127,7 +87,6 @@
 .space-order {
   color: #9ca3af;
   font-size: 0.74rem;
-  white-space: nowrap;
 }
 
 /* 列表 */
@@ -621,11 +580,11 @@
   line-height: 1.6;
 }
 
-/* ===== 视图切换（页头右侧的小分段，和筛选条不是一套） ===== */
+/* ===== 视图切换（工具栏右侧的小分段，和筛选条不是一套） ===== */
 .space-view {
   display: inline-flex;
   flex: 0 0 auto;
-  margin-top: 0.2rem;
+  margin: 0 0 0.35rem;
   padding: 2px;
   border: 1px solid #e5e7eb;
   border-radius: 7px;
@@ -662,12 +621,21 @@
   box-shadow: 0 0 0 1px #e5e7eb;
 }
 
-/* ===== 板块切换：备忘录 / 消耗品（页头那行日期两个板块共用） ===== */
-.space-modules {
+/* ===== 一条工具栏：左板块 tab，右视图切换（页头那行日期两个板块共用） ===== */
+.space-toolbar {
   display: flex;
-  gap: 1.25rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
   margin-top: 0.65rem;
   border-bottom: 1px solid #eef0f3;
+}
+
+.space-modules {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 1.25rem;
+  min-width: 0;
 }
 
 .space-modules button {
@@ -700,12 +668,6 @@
 
 .space-modules button:hover {
   color: #4b5563;
-}
-
-.space-view-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0.7rem;
 }
 
 /* ===== 消耗品看板 ===== */

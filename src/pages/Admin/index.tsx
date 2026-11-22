@@ -23,12 +23,12 @@ interface TabDef {
 
 /**
  * 一张表描述全部分区：新增 tab 只加一行，不再改四处嵌套三元与权限判断。
- * tab 条只排四项（内容 → 人 → 观测）；邀请码留成独立分区，从「用户」页入口进入，
- * 不在用户页里和用户列表挤在同一屏管理。
+ * 用户排在第一位并作为默认分区——后台最常做的是看人和改权限；文章其次。
+ * 邀请码留成独立分区，从「用户」页入口进入，不在用户页里和用户列表挤在同一屏管理。
  */
 const TABS: TabDef[] = [
-  { key: 'posts', label: '文章', panel: <PostsTab /> },
   { key: 'users', label: '用户', permission: 'user:read:any', panel: <UsersTab /> },
+  { key: 'posts', label: '文章', panel: <PostsTab /> },
   { key: 'activity', label: '日志', permission: 'activity:read:any', panel: <ActivityTab /> },
   { key: 'analytics', label: '分析', permission: 'activity:read:any', panel: <AnalyticsTab /> },
   {
@@ -45,21 +45,21 @@ export default function Admin() {
   const { has } = usePermission()
 
   const rawTab = searchParams.get('tab')
-  // 未知 tab 落到第一项：URL 手改错了也不会白屏
-  const active = TABS.find((item) => item.key === rawTab) ?? TABS[0]
   const visible = TABS.filter(
     (item) => !item.entryOnly && (!item.permission || has(item.permission)),
   )
+  // 未知 tab 落到第一个**看得见**的分区：URL 手改错了不会白屏，也不会撞权限门
+  const active = visible.find((item) => item.key === rawTab) ?? visible[0] ?? TABS[0]
 
   const switchTab = (next: AdminTab) => {
-    setSearchParams(next === 'posts' ? {} : { tab: next })
+    setSearchParams(next === 'users' ? {} : { tab: next })
   }
 
   return (
     <div className="admin-page">
       <header className="admin-header">
         <h1>管理后台</h1>
-        <p>管理文章、用户、活跃日志与访问分析；邀请码从用户页进入单独管理。</p>
+        <p>管理用户、文章、活跃日志与访问分析；邀请码从用户页进入单独管理。</p>
       </header>
 
       <div className="admin-tabs" role="tablist" aria-label="管理分区">

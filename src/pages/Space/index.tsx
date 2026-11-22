@@ -7,7 +7,6 @@ import { errorMessage } from '@/api/errors'
 import { memoApi } from '@/api/memos'
 import type { Memo, MemoSummary } from '@/api/memos'
 import { useAuth } from '@/auth/AuthProvider'
-import { usePermission } from '@/auth/usePermission'
 import { useInfiniteList } from '@/hooks/useInfiniteList'
 import { useResource } from '@/hooks/useResource'
 import { MEMO_BODY_MAX } from '@/constants'
@@ -48,9 +47,23 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'done', label: '已完成' },
 ]
 
+/**
+ * 和服务端同一套顺序：待办按到期日升序（越紧越前，没有到期日的排后面并按创建倒序）；
+ * 已完成没有到期语义，按完成时间倒序。本地改到期日/勾选后也用它重排，
+ * 不至于原地不动、等下一次刷新才跳到该在的位置。
+ */
+function sortMemos(rows: Memo[], doneView: boolean): Memo[] {
+  return [...rows].sort((a, b) => {
+    if (doneView) return (b.done_at ?? '').localeCompare(a.done_at ?? '') || b.id - a.id
+    if (!a.due_at && !b.due_at) return b.created_at.localeCompare(a.created_at) || b.id - a.id
+    if (!a.due_at) return 1
+    if (!b.due_at) return -1
+    return a.due_at.localeCompare(b.due_at) || b.created_at.localeCompare(a.created_at) || b.id - a.id
+  })
+}
+
 export default function Space() {
   const { user, ready, openLogin } = useAuth()
-  const { has } = usePermission()
   const { confirm, dialog } = useConfirm()
 
   const [filter, setFilter] = useState<Filter>('all')
@@ -149,9 +162,12 @@ export default function Space() {
   const applyMemo = (memo: Memo) => {
     const visible = filter === 'all' || (filter === 'done' ? memo.done : !memo.done)
     list.setItems((prev) =>
-      visible
-        ? prev.map((item) => (item.id === memo.id ? memo : item))
-        : prev.filter((item) => item.id !== memo.id),
+      sortMemos(
+        visible
+          ? prev.map((item) => (item.id === memo.id ? memo : item))
+          : prev.filter((item) => item.id !== memo.id),
+        filter === 'done',
+      ),
     )
   }
 
@@ -347,57 +363,45 @@ export default function Space() {
         <p className="space-tagline">{SPACE_TAGLINE}</p>
       </header>
 
-      {/* 两个板块共用页头那行日期；这里只切内容，不换数据来源 */}
-      <nav className="space-modules" role="tablist" aria-label="板块">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={module === 'memo'}
-          onClick={() => setModule('memo')}
-        >
-          备忘录
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={module === 'consumables'}
-          onClick={() => setModule('consumables')}
-        >
-          消耗品
-        </button>
-      </nav>
-
-      {/* 快捷入口整条只给管理员：user:read:any 只有 admin 持有，普通用户空间里不显示这一行 */}
-      {has('user:read:any') && (
-        <nav className="space-quick" aria-label="快捷入口">
-          <Link to="/blog">
-            写文章<span>发到博客</span>
-          </Link>
-          <Link to="/admin?tab=users">
-            用户<span>账号与邀请码</span>
-          </Link>
-          <Link to="/admin?tab=analytics">
-            分析<span>访客与停留</span>
-          </Link>
+      {/* 一条工具栏：左边切板块，右边切视图；页头日期两块共用，不换数据来源 */}
+      <div className="space-toolbar">
+        <nav className="space-modules" role="tablist" aria-label="板块">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={module === 'memo'}
+            onClick={() => setModule('memo')}
+          >
+            备忘录
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={module === 'consumables'}
+            onClick={() => setModule('consumables')}
+          >
+            消耗品
+          </button>
         </nav>
-      )}
+
+        {module === 'memo' && (
+          <div className="space-view" role="group" aria-label="视图">
+            <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>
+              列表
+            </button>
+            <button
+              type="button"
+              aria-pressed={view === 'calendar'}
+              onClick={() => setView('calendar')}
+            >
+              日历
+            </button>
+          </div>
+        )}
+      </div>
 
       {module === 'memo' ? (
         <>
-          <div className="space-view-row">
-            <div className="space-view" role="group" aria-label="视图">
-              <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>
-                列表
-              </button>
-              <button
-                type="button"
-                aria-pressed={view === 'calendar'}
-                onClick={() => setView('calendar')}
-              >
-                日历
-              </button>
-            </div>
-          </div>
 
           {/* 视图切换只换渲染，不换数据来源：列表走分页追加，月历走一次性全量 */}
           {view === 'list' ? (
@@ -502,7 +506,9 @@ export default function Space() {
             </button>
           ))}
         </div>
-        <span className="space-order">按创建时间倒序</span>
+        <span className="space-order">
+          {filter === 'done' ? '按完成时间倒序' : '到期正序 · 无到期按创建'}
+        </span>
       </div>
 
       {status === 'error' && (

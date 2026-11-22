@@ -41,7 +41,7 @@ $env:Path = "C:\Users\LinxZhang\.local\bin;C:\Program Files\nodejs;C:\Windows\Sy
 $env:UV_PYTHON = "3.14"
 Set-Location -LiteralPath "D:\this_code\cloudflare-workers\api-worker"
 
-uv run --frozen pytest -q          # 当前 129 passed（含 tests/test_routes.py 的路由层用例）
+uv run --frozen pytest -q          # 当前 132 passed（含 tests/test_routes.py 的路由层用例）
 uv run --frozen ruff check src tests   # 当前 All checks passed
 
 # 只在改了 migrations/*.sql 时（不要加 --yes，会吐 help 并崩溃）
