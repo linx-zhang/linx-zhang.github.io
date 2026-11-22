@@ -20,6 +20,7 @@ export function isKnownDeepLink(path: string): boolean {
     pathname.startsWith(`${APP_ROUTES.tools}/`) ||
     pathname === APP_ROUTES.admin ||
     pathname === APP_ROUTES.profile ||
-    pathname === APP_ROUTES.space
+    pathname === APP_ROUTES.space ||
+    pathname.startsWith(`${APP_ROUTES.space}/`)
   )
 }

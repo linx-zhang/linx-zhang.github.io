@@ -50,7 +50,7 @@
   min-width: 0; /* ✅ flex子元素必须加，ellipsis才能生效 */
 }
 .sidebar-title.active {
-  border-bottom: 2px solid #1f2937;
+  color: #0969da;
 }
 .sidebar-title:hover {
   text-decoration: underline;
@@ -245,9 +245,11 @@
   text-decoration: none;
 }
 .tree-items a.active {
-  background-color: #f3f4f6;
-  color: #1f2937;
+  /* 选中态沿用 hover 的蓝字 + 灰底，当前文章在长目录里一眼能看到 */
+  color: #0969da;
+  background: #f6f8fa;
   font-weight: 500;
+  text-decoration: none;
 }
 
 .toggle-btn {

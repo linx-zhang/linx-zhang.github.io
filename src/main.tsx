@@ -78,7 +78,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   </Suspense>
                 }
               />
+              {/* 板块各有独立路径（/space/memos、/space/consumables），刷新后留在原板块 */}
               <Route path={APP_ROUTES.space} element={<Space />} />
+              <Route path={`${APP_ROUTES.space}/*`} element={<Space />} />
               <Route path={APP_ROUTES.tools} element={<Tools />} />
               {/* 共享剪切板的阅读链接：/tools/clip/<code>，必须排在通用 :slug 之前 */}
               <Route path={`${APP_ROUTES.tools}/clip/:code`} element={<Tools />} />

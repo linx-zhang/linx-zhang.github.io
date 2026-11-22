@@ -81,7 +81,7 @@ npm run preview
 # 运行 oxlint
 npm run lint
 
-# 跑单元测试（vitest，15 个文件 140 例）
+# 跑单元测试（vitest，16 个文件 142 例）
 npm run test
 ```
 
