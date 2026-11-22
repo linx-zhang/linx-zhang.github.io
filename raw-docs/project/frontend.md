@@ -165,9 +165,9 @@ CSS 合计约 109.3 KB，主包 58.1 KB、MarkdownView 35.2 KB，基本和页面
 
 ## 九、热点与下一步
 
-按行数排，前两名是样式：`Tools.css` 1298、`Admin.css` 1201；个人空间拆完后单文件最大 499。逻辑侧最大的是 `Space/SpaceConsumables.tsx` 916 行、`Space/SpaceMemos.tsx` 588 行、`Blog/PostDetail.tsx` 503 行、`Blog/index.tsx` 398 行；`Space/index.tsx` 已收成 120 行的外壳（登录门 + 页头 + 板块 tab + 视图切换 + 分发）。
+按行数排，前两名是样式：`Tools.css` 1298、`Admin.css` 1201；个人空间拆完后单文件最大 499。逻辑侧最大的是 `Space/SpaceMemos.tsx` 588 行、`Blog/PostDetail.tsx` 503 行、`Blog/index.tsx` 398 行、`Space/ConsumableDetail.tsx` 353 行；`Space/index.tsx` 是 120 行外壳（登录门 + 页头 + 板块 tab + 视图切换 + 分发），`SpaceConsumables.tsx` 收到 133 行，只留看板编排。
 
-`SpaceConsumables.tsx` 916 行仍是下一个值得拆的点：里面混了「看板排序 + 新建表单 + 用完确认 + 详情修正 + 周期历史」五件事，可把详情与周期编辑抽成 hook，页面只留看板编排。`SpaceMemos.tsx` 588 行已经把列表、输入区、就地编辑与月历编排收在一处，排序单独放 `memoSort.ts` 并有单测；再拆的收益不如消耗品明显。`Admin.css` 1201 行则是后台多个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
+`SpaceConsumables` 已按「数据层 + 展示块」拆开：`useConsumables.ts` 管列表、排序、计数和四个写操作，`ConsumableForm`（新建）、`ConsumableCard`（单卡与用完三选一）、`ConsumableDetail`（字段修正 + 周期历史）各自独立，公用 `consumableFormat.ts` 的类别、状态与数值校验。`SpaceMemos.tsx` 588 行已经把列表、输入区、就地编辑与月历编排收在一处，排序单独放 `memoSort.ts` 并有单测；再拆的收益不如前面几处明显。`Admin.css` 1201 行则是后台多个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
 
 ## 十、取舍清单
 

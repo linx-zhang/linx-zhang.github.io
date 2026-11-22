@@ -4,7 +4,7 @@ pin: 3
 
 # 深入后端：Cloudflare Worker + D1 的工程化
 
-后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**38 个文件、5516 行、42 个路由装饰器（+ 根路由 = 43 个端点）、9 张业务表、16 个 migration**（另有 `tests/` 8 个文件 1746 行、129 个用例，不计入运行时代码）。
+后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**38 个 py 文件、5529 行、41 个路由装饰器（+ 根路由 = 42 个端点）、9 张业务表、16 个 migration**（另有 `tests/` 8 个文件 1822 行、132 个用例，不计入运行时代码）。
 
 它要支撑的东西不算少：登录与角色、文章增删改查与相邻篇、评论、访问事件与匿名事件、备忘录、日常消耗品、共享剪切板短链、邀请码、用户管理、重置密码、缓存与限流、定时清理。全部跑在一个 Worker 里，没有微服务、没有消息队列、没有 Redis。
 
@@ -49,7 +49,7 @@ _GEO_HEADERS = (
 | `scripts` | 575 | 文档校验、schema 导出、发文助手（其中 `scripts/agent` 469 行是冒烟与运维脚本，不进 Worker 包） |
 | `src/core` | 426 | 权限码表、JWT、常量、时间工具 |
 | `src/infra` | 398 | D1 访问、缓存、配置、密码哈希 |
-| `migrations` | 254 | 15 个增量迁移 |
+| `migrations` | 305 | 16 个增量迁移 |
 | `src/tasks` | 218 | 定时任务（事件保留、缓存清理、memos 墓碑、账本折叠） |
 | `src/entry.py` | 62 | 运行时入口 |
 
@@ -258,10 +258,11 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 
 ## 十三、热点与技术债
 
-按行数，最大的三个文件是 `api/routers/admin.py`（470 行）、`api/models.py`（466 行）、`api/routers/posts.py`（306 行）。按目录看，`src/services` 已经从 341 行涨到 1098 行——分析这条线（SQL、账本编排、纯折叠）占了其中约 757 行，是这轮唯一显著变厚的地方；它虽然分成了三个文件，但读改任何一处都要同时看另外两个。
+按行数，最大的三个文件是 `api/models.py`（678 行）、`api/routers/consumables.py`（512 行）、`api/routers/admin.py`（394 行）。`src/services` 仍是分析这条线最厚的地方（约 757 行，分在 SQL、账本编排、纯折叠三个文件里），读改任何一处都要同时看另外两个。
 
-- `admin.py` 470 行装了 9 个端点：用户列表/改/删/重置密码、邀请码增删查、活动日志、分析汇总。它是下一轮最该拆的：邀请码那三个端点完全可以独立成 `routers/invites.py`，拆分不需要改 URL。
-- `models.py` 466 行全是请求/响应模型与校验规则，行数多但结构单一，属于「长而可读」，暂不动。
+- `models.py` 678 行全是请求/响应模型与校验规则，行数多但结构单一，属于「长而可读」，暂不动。
+- `admin.py` 已从 470 行收到 394 行：邀请码三个端点拆到 `routers/invites.py`（96 行），路径仍是 `/api/admin/invite-codes`，URL 未变；剩下的用户管理、活动日志、分析汇总继续留在这里。
+- `consumables.py` 512 行装物品 CRUD、周期、用完确认；三块共享同一套物品/周期模型，暂时合在一起比利大于弊，等下一个消耗品功能再评估。
 - `posts.py` 的 `_filter_conditions` 已经复用，但列表与相邻篇仍是两段 SQL；如果再加「按标签筛选」，谓词复用是唯一不会漂移的写法。
 
 真正需要盯的不是行数，而是**契约漂移**：前端 `src/constants.ts` 里那些数字（分页 20、正文 2000、标题 200、评论 5000、剪切板 20000）每一个都对应后端一处约束，改后端忘了改前端，症状是 422 或者前端截断。这条现在由前端 CI 的 `scripts/check-contract.mjs` 逐项比对挡住——但它只挡前端一侧，后端单独改模型时后端仓库不会红。
