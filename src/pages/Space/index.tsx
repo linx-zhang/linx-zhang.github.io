@@ -18,8 +18,10 @@ const MODULE_PATHS: Record<Module, string> = {
 }
 
 function moduleFrom(pathname: string, tab: string | null): Module {
-  if (pathname.endsWith('/consumables') || tab === 'consumables') return 'consumables'
-  return 'memo'
+  // 路径优先；?tab= 只在旧的 /space 链接上做兜底，不能盖过 /space/memos
+  if (pathname.endsWith('/consumables')) return 'consumables'
+  if (pathname.endsWith('/memos')) return 'memo'
+  return tab === 'consumables' ? 'consumables' : 'memo'
 }
 
 /** 两个板块共用同一句：模块名由 tab 承担，这里只表达「只属于你」 */
@@ -56,7 +58,9 @@ export default function Space() {
   /** 切板块走真实路径，刷新 / 前进后退都停在同一个板块 */
   const changeModule = (next: Module) => {
     if (next === module) return
-    navigate({ pathname: MODULE_PATHS[next], search: location.search })
+    const nextParams = new URLSearchParams(location.search)
+    nextParams.delete('tab')
+    navigate({ pathname: MODULE_PATHS[next], search: nextParams.toString() })
   }
 
   /** 列表 / 日历也写进 URL，刷新不会掉回列表 */
