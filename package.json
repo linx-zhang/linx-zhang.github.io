@@ -11,6 +11,7 @@
     "build": "tsc -b && node scripts/build-docs.mjs",
     "postbuild": "node scripts/postbuild-wiki-index.mjs",
     "lint": "oxlint",
+    "check:layers": "node scripts/check-layers.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "check:contract": "node scripts/check-contract.mjs",

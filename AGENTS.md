@@ -1,7 +1,7 @@
 # 个人站 · 上线与运维速查
 
 给 AI 助手和未来的自己看的操作手册。**先读这一页，不要凭记忆猜命令。**
-（本文件只记"怎么跑、怎么验证、哪里会炸"，不讲业务设计；业务说明见 `README.md`。）
+（本文件只记"怎么跑、怎么验证、哪里会炸"，不讲业务设计；业务说明见 `README.md`，**分层与改动落点见 `ARCHITECTURE.md`**。）
 
 ## 0. 两个仓库、两个线上
 
@@ -21,20 +21,21 @@ push 到 `main` 触发 `.github/workflows/build.yml`，job `build` 依次执行�
 |---|---|---|
 | 1 | 装依赖 | `npm ci`（node 22 + npm 缓存） |
 | 2 | 静态检查 | `npm run lint` → **oxlint** |
-| 3 | 单元测试 | `npm test` → **vitest run**（当前 155 例） |
-| 4 | 契约漂移 | `git clone --depth 1 .../cf-api-worker.git /tmp/cf-api-worker` 后 `node scripts/check-contract.mjs --api /tmp/cf-api-worker` |
-| 5 | 构建 | `npm run build` = **`tsc -b`** + `node scripts/build-docs.mjs` |
-| 6 | 产物完整 | `docs/index.html`、`docs/404.html`、`docs/wiki/index.json`、`docs/assets/` 存在 |
-| 7 | 上传 | `actions/upload-pages-artifact@v3`（path `docs`） |
+| 3 | 分层依赖 | `npm run check:layers` → **scripts/check-layers.mjs** |
+| 4 | 单元测试 | `npm test` → **vitest run**（当前 155 例） |
+| 5 | 契约漂移 | `git clone --depth 1 .../cf-api-worker.git /tmp/cf-api-worker` 后 `node scripts/check-contract.mjs --api /tmp/cf-api-worker` |
+| 6 | 构建 | `npm run build` = **`tsc -b`** + `node scripts/build-docs.mjs` |
+| 7 | 产物完整 | `docs/index.html`、`docs/404.html`、`docs/wiki/index.json`、`docs/assets/` 存在 |
+| 8 | 上传 | `actions/upload-pages-artifact@v3`（path `docs`） |
 
 job `deploy` 只在 `refs/heads/main` 跑（PR 只验不发布），`concurrency: pages / cancel-in-progress: false`，不会把线上停在半截版本。
 `docs/` 不入库——发布物就是 CI 刚构建出来的那份，所以本地不需要、也不应该再提交构建产物。
 
-**顺序陷阱**：第 4 步 clone 的是后端 **main**。常量两边一起改时，**后端先 push**，否则前端 CI 必红。
+**顺序陷阱**：第 5 步 clone 的是后端 **main**。常量两边一起改时，**后端先 push**，否则前端 CI 必红。
 
 ## 2. 上线前会跑什么（后端，CI 验、手工部署）
 
-push 到 `main`、PR、手动触发都会跑后端 `.github/workflows/ci.yml`：`uv sync --frozen`、`pytest`、`ruff check src tests scripts`、`scripts/check-api-doc.py`。`tests/test_migrations.py` 还会查迁移文件名、编号连续性和空文件。**CI 不部署、不碰线上 D1**，`pywrangler deploy` 仍要手工执行。
+push 到 `main`、PR、手动触发都会跑后端 `.github/workflows/ci.yml`：`uv sync --frozen`、`pytest`、`ruff check src tests scripts`、`scripts/check-layers.py`、`scripts/check-api-doc.py`。`tests/test_migrations.py` 还会查迁移文件名、编号连续性和空文件。**CI 不部署、不碰线上 D1**，`pywrangler deploy` 仍要手工执行。
 
 Windows 本地，`Bash` 工具不可用，一律 PowerShell。**部署必须带完整 PATH**（缺 `System32` 会在 Pyodide 启动器里报 `findstr` 找不到；缺 nodejs 报 `No node executable`）：
 
@@ -45,6 +46,7 @@ Set-Location -LiteralPath "D:\this_code\cloudflare-workers\api-worker"
 
 uv run --frozen pytest -q          # 当前 143 passed（含 tests/test_routes.py 的路由层用例）
 uv run --frozen ruff check src tests scripts   # 当前 All checks passed
+uv run --frozen python scripts/check-layers.py  # Layer check OK (39 files)
 uv run --frozen python scripts/check-api-doc.py  # routes: 43 doc rows: 43
 
 # 只在改了 migrations/*.sql 时（不要加 --yes，会吐 help 并崩溃）

@@ -1,3 +1,10 @@
+/**
+ * 访问采集的唯一入口：路由变化、可见时心跳、离开时 page_leave。
+ *
+ * 这里只负责采样和排队；匿名访客的预算/节流细节在 `visitorBudget.ts`，
+ * 服务端还会再按 IP/用户做固定窗口限流。`page_leave` 用 `fetch keepalive`
+ * 而不是 `sendBeacon`，因为要带 Authorization 头。
+ */
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { API_ROOT, getStoredToken } from '@/api/client'

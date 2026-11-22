@@ -3,7 +3,7 @@
 You are a senior full-stack/frontend engineer maintaining this repository.
 - Repo: linx-zhang.github.io
 - Stack: Vite 8（Rolldown）+ React 19.3.1 + TypeScript（verbatimModuleSyntax）+ react-router-dom 7.18.5（BrowserRouter / Routes / Route 的 v6 风格 API）
-- Deployment: GitHub Pages，Pages source 设为 **GitHub Actions**。`.github/workflows/build.yml`（`build & deploy`）在 push `main` 时跑 `npm ci` → lint → test → build，校验产物后用 `upload-pages-artifact` + `deploy-pages` 发布；`npm run build` 仍写 `docs/`（build.outDir、emptyOutDir、base='/'），但 `docs/` 已进 `.gitignore`，产物不入库。SPA 深链刷新由 public/404.html 兜底：把原始路径写入 sessionStorage.spa-fallback-path 后回到根路径，src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复。
+- Deployment: GitHub Pages，Pages source 设为 **GitHub Actions**。`.github/workflows/build.yml`（`build & deploy`）在 push `main` 时跑 `npm ci` → lint → `npm run check:layers` → test → build，校验产物后用 `upload-pages-artifact` + `deploy-pages` 发布；`npm run build` 仍写 `docs/`（build.outDir、emptyOutDir、base='/'），但 `docs/` 已进 `.gitignore`，产物不入库。SPA 深链刷新由 public/404.html 兜底：把原始路径写入 sessionStorage.spa-fallback-path 后回到根路径，src/main.tsx 在 BrowserRouter 初始化前用 history.replaceState 恢复。
 - Backend: Cloudflare Python Worker + FastAPI + D1，base 常量在 `src/api/client.ts` 的 `API_BASE`（硬编码，不读环境变量）。响应统一为 { code, detail, data }，前端 request<T>() 解包 data；错误抛 ApiError(status, code, detail)。
 - Core Routes（定义在 src/routes.ts 与 src/main.tsx）:
   - / : Home（RootLayout 内）
@@ -33,6 +33,8 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 # linx-zhang.github.io
 
 基于 **Vite 8 + React 19 + TypeScript + React Router 7** 的个人综合站点：门户首页、Wiki 知识库、博客（含评论与管理）、管理后台、可导出 PDF 的简历页。构建产物输出至 `docs/`（已 gitignore），由 GitHub Actions 在每次 push `main` 后构建并发布 Pages。
+
+维护入口：先读 [`ARCHITECTURE.md`](ARCHITECTURE.md)，那里有页面 / 组件 / API / hooks 的层图、依赖闸门和「改动落在哪」；上线命令看 `AGENTS.md`。
 
 ---
 
@@ -335,7 +337,7 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 **发布**
 
 5. `npm run build` 前先停 `npm run dev`（vite 的文件监听会锁目录）。报 `EPERM: rename docs_build -> docs` 说明没停干净：停 dev → 若 `docs/` 已变成 `.docs-trash` 就把 `docs_build` 改回 `docs` → 删 `.docs-trash` → 重跑。
-6. 产物 `docs/` **不入库**（`.gitignore` 有 `/docs/`）。改完代码直接 commit + push 到 `main`，`.github/workflows/build.yml` 会跑 lint + test + build 并发布 Pages；本地 `npm run build` 只为自测，不要 `git add docs`，也不要手工回写产物。
+6. 产物 `docs/` **不入库**（`.gitignore` 有 `/docs/`）。改完代码直接 commit + push 到 `main`，`.github/workflows/build.yml` 会跑 lint + `check:layers` + test + build 并发布 Pages；本地 `npm run build` 只为自测，不要 `git add docs`，也不要手工回写产物。
 7. 发布由 Actions 的 artifact 直出，不需要额外的 Pages 静态站点配置。
 
 

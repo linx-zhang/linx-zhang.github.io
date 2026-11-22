@@ -1,3 +1,12 @@
+/**
+ * 应用装配层：只做 Provider、路由和 SPA 深链恢复，不放业务状态。
+ *
+ * 顺序有讲究：
+ * 1. ErrorBoundary 在 AuthProvider 外层，Provider 自己崩了也能显示降级页；
+ * 2. BrowserRouter 初始化前必须把 404.html 存下的路径写回 history，否则首屏会先
+ *    匹配 `/` 再跳转，用户会看到一次闪屏；
+ * 3. 重依赖页面（Docs / Blog / PostDetail）懒加载，常用入口保持静态，切页不闪骨架。
+ */
 import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'

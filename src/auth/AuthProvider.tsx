@@ -1,3 +1,11 @@
+/**
+ * 全站唯一的登录态 Provider。
+ *
+ * 负责：token 恢复、`/auth/me`、登录/注册成功后的状态写入、401 广播清理、
+ * 按需打开登录弹窗。权限码由后端下发，这里只保存数组；角色到权限码的映射
+ * 不在前端复制。`AuthModal` 由 Provider 直接渲染，所以 auth 层可以依赖通用
+ * 组件，但任何层都不应该反向依赖 pages。
+ */
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import AuthModal from '@/components/AuthModal'
