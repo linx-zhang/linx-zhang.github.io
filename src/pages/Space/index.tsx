@@ -73,7 +73,8 @@ export default function Space() {
         <p className="space-tagline">{SPACE_TAGLINE}</p>
       </header>
 
-      {/* 板块 tab 一条；列表/日历切换交给备忘录自己，贴在筛选行右侧 */}
+      {/* 板块 tab 与视图切换同一条：左边选内容，右边选呈现方式。
+          切换放在这里而不是列表头 / 月历头，是为了两个视图切换时控件不跳位置。 */}
       <div className="space-toolbar">
         <nav className="space-modules" role="tablist" aria-label="板块">
           <button
@@ -93,15 +94,28 @@ export default function Space() {
             消耗品
           </button>
         </nav>
+        {module === 'memo' && (
+          <div className="space-view" role="group" aria-label="视图">
+            <button
+              type="button"
+              aria-pressed={view === 'list'}
+              onClick={() => setView('list')}
+            >
+              列表
+            </button>
+            <button
+              type="button"
+              aria-pressed={view === 'calendar'}
+              onClick={() => setView('calendar')}
+            >
+              日历
+            </button>
+          </div>
+        )}
       </div>
 
       {module === 'memo' ? (
-        <SpaceMemos
-          userId={user.id}
-          view={view}
-          onViewChange={setView}
-          initialDay={initialDay}
-        />
+        <SpaceMemos userId={user.id} view={view} initialDay={initialDay} />
       ) : (
         <SpaceConsumables />
       )}

@@ -153,6 +153,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.5rem 0.75rem;
   margin-top: 0.65rem;
   border-bottom: 1px solid #eef0f3;
@@ -195,6 +196,36 @@
 
 .space-modules button:hover {
   color: #4b5563;
+}
+
+/* 列表 / 日历切换：固定在板块工具栏右侧，两个视图下位置不变（不再随列表头 / 月历头跳动），
+   底部留 3px 让下沿与下方分隔线拉开一点，不压住 tab 下划线。 */
+.space-view {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-bottom: 3px;
+  padding: 2px;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #f9fafb;
+}
+
+.space-view button {
+  min-height: 26px;
+  padding: 0 0.65rem;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.space-view button[aria-pressed='true'] {
+  background: #fff;
+  color: #1f2937;
+  box-shadow: 0 0 0 1px #e5e7eb;
 }
 
 @media (min-width: 768px) {

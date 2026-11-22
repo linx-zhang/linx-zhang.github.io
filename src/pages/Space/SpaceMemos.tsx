@@ -33,36 +33,17 @@ function dueMeta(dueAt: string): { text: string; tone: 'today' | 'late' | 'later
 interface Props {
   userId: number
   view: MemoView
-  onViewChange: (view: MemoView) => void
   /** ?date=YYYY-MM-DD，只在首次进月历时定位那一天 */
   initialDay?: string
-}
-
-/** 列表 / 日历切换：列表贴在筛选行右侧，日历时塞进月历头部右侧 */
-function ViewSwitch({ view, onChange }: { view: MemoView; onChange: (view: MemoView) => void }) {
-  return (
-    <div className="space-view" role="group" aria-label="视图">
-      <button type="button" aria-pressed={view === 'list'} onClick={() => onChange('list')}>
-        列表
-      </button>
-      <button
-        type="button"
-        aria-pressed={view === 'calendar'}
-        onClick={() => onChange('calendar')}
-      >
-        日历
-      </button>
-    </div>
-  )
 }
 
 /**
  * 备忘录板块：列表 / 月历两种视图共用一份 memo 数据。
  *
- * 外壳（页头、板块 tab）留在 `Space`；这里负责备忘录自己的取数、输入区、
- * 就地编辑、筛选、视图切换和月历编排，切到消耗品时整块卸载。
+ * 外壳（页头、板块 tab、列表/日历切换）留在 `Space`；这里负责备忘录自己的取数、
+ * 输入区、就地编辑、筛选和月历编排，切到消耗品时整块卸载。
  */
-export default function SpaceMemos({ userId, view, onViewChange, initialDay }: Props) {
+export default function SpaceMemos({ userId, view, initialDay }: Props) {
   const { confirm, dialog } = useConfirm()
   const [filter, setFilter] = useState<MemoFilter>('all')
 
@@ -421,7 +402,6 @@ export default function SpaceMemos({ userId, view, onViewChange, initialDay }: P
                 </button>
               ))}
             </div>
-            <ViewSwitch view={view} onChange={onViewChange} />
           </div>
 
           {status === 'error' && (
@@ -596,7 +576,6 @@ export default function SpaceMemos({ userId, view, onViewChange, initialDay }: P
           onRetry={calendarQuery.reload}
           onToggleDone={(memo) => void toggleDoneInCalendar(memo)}
           onCreate={createFromCalendar}
-          viewSwitch={<ViewSwitch view={view} onChange={onViewChange} />}
         />
       )}
 
