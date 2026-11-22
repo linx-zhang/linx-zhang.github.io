@@ -73,7 +73,7 @@ export default function Space() {
         <p className="space-tagline">{SPACE_TAGLINE}</p>
       </header>
 
-      {/* 一条工具栏：左边切板块，右边切视图；页头日期两块共用，不换数据来源 */}
+      {/* 板块 tab 一条；列表/日历切换交给备忘录自己，贴在筛选行右侧 */}
       <div className="space-toolbar">
         <nav className="space-modules" role="tablist" aria-label="板块">
           <button
@@ -93,25 +93,15 @@ export default function Space() {
             消耗品
           </button>
         </nav>
-
-        {module === 'memo' && (
-          <div className="space-view" role="group" aria-label="视图">
-            <button type="button" aria-pressed={view === 'list'} onClick={() => setView('list')}>
-              列表
-            </button>
-            <button
-              type="button"
-              aria-pressed={view === 'calendar'}
-              onClick={() => setView('calendar')}
-            >
-              日历
-            </button>
-          </div>
-        )}
       </div>
 
       {module === 'memo' ? (
-        <SpaceMemos userId={user.id} view={view} initialDay={initialDay} />
+        <SpaceMemos
+          userId={user.id}
+          view={view}
+          onViewChange={setView}
+          initialDay={initialDay}
+        />
       ) : (
         <SpaceConsumables />
       )}

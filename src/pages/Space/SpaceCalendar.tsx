@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import type { FormEvent, KeyboardEvent } from 'react'
+import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import type { Memo } from '@/api/memos'
 import { errorMessage } from '@/api/errors'
 import { MEMO_BODY_MAX } from '@/constants'
@@ -32,6 +32,8 @@ interface SpaceCalendarProps {
   onToggleDone: (memo: Memo) => void
   /** 在当前选中的那一天新增一条；失败时抛出，由输入区就地显示 */
   onCreate: (body: string, day: string) => Promise<void>
+  /** 视图切换按钮，由父组件传入，放在「今天」左边 */
+  viewSwitch?: ReactNode
 }
 
 function monthTitle(month: Date): string {
@@ -52,6 +54,7 @@ export default function SpaceCalendar({
   onRetry,
   onToggleDone,
   onCreate,
+  viewSwitch,
 }: SpaceCalendarProps) {
   const todayKey = today()
   const [cursor, setCursor] = useState(() => startOfMonth(initialDay ?? todayKey))
@@ -184,9 +187,12 @@ export default function SpaceCalendar({
             ›
           </button>
         </div>
-        <button type="button" className="space-button" onClick={goToday}>
-          今天
-        </button>
+        <div className="space-cal-actions">
+          {viewSwitch}
+          <button type="button" className="space-button" onClick={goToday}>
+            今天
+          </button>
+        </div>
       </header>
 
       {status === 'error' ? (

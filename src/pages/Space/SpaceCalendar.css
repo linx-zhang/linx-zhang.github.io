@@ -16,6 +16,15 @@
   gap: 0.35rem;
 }
 
+/* 右侧一组：视图切换 + 今天；窄屏允许折行，不把月份挤出去 */
+.space-cal-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem 0.5rem;
+}
+
 .space-cal-nav {
   width: 30px;
   height: 30px;

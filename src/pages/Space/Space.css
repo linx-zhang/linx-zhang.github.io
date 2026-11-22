@@ -136,17 +136,6 @@
   line-height: 1.6;
 }
 
-/* ===== 视图切换（工具栏右侧的小分段，和筛选条不是一套） ===== */
-.space-view {
-  display: inline-flex;
-  flex: 0 0 auto;
-  margin: 0 0 0.35rem;
-  padding: 2px;
-  border: 1px solid #e5e7eb;
-  border-radius: 7px;
-  background: #f9fafb;
-}
-
 /* 窄屏：日期在上、说明在下，避免把一行挤到视口外 */
 @media (max-width: 480px) {
   .space-header {
@@ -159,25 +148,7 @@
   }
 }
 
-.space-view button {
-  min-height: 28px;
-  padding: 0 0.6rem;
-  border: none;
-  border-radius: 5px;
-  background: transparent;
-  color: #6b7280;
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.space-view button[aria-pressed='true'] {
-  background: #fff;
-  color: #1f2937;
-  box-shadow: 0 0 0 1px #e5e7eb;
-}
-
-/* ===== 一条工具栏：左板块 tab，右视图切换（页头那行日期两个板块共用） ===== */
+/* ===== 板块 tab（页头那行日期两个板块共用） ===== */
 .space-toolbar {
   display: flex;
   align-items: flex-end;

@@ -36,9 +36,32 @@
   box-shadow: 0 0 0 1px #e5e7eb;
 }
 
-.space-order {
-  color: #9ca3af;
-  font-size: 0.74rem;
+/* 列表 / 日历切换：列表贴筛选行右侧，月历里放在「今天」左边 */
+.space-view {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 2px;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #f9fafb;
+}
+
+.space-view button {
+  min-height: 28px;
+  padding: 0 0.6rem;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.space-view button[aria-pressed='true'] {
+  background: #fff;
+  color: #1f2937;
+  box-shadow: 0 0 0 1px #e5e7eb;
 }
 
 /* 列表 */
