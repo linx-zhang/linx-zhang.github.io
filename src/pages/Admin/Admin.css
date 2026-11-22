@@ -632,7 +632,9 @@
   line-height: 1.6;
 }
 
-@media (max-width: 640px) {
+/* 用户行是五列定宽（角色/时间/操作），640–900px 这段桌面宽度放不下，
+   会挤到邮箱逐字换行；这一段直接改成卡片，别等它碎掉。 */
+@media (max-width: 900px) {
   .user-list-head {
     display: none;
   }
