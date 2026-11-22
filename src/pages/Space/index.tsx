@@ -11,20 +11,17 @@ import './Space.css'
 /** 个人空间两个板块：备忘录（含日历）和日常消耗品 */
 type Module = 'memo' | 'consumables'
 
-/** 板块有独立路径，刷新后留在当前板块；旧链接的 ?tab=consumables 继续生效 */
+/** 板块有独立路径，刷新后留在当前板块 */
 const MODULE_PATHS: Record<Module, string> = {
   memo: '/space/memos',
   consumables: '/space/consumables',
 }
 
-function moduleFrom(pathname: string, tab: string | null): Module {
-  // 路径优先；?tab= 只在旧的 /space 链接上做兜底，不能盖过 /space/memos
-  if (pathname.endsWith('/consumables')) return 'consumables'
-  if (pathname.endsWith('/memos')) return 'memo'
-  return tab === 'consumables' ? 'consumables' : 'memo'
+function moduleFrom(pathname: string): Module {
+  return pathname.startsWith(MODULE_PATHS.consumables) ? 'consumables' : 'memo'
 }
 
-/** 两个板块共用同一句：模块名由 tab 承担，这里只表达「只属于你」 */
+/** 两个板块共用同一句：模块名由路径承担，这里只表达「只属于你」 */
 const SPACE_TAGLINE = '只属于你，别人看不到。'
 
 /** "M 月 D 日 · 星期四 · 农历十月十一 · 今日小雪" */
@@ -48,7 +45,7 @@ export default function Space() {
   const [params, setParams] = useSearchParams()
   /** 视图也直接由 URL 决定，刷新 / 前进后退不会掉回列表 */
   const view: MemoView = params.get('view') === 'calendar' ? 'calendar' : 'list'
-  const module = moduleFrom(location.pathname, params.get('tab'))
+  const module = moduleFrom(location.pathname)
   // ?date=YYYY-MM-DD 只当天进月历时用一次；格式不对就当没传
   const initialDay = useMemo(() => {
     const raw = params.get('date')
@@ -58,8 +55,9 @@ export default function Space() {
   /** 切板块走真实路径，刷新 / 前进后退都停在同一个板块 */
   const changeModule = (next: Module) => {
     if (next === module) return
-    const nextParams = new URLSearchParams(location.search)
-    nextParams.delete('tab')
+    // 只带过去日历视图；date / 旧参数不跟着跨板块
+    const nextParams = new URLSearchParams()
+    if (next === 'memo' && view === 'calendar') nextParams.set('view', 'calendar')
     navigate({ pathname: MODULE_PATHS[next], search: nextParams.toString() })
   }
 
