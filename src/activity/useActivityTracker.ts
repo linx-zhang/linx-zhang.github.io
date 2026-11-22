@@ -185,7 +185,8 @@ function flushWithKeepalive(events: ActivityEvent[]): void {
   if (events.length === 0) return
   const token = getStoredToken()
   const limit = token ? ACTIVITY_MAX_BATCH : ACTIVITY_MAX_VISITOR_BATCH
-  // 带 page_leave 的批次服务端恒放行，但写入同样会刷新 IP 窗口，所以这里先按已接受处理
+  // page_leave 可能被接受，也可能因窗口内已有一条 leave 而 429；卸载期读不到响应，
+  // 先按已接受推进本地窗口，最坏是少报一次，不会放大请求。
   if (!token) noteVisitorAccepted()
   // 卸载期上报只能直接 fetch：keepalive 是 api/client 不暴露的参数，
   // 而且这一步不能 await（页面已经在走），失败也必须静默。

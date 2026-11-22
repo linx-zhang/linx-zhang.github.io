@@ -4,7 +4,7 @@ pin: 3
 
 # 深入后端：Cloudflare Worker + D1 的工程化
 
-后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**38 个 py 文件、5529 行、41 个路由装饰器（+ 根路由 = 42 个端点）、9 张业务表、16 个 migration**（另有 `tests/` 8 个文件 1822 行、132 个用例，不计入运行时代码）。
+后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**39 个 py 文件（连同迁移与脚本共 59 个文本文件、5564 行）、42 个路由装饰器（+ 根路由 = 43 个端点）、9 张业务表、16 个 migration**（另有 `tests/` 13 个文件 1712 行、143 个用例，不计入运行时代码）。
 
 它要支撑的东西不算少：登录与角色、文章增删改查与相邻篇、评论、访问事件与匿名事件、备忘录、日常消耗品、共享剪切板短链、邀请码、用户管理、重置密码、缓存与限流、定时清理。全部跑在一个 Worker 里，没有微服务、没有消息队列、没有 Redis。
 

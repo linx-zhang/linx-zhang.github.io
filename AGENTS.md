@@ -11,7 +11,7 @@
 | 后端 Worker | `D:\this_code\cloudflare-workers\api-worker` | `linx-zhang/cf-api-worker`（public） | `https://api-worker.linx-zhang.workers.dev` |
 | Pages 代理 | — | — | `https://linx-api-78i.pages.dev`（前端 `API_BASE`） |
 
-后端：D1 `api-worker-db`（id `dbea30d3-6a51-4c5c-a389-4f454f81ce9f`），入口 `src/entry.py`，cron `15 18 * * *`（UTC，= 北京时间 02:15）。
+后端：D1 `api-worker-db`（id `dbea30d3-6a51-4c5c-a389-4f454f81ce9f`），入口 `src/entry.py`，两个 cron（UTC）：`15 18 * * *` 日更清理（= 北京时间 02:15）、`0 * * * *` 每小时折分析账本。
 
 ## 1. 上线前会跑什么（前端，CI 自动）
 
@@ -21,7 +21,7 @@ push 到 `main` 触发 `.github/workflows/build.yml`，job `build` 依次执行�
 |---|---|---|
 | 1 | 装依赖 | `npm ci`（node 22 + npm 缓存） |
 | 2 | 静态检查 | `npm run lint` → **oxlint** |
-| 3 | 单元测试 | `npm test` → **vitest run**（当前 154 例） |
+| 3 | 单元测试 | `npm test` → **vitest run**（当前 155 例） |
 | 4 | 契约漂移 | `git clone --depth 1 .../cf-api-worker.git /tmp/cf-api-worker` 后 `node scripts/check-contract.mjs --api /tmp/cf-api-worker` |
 | 5 | 构建 | `npm run build` = **`tsc -b`** + `node scripts/build-docs.mjs` |
 | 6 | 产物完整 | `docs/index.html`、`docs/404.html`、`docs/wiki/index.json`、`docs/assets/` 存在 |
@@ -32,7 +32,9 @@ job `deploy` 只在 `refs/heads/main` 跑（PR 只验不发布），`concurrency
 
 **顺序陷阱**：第 4 步 clone 的是后端 **main**。常量两边一起改时，**后端先 push**，否则前端 CI 必红。
 
-## 2. 上线前会跑什么（后端，全手工，无 CI）
+## 2. 上线前会跑什么（后端，CI 验、手工部署）
+
+push 到 `main`、PR、手动触发都会跑后端 `.github/workflows/ci.yml`：`uv sync --frozen`、`pytest`、`ruff check src tests scripts`、`scripts/check-api-doc.py`。`tests/test_migrations.py` 还会查迁移文件名、编号连续性和空文件。**CI 不部署、不碰线上 D1**，`pywrangler deploy` 仍要手工执行。
 
 Windows 本地，`Bash` 工具不可用，一律 PowerShell。**部署必须带完整 PATH**（缺 `System32` 会在 Pyodide 启动器里报 `findstr` 找不到；缺 nodejs 报 `No node executable`）：
 
@@ -41,8 +43,9 @@ $env:Path = "C:\Users\LinxZhang\.local\bin;C:\Program Files\nodejs;C:\Windows\Sy
 $env:UV_PYTHON = "3.14"
 Set-Location -LiteralPath "D:\this_code\cloudflare-workers\api-worker"
 
-uv run --frozen pytest -q          # 当前 132 passed（含 tests/test_routes.py 的路由层用例）
-uv run --frozen ruff check src tests   # 当前 All checks passed
+uv run --frozen pytest -q          # 当前 143 passed（含 tests/test_routes.py 的路由层用例）
+uv run --frozen ruff check src tests scripts   # 当前 All checks passed
+uv run --frozen python scripts/check-api-doc.py  # routes: 43 doc rows: 43
 
 # 只在改了 migrations/*.sql 时（不要加 --yes，会吐 help 并崩溃）
 "y" | .\node_modules\.bin\wrangler.cmd d1 migrations apply api-worker-db --remote
@@ -100,13 +103,13 @@ node scripts/check-contract.mjs --api "D:\this_code\cloudflare-workers\api-worke
 - 存活行 partial index 已在线上：`idx_posts_live_created_id`、`idx_memos_live_user_created`、`idx_memos_live_user_done`、`idx_comments_live_post_created_id`（0015），以及消耗品的 `idx_consumable_items_live_user_created`、`idx_consumable_cycles_live_item_started`、`idx_consumable_cycles_live_item_ended`（0016）。旧的全量索引保留（带 author/q/done 过滤的查询还要用）。
 - `posts` 列表计划仍是 `SCAN ... USING INDEX idx_posts_live_created_id`——表只有几十行，规划器认为全扫更便宜，但扫的是只含存活行的索引，属预期。
 - 消耗品还有一条**唯一** partial index：`idx_consumable_cycles_open_item`（`item_id WHERE ended_on IS NULL AND deleted_at IS NULL`），保证一个物品同时只有一轮进行中；接口 409 只是友好提示，真正的兜底在这条索引。
-- cron 三段：activity 保留 30 天 → cache 清理 → memos 墓碑 90 天硬删（`src/tasks/memo_tombstone.py`）。memos 表是 AUTOINCREMENT，硬删后 id 依然永不复用。
+- 日更 cron 四步：activity 保留 30 天 → cache 清理 → memos 墓碑 90 天硬删（`src/tasks/memo_tombstone.py`）→ 分析账本折一次；`0 * * * *` 的小时触发器只折分析账本。memos 表是 AUTOINCREMENT，硬删后 id 依然永不复用。
 
 ## 6. 已知缺口（别误以为有闸门）
 
-- **后端零 CI**：pytest / ruff / 迁移顺序全靠人记。
-- **迁移无前置校验**：没有 dry-run，也没有"部署前确认迁移已应用"的检查；先 deploy 后迁移不会报错，只会行为不对。
-- **契约只挡前端一侧**：后端单独改 `models.py` 时，后端仓库没有任何东西会红，要等下次前端 push 才暴露。
+- **后端 CI 只验、不部署**：pytest / ruff / 迁移文件顺序会拦，但 `pywrangler deploy` 和线上冒烟仍靠人敲。
+- **迁移无 dry-run**：`tests/test_migrations.py` 只查文件名、编号连续和文件非空；没有"部署前确认迁移已应用"的检查，先 deploy 后迁移不会报错，只会行为不对。
+- **契约检查只覆盖前端一侧**：后端单独改 `models.py` 时，后端 CI 不跑 `check-contract.mjs`，要等下次前端 push 才暴露。
 - **部署后冒烟是手敲的**，没脚本化。
 
 ## 7. 已验证的边界（别重复踩）

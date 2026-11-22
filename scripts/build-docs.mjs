@@ -74,7 +74,7 @@ try {
 
   // dev server 开着时它 watch 着 docs/，目录重命名会偶发 EPERM；
   // 所以每一次替换都带重试，并且「旧目录已挪走、新目录没接上」时一定还原，
-  // 绝不让仓库停在没有 docs/ 的状态（docs/ 是提交进仓的产物）。
+  // 绝不让仓库停在没有 docs/ 的状态（docs/ 是本地构建产物，已在 .gitignore 里）。
   let movedOld = false;
   if (existsSync(TARGET)) {
     renameWithRetry(TARGET, TRASH);

@@ -137,7 +137,7 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 
 同理，`html { scrollbar-gutter: stable }` 是为了修一个很隐蔽的抖动：列表从「短（无滚动条）」切到「长（有滚动条）」时，居中容器会被滚动条宽度推着左右抖——筛选、翻页、空态来回切最容易看见。
 
-页面样式里体量最大的现在是 `pages/Tools/Tools.css`（1298 行）、`pages/Admin/Admin.css`（1201 行）、`pages/Blog/Blog.css`（604 行）。个人空间已按组件归属拆开：`Space.css` 只留页头、登录门、板块 tab 与视图切换这些外壳（240 行），备忘录 `SpaceMemos.css`（472 行）、消耗品 `SpaceConsumables.css`（499 行）、月历 `SpaceCalendar.css`（368 行）各自就近 `import`，切板块时随组件一起加载。拆的是「谁用这份样式」，不是颜色变量——全站仍直接写 hex，不引入 CSS 变量层。
+页面样式里体量最大的现在是 `pages/Tools/Tools.css`（1110 行）、`pages/Admin/Admin.css`（1184 行）、`pages/Blog/Blog.css`（597 行）。个人空间已按组件归属拆开：`Space.css` 只留页头、登录门、板块 tab 与视图切换这些外壳（211 行），备忘录 `SpaceMemos.css`（355 行）、消耗品 `SpaceConsumables.css`（421 行）、月历 `SpaceCalendar.css`（327 行）各自就近 `import`，切板块时随组件一起加载。拆的是「谁用这份样式」，不是颜色变量——全站仍直接写 hex，不引入 CSS 变量层。
 
 ## 七、体积：懒加载的账
 
@@ -165,9 +165,9 @@ CSS 合计约 109.3 KB，主包 58.1 KB、MarkdownView 35.2 KB，基本和页面
 
 ## 九、热点与下一步
 
-按行数排，前两名是样式：`Tools.css` 1298、`Admin.css` 1201；个人空间拆完后单文件最大 499。逻辑侧最大的是 `Space/SpaceMemos.tsx` 588 行、`Blog/PostDetail.tsx` 503 行、`Blog/index.tsx` 398 行、`Space/ConsumableDetail.tsx` 353 行；`Space/index.tsx` 是 120 行外壳（登录门 + 页头 + 板块 tab + 视图切换 + 分发），`SpaceConsumables.tsx` 收到 133 行，只留看板编排。
+按行数排，前两名是样式：`Tools.css` 1110、`Admin.css` 1184；个人空间拆完后单文件最大 421。逻辑侧最大的是 `Space/SpaceMemos.tsx` 588 行、`Blog/PostDetail.tsx` 468 行、`Space/SpaceCalendar.tsx` 379 行、`Blog/index.tsx` 372 行、`Space/ConsumableDetail.tsx` 346 行；`Space/index.tsx` 是 136 行外壳（登录门 + 页头 + 板块 tab + 视图切换 + 分发），`SpaceConsumables.tsx` 收到 128 行，只留看板编排。
 
-`SpaceConsumables` 已按「数据层 + 展示块」拆开：`useConsumables.ts` 管列表、排序、计数和四个写操作，`ConsumableForm`（新建）、`ConsumableCard`（单卡与用完三选一）、`ConsumableDetail`（字段修正 + 周期历史）各自独立，公用 `consumableFormat.ts` 的类别、状态与数值校验。`SpaceMemos.tsx` 588 行已经把列表、输入区、就地编辑与月历编排收在一处，排序单独放 `memoSort.ts` 并有单测；再拆的收益不如前面几处明显。`Admin.css` 1201 行则是后台多个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
+`SpaceConsumables` 已按「数据层 + 展示块」拆开：`useConsumables.ts` 管列表、排序、计数和四个写操作，`ConsumableForm`（新建）、`ConsumableCard`（单卡与用完三选一）、`ConsumableDetail`（字段修正 + 周期历史）各自独立，公用 `consumableFormat.ts` 的类别、状态与数值校验。`SpaceMemos.tsx` 588 行已经把列表、输入区、就地编辑与月历窗口取数编排收在一处，排序单独放 `memoSort.ts` 并有单测；再拆的收益不如前面几处明显。`Admin.css` 1184 行则是后台多个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
 
 ## 十、取舍清单
 
