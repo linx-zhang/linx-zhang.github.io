@@ -1,4 +1,4 @@
-import { parseDay } from '@/utils/calendar'
+import { parseDay, today } from '@/utils/calendar'
 import type { Consumable, ConsumableCategory, ConsumableStatus } from '@/api/consumables'
 
 /** 服务端只接受 ≥1 的预计天数：实测为 0 或缺失时一律按「不设」提交 */
@@ -32,15 +32,17 @@ export const STATUS_ORDER: Record<ConsumableStatus, number> = {
   unknown: 4,
 }
 
-/** '2026-12-03' → '12 月 3 日' */
+/** '2026-12-03' → '12 月 3 日'；跨年时带上年份，避免把明年看成今年 */
 function monthDay(day: string): string {
   const date = parseDay(day)
-  return `${date.getMonth() + 1} 月 ${date.getDate()} 日`
+  const year = today().slice(0, 4)
+  const prefix = day.startsWith(year) ? '' : `${date.getFullYear()} 年 `
+  return `${prefix}${date.getMonth() + 1} 月 ${date.getDate()} 日`
 }
 
-/** '2026-10-08' → '10/08'，周期历史用短格式 */
+/** '2026-10-08' → '10/08'；不是今年则保留年份，长周期历史才不会混 */
 export function shortDay(day: string): string {
-  return day.slice(5).replace('-', '/')
+  return day.startsWith(today().slice(0, 4)) ? day.slice(5).replace('-', '/') : day.replaceAll('-', '/')
 }
 
 export function categoryMeta(key: ConsumableCategory) {

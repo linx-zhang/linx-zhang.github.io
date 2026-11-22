@@ -45,11 +45,11 @@ export default function Admin() {
   const { has } = usePermission()
 
   const rawTab = searchParams.get('tab')
-  const visible = TABS.filter(
-    (item) => !item.entryOnly && (!item.permission || has(item.permission)),
-  )
+  // 有权限的分区包含「只从别处进入」的邀请码；tab 条只展示常规分区
+  const accessible = TABS.filter((item) => !item.permission || has(item.permission))
+  const visible = accessible.filter((item) => !item.entryOnly)
   // 未知 tab 落到第一个**看得见**的分区：URL 手改错了不会白屏，也不会撞权限门
-  const active = visible.find((item) => item.key === rawTab) ?? visible[0] ?? TABS[0]
+  const active = accessible.find((item) => item.key === rawTab) ?? visible[0] ?? TABS[0]
 
   const switchTab = (next: AdminTab) => {
     setSearchParams(next === 'users' ? {} : { tab: next })

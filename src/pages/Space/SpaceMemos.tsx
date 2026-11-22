@@ -22,13 +22,18 @@ const FILTERS: { key: MemoFilter; label: string }[] = [
   { key: 'done', label: '已完成' },
 ]
 
-function dueMeta(dueAt: string): { text: string; tone: 'today' | 'late' | 'later' } {
+function dayLabel(day: string, todayKey: string): string {
+  // 同一年沿用 12-03；跨年必须带年份，否则 2027 的条目会被看成今年
+  return day.startsWith(todayKey.slice(0, 4)) ? day.slice(5) : day
+}
+
+export function dueMeta(dueAt: string): { text: string; tone: 'today' | 'late' | 'later' } {
   // due_at 存的是 UTC 时刻（本地当天 23:59:59），比较前先换算成本地那一天
   const day = formatDate(dueAt)
   const todayKey = today()
   if (day === todayKey) return { text: '今天到期', tone: 'today' }
-  if (day < todayKey) return { text: `${day.slice(5)} 已过期`, tone: 'late' }
-  return { text: `${day.slice(5)} 到期`, tone: 'later' }
+  if (day < todayKey) return { text: `${dayLabel(day, todayKey)} 已过期`, tone: 'late' }
+  return { text: `${dayLabel(day, todayKey)} 到期`, tone: 'later' }
 }
 
 interface Props {
@@ -36,6 +41,18 @@ interface Props {
   view: MemoView
   /** ?date=YYYY-MM-DD，只在首次进月历时定位那一天 */
   initialDay?: string
+}
+
+export async function loadAllMemos(): Promise<Memo[]> {
+  const rows: Memo[] = []
+  let offset = 0
+  for (let page = 0; page < 200; page += 1) {
+    const res = await memoApi.list(undefined, 100, offset)
+    rows.push(...res.items)
+    if (!res.has_next || res.items.length === 0) break
+    offset += res.items.length
+  }
+  return rows
 }
 
 /**
@@ -63,25 +80,14 @@ export default function SpaceMemos({ userId, view, initialDay }: Props) {
   const summary = summaryQuery.data
 
   /**
-   * 月历要「整月的到期点」，和列表视图的按页追加不是一回事：这里一次把全部条目取回来
-   * （个人备忘录量级很小，100/页、最多 5 页足够），只在切到日历视图时才发请求。
+   * 月历要「整月的到期点」，和列表视图的按页追加不是一回事：这里一次把全部条目取回来。
+   * 个人备忘录量级很小，但也不再写死 5 页——数据攒到半年以上时，截断会让旧到期日
+   * 在月历里凭空消失，而列表里还在。
    * 顺手把 done 的筛选去掉——月历要把已完成的也画出来，只是颜色淡一档。
    */
-  const calendarQuery = useResource<Memo[]>(
-    async () => {
-      const rows: Memo[] = []
-      let offset = 0
-      for (let page = 0; page < 5; page += 1) {
-        const res = await memoApi.list(undefined, 100, offset)
-        rows.push(...res.items)
-        if (!res.has_next || res.items.length === 0) break
-        offset += res.items.length
-      }
-      return rows
-    },
-    [userId],
-    { enabled: view === 'calendar' },
-  )
+  const calendarQuery = useResource<Memo[]>(loadAllMemos, [userId], {
+    enabled: view === 'calendar',
+  })
 
   const [body, setBody] = useState('')
   // 输入框里的到期日只按「本地哪一天」保管，落库前换算成 UTC 时刻
