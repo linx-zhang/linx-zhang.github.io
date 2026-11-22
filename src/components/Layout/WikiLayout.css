@@ -48,12 +48,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0; /* ✅ flex子元素必须加，ellipsis才能生效 */
+  /* 常驻内边距：选中时只换底色，文字和右侧按钮都不会位移 */
+  padding: 2px 6px;
+  margin-left: -6px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
 }
 .sidebar-title.active {
   color: #0969da;
+  background: #f6f8fa;
 }
 .sidebar-title:hover {
   text-decoration: underline;
+}
+/* 选中时保持蓝字 + 灰底，悬停也不再出现那条细下划线 */
+.sidebar-title.active:hover,
+.sidebar-title.active:focus {
+  text-decoration: none;
 }
 /* 顶栏（标题 + 搜索）固定在侧栏顶部：目录长了自己滚，搜索入口不会跟着滚走 */
 .sidebar-top {
