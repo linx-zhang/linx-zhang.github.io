@@ -4,7 +4,7 @@ import { consumableApi } from '@/api/consumables'
 import type { Consumable, CreateConsumablePayload } from '@/api/consumables'
 import { useResource } from '@/hooks/useResource'
 import { today } from '@/utils/calendar'
-import { STATUS_ORDER } from './consumableFormat'
+import { positiveDaysOrNull, STATUS_ORDER } from './consumableFormat'
 
 /**
  * 消耗品看板的数据层：列表、排序、计数与四个写操作。
@@ -55,7 +55,7 @@ export function useConsumables() {
           item.id,
           {
             started_on: todayKey,
-            expected_days: finished.suggested_days ?? finished.last_days ?? null,
+            expected_days: positiveDaysOrNull(finished.suggested_days ?? finished.last_days),
           },
           todayKey,
         )
@@ -74,7 +74,7 @@ export function useConsumables() {
       item.id,
       {
         started_on: todayKey,
-        expected_days: item.suggested_days ?? item.last_days ?? null,
+        expected_days: positiveDaysOrNull(item.suggested_days ?? item.last_days),
       },
       todayKey,
     )

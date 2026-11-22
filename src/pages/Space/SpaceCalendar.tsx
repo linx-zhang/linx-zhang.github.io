@@ -64,6 +64,7 @@ export default function SpaceCalendar({
   const [saving, setSaving] = useState(false)
   const [composeError, setComposeError] = useState('')
   const draftRef = useRef<HTMLTextAreaElement>(null)
+  const panelRef = useRef<HTMLElement>(null)
 
   const cells = useMemo(() => monthGrid(cursor, 1), [cursor])
 
@@ -89,6 +90,13 @@ export default function SpaceCalendar({
 
   const dayMemos = byDay.map.get(selected) ?? []
 
+  /** 选完格子把当天面板滚进视口：小屏上它常被月网格压到折叠线以下 */
+  const revealPanel = () => {
+    window.setTimeout(() => {
+      panelRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
+    }, 30)
+  }
+
   const pick = (day: string) => {
     // 换一天就把草稿丢掉：输入区的「到期日」跟着格子走，别让上一格的文字落到新日期上
     if (day !== selected) {
@@ -96,6 +104,7 @@ export default function SpaceCalendar({
       setComposeError('')
     }
     setSelected(day)
+    revealPanel()
     const date = parseDay(day)
     if (date.getMonth() !== cursor.getMonth() || date.getFullYear() !== cursor.getFullYear()) {
       setCursor(startOfMonth(day))
@@ -105,6 +114,7 @@ export default function SpaceCalendar({
   const goToday = () => {
     setSelected(todayKey)
     setCursor(startOfMonth(todayKey))
+    revealPanel()
   }
 
   const openComposer = () => {
@@ -246,7 +256,7 @@ export default function SpaceCalendar({
             })}
           </div>
 
-          <section className="space-cal-day-panel" aria-live="polite">
+          <section className="space-cal-day-panel" ref={panelRef} aria-live="polite">
             <div className="space-cal-day-head">
               <h2>
                 {dayTitle(selected)}

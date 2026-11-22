@@ -72,6 +72,19 @@ describe('SpaceCalendar 新增', () => {
     expect((screen.getByLabelText(/到期的新条目/) as HTMLTextAreaElement).value).toBe('交周报')
   })
 
+  it('选完一天把当天面板滚进视口', async () => {
+    const scrollIntoView = vi.fn()
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = scrollIntoView
+    try {
+      setup()
+      fireEvent.click(screen.getByLabelText(/^11 月 28 日/))
+      await waitFor(() => expect(scrollIntoView).toHaveBeenCalled())
+    } finally {
+      Element.prototype.scrollIntoView = original
+    }
+  })
+
   it('Esc 收起输入区并清掉草稿', () => {
     setup()
     fireEvent.click(screen.getByRole('button', { name: /记一条/ }))

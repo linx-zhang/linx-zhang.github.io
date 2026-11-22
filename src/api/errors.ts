@@ -34,6 +34,9 @@ export function errorMessage(err: unknown): string {
   if (err instanceof ApiError) {
     if (err.status >= 500) return '服务暂时不可用，请稍后重试。'
     if (err.code === 'forbidden') return err.detail || '没有权限执行该操作。'
+    // 已知业务码优先用人话，别把后端校验原文铺给用户
+    const mapped = CODE_MESSAGES[err.code]
+    if (mapped) return mapped
     return err.detail || '请求失败，请稍后重试。'
   }
   if (isNetworkError(err)) return '网络请求失败，请检查连接后重试。'

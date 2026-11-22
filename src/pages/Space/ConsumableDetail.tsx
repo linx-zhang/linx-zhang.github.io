@@ -131,7 +131,7 @@ export default function ConsumableDetail({ item, onChanged, onDelete }: Props) {
     setCycleError('')
     setSaving(true)
     try {
-      await consumableApi.updateCycle(
+      const updated = await consumableApi.updateCycle(
         item.id,
         editingCycle.id,
         {
@@ -141,6 +141,15 @@ export default function ConsumableDetail({ item, onChanged, onDelete }: Props) {
         todayKey,
       )
       setEditingCycle(null)
+      // 改的是当前这一轮时，把上方的「本轮」同步过来；否则要重开详情才看到新开始日
+      const fresh = updated.cycle
+      if (fresh && item.cycle?.id === editingCycle.id) {
+        setDraft((prev) => ({
+          ...prev,
+          startedOn: fresh.started_on,
+          expected: fresh.expected_days === null ? '' : String(fresh.expected_days),
+        }))
+      }
       await loadHistory()
       onChanged()
     } catch (err) {

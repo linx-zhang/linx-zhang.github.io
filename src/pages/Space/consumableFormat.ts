@@ -1,6 +1,11 @@
 import { parseDay } from '@/utils/calendar'
 import type { Consumable, ConsumableCategory, ConsumableStatus } from '@/api/consumables'
 
+/** 服务端只接受 ≥1 的预计天数：实测为 0 或缺失时一律按「不设」提交 */
+export function positiveDaysOrNull(value: number | null | undefined): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 1 ? Math.round(value) : null
+}
+
 /** 类别只决定图标和分组，不参与计算 */
 export const CATEGORIES: { key: ConsumableCategory; label: string; icon: string }[] = [
   { key: 'paper', label: '纸品', icon: '🧻' },

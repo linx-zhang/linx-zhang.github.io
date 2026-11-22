@@ -195,4 +195,21 @@ describe('SpaceConsumables', () => {
       ),
     )
   })
+
+  it('上一轮实测为 0 天时，补货不带非法的 expected_days', async () => {
+    api.list.mockResolvedValue({
+      items: [item({ cycle: null, status: 'idle', last_days: 0, suggested_days: 0 })],
+    })
+    api.startCycle.mockResolvedValue(item({}))
+    render(<SpaceConsumables />)
+
+    fireEvent.click(await screen.findByRole('button', { name: '补货' }))
+    await waitFor(() =>
+      expect(api.startCycle).toHaveBeenCalledWith(
+        1,
+        { started_on: today(), expected_days: null },
+        today(),
+      ),
+    )
+  })
 })
