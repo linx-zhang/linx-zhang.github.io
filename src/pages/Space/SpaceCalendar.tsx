@@ -5,6 +5,7 @@ import { errorMessage } from '@/api/errors'
 import { MEMO_BODY_MAX } from '@/constants'
 import { formatDate } from '@/utils/format'
 import { addMonths, dayNumber, isOutsideMonth, monthGrid, parseDay, startOfMonth, today } from '@/utils/calendar'
+import './SpaceCalendar.css'
 
 /**
  * 个人空间的月历视图：只做一件事——把 `due_at` 摊到月网格上看。

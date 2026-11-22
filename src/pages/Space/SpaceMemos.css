@@ -1,0 +1,472 @@
+/* 备忘录：清单、输入区、就地编辑，只被 SpaceMemos 使用 */
+
+/* 列表头：分段筛选 */
+.space-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.1rem;
+}
+
+.space-seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.space-seg button {
+  min-height: 32px;
+  padding: 0 0.7rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #4b5563;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.space-seg button[aria-pressed='true'] {
+  background: #fff;
+  color: #1f2937;
+  box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+.space-order {
+  color: #9ca3af;
+  font-size: 0.74rem;
+}
+
+/* 列表 */
+.space-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.space-memo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.space-memo.is-done {
+  background: #fbfbfc;
+}
+
+/* 加载中的骨架：占住真实卡片的位置，切换筛选时页面不会塌成空白 */
+.space-skeleton {
+  background: #fff;
+}
+
+.space-skeleton-box,
+.space-skeleton-line {
+  display: block;
+  background: #eceff3;
+  animation: space-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.space-skeleton-box {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0.1rem 0.55rem 0 0.6rem;
+  border-radius: 50%;
+}
+
+.space-skeleton-lines {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+}
+
+.space-skeleton-line {
+  height: 0.8rem;
+  width: 62%;
+  border-radius: 4px;
+}
+
+.space-skeleton-line.is-short {
+  width: 34%;
+}
+
+@keyframes space-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .space-skeleton-box,
+  .space-skeleton-line {
+    animation: none;
+  }
+}
+
+.space-check {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 32px;
+  margin: -0.35rem 0 -0.35rem -0.5rem;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.space-box {
+  width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #cbd2da;
+  border-radius: 5px;
+  color: transparent;
+}
+
+.space-box svg {
+  width: 12px;
+  height: 12px;
+}
+
+.space-check[aria-pressed='true'] .space-box {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #fff;
+}
+
+/* 整条都可点：正文与元信息合在一个按钮里，鼠标是文本光标，避免像普通按钮 */
+.space-memo-main {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: text;
+}
+
+.space-memo-text {
+  display: block;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.space-memo.is-done .space-memo-text {
+  color: #6b7280;
+  text-decoration: line-through;
+  text-decoration-color: #cbd2da;
+}
+
+/* 就地编辑：勾选框让位，输入区占据整行 */
+.space-memo.is-editing {
+  display: block;
+}
+
+.space-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.space-edit-text {
+  width: 100%;
+  min-height: 4.4rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.space-edit-text:focus {
+  outline: none;
+  border-color: #1f2937;
+}
+
+.space-edit-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.space-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.space-memo-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+  color: #9ca3af;
+  font-size: 0.76rem;
+}
+
+.space-tag {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  color: #4b5563;
+}
+
+/* 到期与逾期都标红：这是列表里唯一需要被一眼看见的状态 */
+.space-tag-today,
+.space-tag-late {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.space-tag-late {
+  font-weight: 600;
+}
+
+.space-del {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: none;
+  color: #c3c9d1;
+  cursor: pointer;
+}
+
+.space-del svg {
+  width: 17px;
+  height: 17px;
+}
+
+.space-del:hover {
+  color: #4b5563;
+}
+
+.space-more {
+  margin-top: 0.4rem;
+}
+
+.space-more:disabled {
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: default;
+  background: #fff;
+}
+
+/* 收起态的入口：整条都要像个按钮，别让人猜哪里能写 */
+.space-compose-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  background: #1f2937;
+  color: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.space-compose-trigger svg {
+  width: 16px;
+  height: 16px;
+}
+
+.space-compose-trigger span {
+  color: #cbd5e1;
+  font-size: 0.74rem;
+  font-weight: 400;
+}
+
+.space-dock-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.space-dock-foot .space-hint,
+.space-dock-foot .space-error {
+  margin-top: 0;
+}
+
+.space-collapse {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+/* 输入区：手机上固定在底部，桌面上回到列表上方一条 */
+.space-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  padding: 0.6rem 0.8rem calc(0.6rem + env(safe-area-inset-bottom));
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.space-dock > * {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.space-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.space-composer textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  max-height: 140px;
+  padding: 0.5rem 0.2rem;
+  border: none;
+  outline: none;
+  resize: none;
+  /* 16px：移动端聚焦时 iOS 不放大页面 */
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #1f2937;
+  background: transparent;
+}
+
+.space-composer textarea::placeholder {
+  color: #9ca3af;
+}
+
+.space-due {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
+/* 日期触发器在输入区里应当窄：只占内容宽度，别和输入框抢地方 */
+.space-due .space-due-trigger {
+  width: auto;
+  min-height: 38px;
+  padding: 0 0.6rem;
+  font-size: 0.8rem;
+}
+
+.space-due .space-due-trigger:hover:not(:disabled) {
+  border-color: #cbd2da;
+}
+
+/* 选了日期就变成一条可读的状态，红字提示这条有截止时间 */
+.space-due .space-due-trigger .date-trigger-value:not(.is-empty) {
+  color: #b91c1c;
+}
+
+.space-due-clear {
+  width: 24px;
+  min-height: 38px;
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.space-due-clear:hover {
+  color: #4b5563;
+}
+
+@media (max-width: 600px) {
+  .space-composer {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .space-composer textarea {
+    flex: 1 1 100%;
+  }
+
+  .space-due {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .space-due .space-due-trigger {
+    min-width: 0;
+  }
+}
+
+
+@media (min-width: 768px) {
+  /* 宽屏一直展开，收起按钮与「记一条」入口都不该出现 */
+  .space-collapse,
+  .space-compose-trigger {
+    display: none;
+  }
+
+  .space-dock {
+    position: static;
+    padding: 0;
+    border-top: none;
+    background: transparent;
+    margin-top: 1.1rem;
+  }
+
+  .space-composer {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .space-hint,
+  .space-error {
+    text-align: right;
+  }
+}
+

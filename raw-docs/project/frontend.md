@@ -137,7 +137,7 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 
 同理，`html { scrollbar-gutter: stable }` 是为了修一个很隐蔽的抖动：列表从「短（无滚动条）」切到「长（有滚动条）」时，居中容器会被滚动条宽度推着左右抖——筛选、翻页、空态来回切最容易看见。
 
-页面样式里体量最大的是 `pages/Space/Space.css`（1614 行）、`pages/Admin/Admin.css`（1186 行）、`Tools.css`（962 行）、`Blog.css`（604 行）。这几个页面本身就是多个分区的复合体，样式集中在一处反而比拆成十几个文件更好定位——这是有意识的取舍，不是没整理。个人空间现在是「备忘录 + 消耗品」两个板块共用一个 `Space.css`，模块 tab 与卡片布局都在这一份里。
+页面样式里体量最大的现在是 `pages/Tools/Tools.css`（1298 行）、`pages/Admin/Admin.css`（1201 行）、`pages/Blog/Blog.css`（604 行）。个人空间已按组件归属拆开：`Space.css` 只留页头、登录门、板块 tab 与视图切换这些外壳（240 行），备忘录 `SpaceMemos.css`（472 行）、消耗品 `SpaceConsumables.css`（499 行）、月历 `SpaceCalendar.css`（368 行）各自就近 `import`，切板块时随组件一起加载。拆的是「谁用这份样式」，不是颜色变量——全站仍直接写 hex，不引入 CSS 变量层。
 
 ## 七、体积：懒加载的账
 
@@ -165,15 +165,15 @@ CSS 合计约 109.3 KB，主包 58.1 KB、MarkdownView 35.2 KB，基本和页面
 
 ## 九、热点与下一步
 
-按行数排，前五名里四个是样式：`Space.css` 1614、`Admin.css` 1186、`Tools.css` 962、`Blog.css` 604；逻辑侧最大的是 `Space/SpaceConsumables.tsx` 915 行、`Space/index.tsx` 690 行、`Blog/PostDetail.tsx` 503 行、`Blog/index.tsx` 398 行。
+按行数排，前两名是样式：`Tools.css` 1298、`Admin.css` 1201；个人空间拆完后单文件最大 499。逻辑侧最大的是 `Space/SpaceConsumables.tsx` 916 行、`Space/SpaceMemos.tsx` 588 行、`Blog/PostDetail.tsx` 503 行、`Blog/index.tsx` 398 行；`Space/index.tsx` 已收成 120 行的外壳（登录门 + 页头 + 板块 tab + 视图切换 + 分发）。
 
-`SpaceConsumables.tsx` 915 行里混了「看板排序 + 新建表单 + 用完确认 + 详情修正 + 周期历史」五件事，是最值得下一步拆的：把详情与周期编辑抽成 `useConsumableEditor`，页面只留看板编排。`Space/index.tsx` 已经按模块拆过一轮（备忘录留在页面、消耗品独立组件），剩下的台账/筛选逻辑仍在页面里。`Admin.css` 1186 行则是后台五个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
+`SpaceConsumables.tsx` 916 行仍是下一个值得拆的点：里面混了「看板排序 + 新建表单 + 用完确认 + 详情修正 + 周期历史」五件事，可把详情与周期编辑抽成 hook，页面只留看板编排。`SpaceMemos.tsx` 588 行已经把列表、输入区、就地编辑与月历编排收在一处，排序单独放 `memoSort.ts` 并有单测；再拆的收益不如消耗品明显。`Admin.css` 1201 行则是后台多个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
 
 ## 十、取舍清单
 
 - 没有 SSR：SEO 与首屏速度都让给了「零运维」；知识库 md 还是运行时渲染，搜索引擎只能看到外壳。
 - 没有 UI 库：省掉版本与主题适配，但每个控件都要自己处理键盘、焦点、移动端。
 - 常用页静态进包：首包变大，换页不闪。
-- 样式按页面集中：定位快，但单文件行数偏高。
+- 样式按组件归属就近放：改哪个组件只翻一份小文件，代价是切板块时多一次 CSS 请求（已随组件懒加载抵消）。
 
 一句话总结：这套前端不是「组件多得漂亮」，而是把每个高频结构都压成了唯一实现——路由只有一张表、请求只有一个入口、列表只有两套语义、占位只有一份、权限只有一个消费口。规模再翻一倍，新增页面仍然只是「加一条路由 + 一个 api 函数 + 一个页面目录」。

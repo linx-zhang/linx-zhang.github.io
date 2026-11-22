@@ -13,6 +13,7 @@ import type {
 import { useAuth } from '@/auth/AuthProvider'
 import { useResource } from '@/hooks/useResource'
 import { parseDay, today } from '@/utils/calendar'
+import './SpaceConsumables.css'
 
 /** 类别只决定图标和分组，不参与计算 */
 const CATEGORIES: { key: ConsumableCategory; label: string; icon: string }[] = [
