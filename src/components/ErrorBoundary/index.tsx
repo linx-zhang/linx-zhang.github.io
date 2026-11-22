@@ -7,6 +7,7 @@
  */
 import { Component } from 'react'
 import type { ErrorInfo, ReactNode } from 'react'
+import { hardReload } from '../../utils/hardReload'
 import './ErrorBoundary.css'
 
 interface ErrorBoundaryProps {
@@ -41,14 +42,12 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
         <h2>页面出错了</h2>
         {/* 只有「重新加载」这一个出口：这里的崩溃是 render 抛错，
             清掉 error 再渲染同一棵子树往往立刻再炸一次，点了没反应；
-            整页重载才会重新取数、重新挂载，是真正能恢复的那一步。 */}
+            整页重载才会重新取数、重新挂载，是真正能恢复的那一步。
+            hardReload 会顺手清掉 Cache Storage，并在 URL 上加一次性参数，
+            避免用户重载后拿到的还是缓存里的旧 HTML / 旧样式。 */}
         <p>这一块内容暂时无法显示。重新加载页面通常就能恢复。</p>
         <div className="error-boundary-actions">
-          <button
-            type="button"
-            className="blog-button comment-submit"
-            onClick={() => window.location.reload()}
-          >
+          <button type="button" className="blog-button comment-submit" onClick={hardReload}>
             重新加载
           </button>
         </div>
