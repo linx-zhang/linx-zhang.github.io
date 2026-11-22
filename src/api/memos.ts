@@ -16,12 +16,22 @@ export interface Memo {
 /** 与全站一致的分页形状：服务端多取一条判断 has_next */
 export type MemoPage = Page<Memo>
 
+/** 列表/月历共用的筛选条件；日期都是服务端 UTC datetime 串 */
+export interface MemoListQuery {
+  done?: boolean
+  dueFrom?: string
+  dueTo?: string
+  undated?: boolean
+}
+
 /** 个人空间的计数，单独一个接口，列表里不带 total */
 export interface MemoSummary {
   pending: number
   done: number
   /** 未完成且到期时刻已到（含逾期） */
   due: number
+  /** 没有到期日的条数；月历只预览其中前若干条 */
+  undated: number
 }
 
 export interface CreateMemoPayload {
@@ -36,12 +46,15 @@ export interface UpdateMemoPayload {
 }
 
 export const memoApi = {
-  list(done: boolean | undefined, limit: number, offset: number): Promise<MemoPage> {
+  list(query: MemoListQuery, limit: number, offset: number): Promise<MemoPage> {
     const params = new URLSearchParams({
       limit: String(limit),
       offset: String(offset),
     })
-    if (done !== undefined) params.set('done', String(done))
+    if (query.done !== undefined) params.set('done', String(query.done))
+    if (query.dueFrom) params.set('due_from', query.dueFrom)
+    if (query.dueTo) params.set('due_to', query.dueTo)
+    if (query.undated) params.set('undated', 'true')
     return request<MemoPage>(`/memos?${params.toString()}`, {}, true)
   },
   summary(): Promise<MemoSummary> {

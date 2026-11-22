@@ -288,6 +288,12 @@
   font-size: 0.82rem;
 }
 
+/* 未排到期日只预览一页，超出的部分明确说清楚，避免被当成完整列表 */
+.space-cal-undated .space-cal-empty {
+  margin-top: 0.5rem;
+  padding: 0 0.2rem;
+}
+
 .space-cal-day-panel ul,
 .space-cal-undated ul {
   display: flex;

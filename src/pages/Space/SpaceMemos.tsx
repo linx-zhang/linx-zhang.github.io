@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
 import DatePicker from '@/components/DatePicker'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
@@ -8,8 +8,8 @@ import type { Memo, MemoSummary } from '@/api/memos'
 import { useInfiniteList } from '@/hooks/useInfiniteList'
 import { useResource } from '@/hooks/useResource'
 import { MEMO_BODY_MAX } from '@/constants'
-import { formatDate, localDayEndUtc } from '@/utils/format'
-import { today } from '@/utils/calendar'
+import { formatDate, localDayEndUtc, localDayStartUtc } from '@/utils/format'
+import { monthGrid, startOfMonth, today } from '@/utils/calendar'
 import SpaceCalendar from './SpaceCalendar'
 import SpaceSkeleton from './SpaceSkeleton'
 import { sortMemos } from './memoSort'
@@ -43,16 +43,46 @@ interface Props {
   initialDay?: string
 }
 
-export async function loadAllMemos(): Promise<Memo[]> {
+export interface CalendarRange {
+  /** 可见网格第一天的 00:00:00（UTC 串） */
+  from: string
+  /** 可见网格最后一天的 23:59:59（UTC 串） */
+  to: string
+}
+
+/** 月历预览的未排到期日上限；完整列表仍走「全部」筛选 */
+export const CALENDAR_UNDATED_PREVIEW = 20
+
+const CALENDAR_PAGE_SIZE = 100
+const CALENDAR_MAX_PAGES = 20
+
+function calendarRangeFor(day: string): CalendarRange {
+  const cells = monthGrid(startOfMonth(day), 1)
+  return {
+    from: localDayStartUtc(cells[0]),
+    to: localDayEndUtc(cells[cells.length - 1]),
+  }
+}
+
+/**
+ * 月历只取可见网格（通常 42 天）的到期条目，再补一页未排到期日预览。
+ * 不再为了让一个月历画满而按 100 条/页把全部备忘录正文拉回来。
+ */
+export async function loadCalendarMemos(range: CalendarRange): Promise<Memo[]> {
   const rows: Memo[] = []
   let offset = 0
-  for (let page = 0; page < 200; page += 1) {
-    const res = await memoApi.list(undefined, 100, offset)
+  for (let page = 0; page < CALENDAR_MAX_PAGES; page += 1) {
+    const res = await memoApi.list(
+      { dueFrom: range.from, dueTo: range.to },
+      CALENDAR_PAGE_SIZE,
+      offset,
+    )
     rows.push(...res.items)
     if (!res.has_next || res.items.length === 0) break
     offset += res.items.length
   }
-  return rows
+  const undated = await memoApi.list({ undated: true }, CALENDAR_UNDATED_PREVIEW, 0)
+  return [...rows, ...undated.items]
 }
 
 /**
@@ -64,6 +94,19 @@ export async function loadAllMemos(): Promise<Memo[]> {
 export default function SpaceMemos({ userId, view, initialDay }: Props) {
   const { confirm, dialog } = useConfirm()
   const [filter, setFilter] = useState<MemoFilter>('all')
+  const [calendarRange, setCalendarRange] = useState<CalendarRange>(() =>
+    calendarRangeFor(initialDay ?? today()),
+  )
+
+  const updateCalendarRange = useCallback((firstDay: string, lastDay: string) => {
+    const next = {
+      from: localDayStartUtc(firstDay),
+      to: localDayEndUtc(lastDay),
+    }
+    setCalendarRange((prev) =>
+      prev.from === next.from && prev.to === next.to ? prev : next,
+    )
+  }, [])
 
   /**
    * 列表用「追加型」状态机：只有 loadMore 会追加，reload 一定清空回第 1 页。
@@ -71,7 +114,12 @@ export default function SpaceMemos({ userId, view, initialDay }: Props) {
    * 页码还停在原来的位置，于是 pageIndex !== 0 走了追加分支。
    */
   const list = useInfiniteList<Memo>(
-    (limit, offset) => memoApi.list(filter === 'all' ? undefined : filter === 'done', limit, offset),
+    (limit, offset) =>
+      memoApi.list(
+        { done: filter === 'all' ? undefined : filter === 'done' },
+        limit,
+        offset,
+      ),
   )
 
   const summaryQuery = useResource<MemoSummary>(() => memoApi.summary(), [userId], {
@@ -80,14 +128,14 @@ export default function SpaceMemos({ userId, view, initialDay }: Props) {
   const summary = summaryQuery.data
 
   /**
-   * 月历要「整月的到期点」，和列表视图的按页追加不是一回事：这里一次把全部条目取回来。
-   * 个人备忘录量级很小，但也不再写死 5 页——数据攒到半年以上时，截断会让旧到期日
-   * 在月历里凭空消失，而列表里还在。
-   * 顺手把 done 的筛选去掉——月历要把已完成的也画出来，只是颜色淡一档。
+   * 月历只取当前可见网格的到期条目，再由 SpaceCalendar 随月份切换回报新范围。
+   * 未排到期日只预览一页，数量用 summary.undated 显示，避免为了折叠区拉全量。
    */
-  const calendarQuery = useResource<Memo[]>(loadAllMemos, [userId], {
-    enabled: view === 'calendar',
-  })
+  const calendarQuery = useResource<Memo[]>(
+    () => loadCalendarMemos(calendarRange),
+    [userId, calendarRange.from, calendarRange.to],
+    { enabled: view === 'calendar' },
+  )
 
   const [body, setBody] = useState('')
   // 输入框里的到期日只按「本地哪一天」保管，落库前换算成 UTC 时刻
@@ -568,6 +616,8 @@ export default function SpaceMemos({ userId, view, initialDay }: Props) {
           status={calendarQuery.status}
           error={calendarQuery.error}
           initialDay={initialDay}
+          undatedTotal={summary?.undated}
+          onRangeChange={updateCalendarRange}
           onRetry={calendarQuery.reload}
           onToggleDone={(memo) => void toggleDoneInCalendar(memo)}
           onCreate={createFromCalendar}

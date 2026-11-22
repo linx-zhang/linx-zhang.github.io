@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import type { Memo } from '@/api/memos'
 import { errorMessage } from '@/api/errors'
@@ -14,8 +14,8 @@ import './SpaceCalendar.css'
  * 1. 一律按「本地日 YYYY-MM-DD」分组。`due_at` 在库里是 UTC datetime（本地当天 23:59:59
  *    换算而来），直接切字符串会差一天，必须走 `formatDate` 转成本地日。
  * 2. 没有 `due_at` 的条目不上网格，单独收在下面的「未排到期日」里，否则它们在月历里凭空消失。
- * 3. 组件不取数：`memos` 由调用方一次性取全量传进来，勾选完成也回调给调用方落库，
- *    保证列表视图与月历视图只有一份写入路径。
+ * 3. 组件不取数：`memos` 是当前可见网格的到期条目，加上一页未排到期日预览；
+ *    翻月时把新网格的首尾本地日回报给父组件，由父组件换查询窗口。
  * 4. 新增也走调用方：输入区只收集「内容 + 当前选中的那一天」，到期时刻统一由父组件换算落库。
  */
 
@@ -28,6 +28,10 @@ interface SpaceCalendarProps {
   error: string
   /** 带着某一天进来（万年历点「查看我的待办」时传） */
   initialDay?: string
+  /** summary 里的未排到期日总数；未传时退化为预览数组长度 */
+  undatedTotal?: number
+  /** 网格首尾本地日变化时回报，父组件据此换 due_from / due_to */
+  onRangeChange: (firstDay: string, lastDay: string) => void
   onRetry: () => void
   onToggleDone: (memo: Memo) => void
   /** 在当前选中的那一天新增一条；失败时抛出，由输入区就地显示 */
@@ -49,6 +53,8 @@ export default function SpaceCalendar({
   status,
   error,
   initialDay,
+  undatedTotal: undatedTotalProp,
+  onRangeChange,
   onRetry,
   onToggleDone,
   onCreate,
@@ -67,6 +73,11 @@ export default function SpaceCalendar({
   const panelRef = useRef<HTMLElement>(null)
 
   const cells = useMemo(() => monthGrid(cursor, 1), [cursor])
+
+  /** 翻月后把新网格的首尾日交给父组件；父组件据此只取这 42 天 */
+  useEffect(() => {
+    onRangeChange(cells[0], cells[cells.length - 1])
+  }, [cells, onRangeChange])
 
   /** 本地日 → 当天到期的条目（未完成在前，同状态按创建时间倒序） */
   const byDay = useMemo(() => {
@@ -89,6 +100,7 @@ export default function SpaceCalendar({
   }, [memos])
 
   const dayMemos = byDay.map.get(selected) ?? []
+  const undatedTotal = undatedTotalProp ?? byDay.undated.length
 
   /** 选完格子把当天面板滚进视口：小屏上它常被月网格压到折叠线以下 */
   const revealPanel = () => {
@@ -344,7 +356,7 @@ export default function SpaceCalendar({
         </>
       )}
 
-      {byDay.undated.length > 0 && (
+      {undatedTotal > 0 && (
         <section className="space-cal-undated">
           <button
             type="button"
@@ -352,30 +364,37 @@ export default function SpaceCalendar({
             aria-expanded={showUndated}
             onClick={() => setShowUndated(!showUndated)}
           >
-            未排到期日 {byDay.undated.length} 条
+            未排到期日 {undatedTotal} 条
             <span aria-hidden="true">{showUndated ? '收起' : '展开'}</span>
           </button>
           {showUndated && (
-            <ul>
-              {byDay.undated.map((memo) => (
-                <li key={memo.id} className={memo.done ? 'is-done' : undefined}>
-                  <button
-                    type="button"
-                    className="space-check"
-                    aria-pressed={memo.done}
-                    aria-label={memo.done ? '取消完成' : '标记完成'}
-                    onClick={() => onToggleDone(memo)}
-                  >
-                    <span className="space-box">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
-                        <path d="M20 7L9 18 4 13" />
-                      </svg>
-                    </span>
-                  </button>
-                  <span className="space-cal-text">{memo.body}</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul>
+                {byDay.undated.map((memo) => (
+                  <li key={memo.id} className={memo.done ? 'is-done' : undefined}>
+                    <button
+                      type="button"
+                      className="space-check"
+                      aria-pressed={memo.done}
+                      aria-label={memo.done ? '取消完成' : '标记完成'}
+                      onClick={() => onToggleDone(memo)}
+                    >
+                      <span className="space-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+                          <path d="M20 7L9 18 4 13" />
+                        </svg>
+                      </span>
+                    </button>
+                    <span className="space-cal-text">{memo.body}</span>
+                  </li>
+                ))}
+              </ul>
+              {byDay.undated.length < undatedTotal && (
+                <p className="space-cal-empty">
+                  这里只预览最近 {byDay.undated.length} 条，完整列表请切到「全部」。
+                </p>
+              )}
+            </>
           )}
         </section>
       )}

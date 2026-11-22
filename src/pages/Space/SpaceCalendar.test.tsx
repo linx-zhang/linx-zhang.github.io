@@ -6,6 +6,7 @@ const baseProps = {
   memos: [],
   status: 'ready' as const,
   error: '',
+  onRangeChange: () => {},
   onRetry: () => {},
   onToggleDone: () => {},
 }
@@ -16,6 +17,21 @@ function setup(onCreate = vi.fn().mockResolvedValue(undefined)) {
 }
 
 describe('SpaceCalendar 新增', () => {
+  it('翻月时把新网格的首尾本地日回报父组件', () => {
+    const onRangeChange = vi.fn()
+    render(
+      <SpaceCalendar
+        {...baseProps}
+        initialDay="2026-11-25"
+        onRangeChange={onRangeChange}
+        onCreate={vi.fn()}
+      />,
+    )
+    expect(onRangeChange).toHaveBeenLastCalledWith('2026-10-26', '2026-12-06')
+    fireEvent.click(screen.getByRole('button', { name: '下个月' }))
+    expect(onRangeChange).toHaveBeenLastCalledWith('2026-11-30', '2027-01-10')
+  })
+
   it('把内容加到当前选中的那一天', async () => {
     const onCreate = setup()
     fireEvent.click(screen.getByRole('button', { name: /记一条/ }))

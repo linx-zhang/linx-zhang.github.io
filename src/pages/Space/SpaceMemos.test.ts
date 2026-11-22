@@ -5,9 +5,21 @@ import { localDayEndUtc } from '@/utils/format'
 const api = vi.hoisted(() => ({ list: vi.fn() }))
 vi.mock('@/api/memos', () => ({ memoApi: api }))
 
-import { dueMeta, loadAllMemos } from './SpaceMemos'
+import { CALENDAR_UNDATED_PREVIEW, dueMeta, loadCalendarMemos } from './SpaceMemos'
 
 const YEAR = today().slice(0, 4)
+
+function memo(id: number, due_at: string | null = null) {
+  return {
+    id,
+    body: `第 ${id} 条`,
+    done: false,
+    done_at: null,
+    due_at,
+    created_at: '2026-01-01 00:00:00',
+    updated_at: '2026-01-01 00:00:00',
+  }
+}
 
 describe('memo dueMeta', () => {
   it('同年到期沿用月日短格式', () => {
@@ -30,21 +42,37 @@ describe('memo dueMeta', () => {
     expect(dueMeta(localDayEndUtc(day)).text).toBe(`${day} 已过期`)
   })
 
-  it('月历取数超过 5 页时不截断', async () => {
-    api.list.mockImplementation(async (_done: unknown, _limit: number, offset: number) => {
-      const items = Array.from({ length: 100 }, (_, index) => ({
-        id: offset + index + 1,
-        body: `第 ${offset + index + 1} 条`,
-        done: false,
-        done_at: null,
-        due_at: null,
-        created_at: '2026-01-01 00:00:00',
-        updated_at: '2026-01-01 00:00:00',
-      }))
-      return { items, has_next: offset + 100 < 600 }
+  it('月历只取可见窗口的到期条目，未排到期日单独取一页预览', async () => {
+    let datedPage = 0
+    api.list.mockImplementation(async (query: { undated?: boolean }, _limit: number, offset: number) => {
+      if (query.undated) {
+        return { items: [memo(900)], has_next: false }
+      }
+      datedPage += 1
+      const items = Array.from({ length: 100 }, (_, index) => memo(offset + index + 1))
+      return { items, has_next: datedPage === 1 }
     })
 
-    await expect(loadAllMemos()).resolves.toHaveLength(600)
-    expect(api.list).toHaveBeenCalledTimes(6)
+    const range = { from: '2026-11-01 00:00:00', to: '2026-11-30 23:59:59' }
+    await expect(loadCalendarMemos(range)).resolves.toHaveLength(201)
+
+    expect(api.list).toHaveBeenNthCalledWith(
+      1,
+      { dueFrom: range.from, dueTo: range.to },
+      100,
+      0,
+    )
+    expect(api.list).toHaveBeenNthCalledWith(
+      2,
+      { dueFrom: range.from, dueTo: range.to },
+      100,
+      100,
+    )
+    expect(api.list).toHaveBeenNthCalledWith(
+      3,
+      { undated: true },
+      CALENDAR_UNDATED_PREVIEW,
+      0,
+    )
   })
 })
