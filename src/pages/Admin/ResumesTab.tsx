@@ -72,7 +72,9 @@ export default function ResumesTab() {
   const [editor, setEditor] = useState<{ id: number | null } | null>(null)
   const [share, setShare] = useState<ResumeRow | null>(null)
   const [previewId, setPreviewId] = useState<number | null>(null)
-  const [busyId, setBusyId] = useState<number | null>(null)
+  const [busy, setBusy] = useState<{ id: number; kind: 'copy' | 'default' | 'delete' } | null>(
+    null,
+  )
   const [notice, setNotice] = useState('')
   const [actionError, setActionError] = useState('')
 
@@ -89,21 +91,21 @@ export default function ResumesTab() {
       confirmText: '设为默认',
       pendingText: '设置中…',
       onConfirm: async () => {
-        setBusyId(row.id)
+        setBusy({ id: row.id, kind: 'default' })
         try {
           await resumeApi.setDefault(row.id)
           afterMutation('默认简历已切换。')
         } catch (err) {
           setActionError(errorMessage(err))
         } finally {
-          setBusyId(null)
+          setBusy(null)
         }
       },
     })
   }
 
   const copyResume = async (row: ResumeRow) => {
-    setBusyId(row.id)
+    setBusy({ id: row.id, kind: 'copy' })
     setActionError('')
     try {
       await resumeApi.copy(row.id)
@@ -111,7 +113,7 @@ export default function ResumesTab() {
     } catch (err) {
       setActionError(errorMessage(err))
     } finally {
-      setBusyId(null)
+      setBusy(null)
     }
   }
 
@@ -127,7 +129,7 @@ export default function ResumesTab() {
       pendingText: '删除中…',
       tone: 'danger',
       onConfirm: async () => {
-        setBusyId(row.id)
+        setBusy({ id: row.id, kind: 'delete' })
         try {
           await resumeApi.remove(row.id)
           setNotice('简历已删除。')
@@ -137,7 +139,7 @@ export default function ResumesTab() {
         } catch (err) {
           setActionError(errorMessage(err))
         } finally {
-          setBusyId(null)
+          setBusy(null)
         }
       },
     })
@@ -217,19 +219,19 @@ export default function ResumesTab() {
                 <button
                   type="button"
                   className="resume-action"
-                  disabled={busyId === row.id}
+                  disabled={busy?.id === row.id}
                   onClick={() => void copyResume(row)}
                 >
-                  {busyId === row.id ? '复制中…' : '复制'}
+                  {busy?.id === row.id && busy.kind === 'copy' ? '复制中…' : '复制'}
                 </button>
                 {!row.is_default && (
                   <button
                     type="button"
                     className="resume-action"
-                    disabled={busyId === row.id}
+                    disabled={busy?.id === row.id}
                     onClick={() => makeDefault(row)}
                   >
-                    设为默认
+                    {busy?.id === row.id && busy.kind === 'default' ? '设置中…' : '设为默认'}
                   </button>
                 )}
                 <button
@@ -242,11 +244,11 @@ export default function ResumesTab() {
                 <button
                   type="button"
                   className="resume-action resume-action-danger"
-                  disabled={busyId === row.id || row.is_default}
+                  disabled={busy?.id === row.id || row.is_default}
                   title={row.is_default ? '默认简历不能删除' : undefined}
                   onClick={() => deleteResume(row)}
                 >
-                  删除
+                  {busy?.id === row.id && busy.kind === 'delete' ? '删除中…' : '删除'}
                 </button>
               </div>
             </li>

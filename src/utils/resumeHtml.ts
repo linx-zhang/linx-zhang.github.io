@@ -73,7 +73,8 @@ function safeHref(raw: string): string | null {
   if (lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('mailto:')) {
     return value
   }
-  if (value.startsWith('/') || value.startsWith('#')) return value
+  if (value.startsWith('/') && !value.startsWith('//')) return value
+  if (value.startsWith('#')) return value
   return null
 }
 

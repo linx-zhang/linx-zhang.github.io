@@ -35,6 +35,10 @@ describe('sanitizeResumeHtml', () => {
 
     const bad = sanitizeResumeHtml('<a href="javascript:alert(1)">点我</a>')
     expect(bad).toBe('<a>点我</a>')
+
+    // 协议相对地址会跳出本站，和 // 开头的外链一样不能放行
+    const protocolRelative = sanitizeResumeHtml('<a href="//evil.example">伪装站内</a>')
+    expect(protocolRelative).toBe('<a>伪装站内</a>')
   })
 
   it('未知标签脱壳保留文字，不留下图层', () => {
