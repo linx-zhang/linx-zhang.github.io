@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams } from 'react-router-dom'
 import { useReactToPrint } from 'react-to-print'
 import { errorMessage, isNotFound } from '@/api/errors'
@@ -25,6 +26,7 @@ export default function Profile() {
   const { code } = useParams<{ code?: string }>()
   const printContentRef = useRef<HTMLDivElement>(null)
   const [state, setState] = useState<ViewState>({ status: 'loading' })
+  const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null)
 
   const load = useCallback(async () => {
     setState({ status: 'loading' })
@@ -63,6 +65,30 @@ export default function Profile() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // 操作栏放在简历标题下方，而不是页面最顶端：正文 HTML 是数据，
+  // 这里在渲染后的 `.profile-header-bar` 里挂一个宿主节点，React 用 portal 填进去。
+  const readyHtml = state.status === 'ready' ? state.html : null
+  useEffect(() => {
+    const root = printContentRef.current
+    if (!readyHtml || !root) {
+      setActionsHost(null)
+      return
+    }
+    const header = root.querySelector<HTMLElement>('.profile-header-bar')
+    if (!header) {
+      setActionsHost(null)
+      return
+    }
+    const host = document.createElement('div')
+    host.className = 'profile-actions-host'
+    header.appendChild(host)
+    setActionsHost(host)
+    return () => {
+      host.remove()
+      setActionsHost(null)
+    }
+  }, [readyHtml])
 
   const handlePrint = useReactToPrint({
     contentRef: printContentRef,
@@ -104,8 +130,8 @@ export default function Profile() {
     )
   }
 
-  return (
-    <div className="profile-preview-wrap">
+  const actions = (
+    <>
       <div className="action-group no-print">
         <a href="mailto:xxx@qq.com">邮箱</a>
         <a href="https://github.com/linx-zhang">GitHub</a>
@@ -116,10 +142,20 @@ export default function Profile() {
       {state.updatedAt && (
         <p className="resume-updated no-print">更新于 {formatTimestamp(state.updatedAt)}</p>
       )}
+    </>
+  )
+
+  return (
+    <div className="profile-preview-wrap">
+      {!actionsHost && !(readyHtml && readyHtml.includes('profile-header-bar')) && (
+        <div className="profile-actions-fallback">{actions}</div>
+      )}
 
       <div ref={printContentRef} className="profile-print-root">
         <div dangerouslySetInnerHTML={{ __html: state.html }} />
       </div>
+
+      {actionsHost && createPortal(actions, actionsHost)}
     </div>
   )
 }

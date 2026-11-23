@@ -18,7 +18,9 @@
   gap: 0.9rem;
 }
 .resume-button {
-  height: var(--admin-control-h);
+  /* 弹窗 portal 到 body，拿不到 .admin-page 上的 --admin-control-h，回退到 39px
+     才能和弹窗输入框同高；后台页内仍沿用页面自己的 35px */
+  height: var(--admin-control-h, 39px);
   padding: 0 1rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -269,6 +271,12 @@
 }
 .share-create .modal-field {
   flex: 0 0 180px;
+}
+/* 弹窗里的下拉和按钮、输入框统一高度（同样拿不到页面上的 --admin-control-h） */
+.share-create .select-trigger {
+  height: 39px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 .share-list-head {
   display: flex;

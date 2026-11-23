@@ -156,7 +156,7 @@ CI 在 `npm run lint` 之后跑这一步。它挡的是「底层为了省事反�
 | 页面行为 | `src/pages/**/*.test.tsx` |
 | 纯工具 | `src/utils/*.test.ts` |
 
-`npm test` 是 vitest run；`npm run lint` 是 oxlint。当前 20 个测试文件、161 例，构建前 CI 会全跑。
+`npm test` 是 vitest run；`npm run lint` 是 oxlint。当前 21 个测试文件、162 例，构建前 CI 会全跑。
 
 ## 11. 已知的、刻意保留的债
 

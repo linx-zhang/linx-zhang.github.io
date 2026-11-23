@@ -8,9 +8,9 @@
   line-height: 1.65;
 }
 
-/* 操作栏不参与打印：分享访客也能直接导出或回首页 */
+/* 操作栏不参与打印：挂在简历标题下方，分享访客也能直接导出或回首页 */
 .action-group {
-  margin-top: 1rem;
+  margin-top: 1.15rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,7 +40,7 @@
 
 /* 分享链接与默认简历都会显示的时间戳；不打印 */
 .resume-updated {
-  margin: 0 0 1.5rem;
+  margin: 0.55rem 0 0;
   color: #9ca3af;
   font-size: 0.8rem;
   text-align: center;
