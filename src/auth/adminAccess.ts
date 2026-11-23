@@ -15,4 +15,5 @@ export const ADMIN_AREA_PERMISSIONS = [
   'user:read:any',
   'activity:read:any',
   'invite_code:read:any',
+  'resume:manage:any',
 ] as const

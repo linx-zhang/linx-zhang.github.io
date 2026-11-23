@@ -80,6 +80,9 @@ const CHECKS = [
     re: /VISITOR_RATE_LIMIT_SECONDS\s*=\s*(\d+)/,
     scale: 1000, // 前端毫秒，后端秒
   },
+  { name: 'RESUME_TITLE_MAX', file: 'src/api/models.py', re: /RESUME_TITLE_MAX\s*=\s*(\d+)/ },
+  { name: 'RESUME_NOTE_MAX', file: 'src/api/models.py', re: /RESUME_NOTE_MAX\s*=\s*(\d+)/ },
+  { name: 'RESUME_HTML_MAX', file: 'src/api/models.py', re: /RESUME_HTML_MAX\s*=\s*(\d[\d_]*)/ },
 ]
 
 const args = parseArgs(process.argv.slice(2))

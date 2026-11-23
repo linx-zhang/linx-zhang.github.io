@@ -60,12 +60,21 @@ CI 在 `npm run lint` 之后跑这一步。它挡的是「底层为了省事反�
 4. 页面用 `errorMessage()` 把错误转成中文；详情页可用 `treat404AsMissing` 把 404 当「不存在」。
 5. 列表统一 `{items, has_next}`；「下一页」只看 `has_next`，不用 `total` 推算。
 
+### 简历页的两个入口
+
+| 路径 | 数据源 | 失效行为 |
+|---|---|---|
+| `/profile` | `GET /api/resumes/current` | 无默认简历或接口异常时回退 `utils/resumeTemplate.ts` |
+| `/r/<code>` | `GET /api/resumes/shared/<code>` | 过期 / 撤销 / 简历删除一律 404，页面提示链接失效，不回落模板 |
+
+两者都从 `api/resumes.ts` 取数据，正文渲染前统一过 `utils/resumeHtml.ts` 的标签/类名白名单；后台编辑器预览走同一函数。
+
 ### 三个列表 hook 怎么选
 
 | hook | 场景 | 关键行为 |
 |---|---|---|
 | `useResource` | 单对象 / 一次性数据（详情、分析摘要） | 四态、`enabled`、404 可选 |
-| `usePagedList` | 传统分页（用户、文章、日志、邀请码） | 受控页码、`has_next`、翻页保留筛选 |
+| `usePagedList` | 传统分页（用户、文章、日志、邀请码、简历） | 受控页码、`has_next`、翻页保留筛选 |
 | `useInfiniteList` | 追加式列表（备忘录列表） | 首屏 + 追加、去重、删除后就地更新 |
 
 不要在页面里另写一套 `loading/error` 布尔组合；四态语义已经在 `src/types` 统一。
@@ -75,7 +84,7 @@ CI 在 `npm run lint` 之后跑这一步。它挡的是「底层为了省事反�
 - `AuthProvider` 负责 token 恢复、`/auth/me`、登录弹窗、权限码数组；`AuthModal` 目前由 Provider 直接渲染。
 - `usePermission(code)` 只判断权限码，不判断角色；角色到权限码的映射在后端，前端不要复制角色矩阵。
 - `RequirePermission anyOf={ADMIN_AREA_PERMISSIONS}` 是后台总入口；分区自己的权限在 `pages/Admin` 内部再判。
-- `RootLayout` 里的「管理后台」入口也看 `ADMIN_AREA_PERMISSIONS`，五选一，不是只认 admin。
+- `RootLayout` 里的「管理后台」入口也看 `ADMIN_AREA_PERMISSIONS`，六选一，不是只认 admin。
 
 ## 6. 访问采集
 
@@ -92,7 +101,7 @@ CI 在 `npm run lint` 之后跑这一步。它挡的是「底层为了省事反�
 - 一个页面只有一块样式时，允许 `Page.css` 单文件（Admin、Tools、Blog 现在如此）。
 - 当页面出现多个互不相关的区域、单文件超过约 500 行时，按区域拆（`pages/Space/` 已拆成 `Space.css` 外壳 + `SpaceMemos.css` / `SpaceConsumables.css` / `SpaceCalendar.css`）。
 - 不引入颜色变量：颜色直接写 hex 是既有取舍，不要为了「主题化」重写全站 CSS。
-- 打印：所有不该出现在 PDF 的元素加 `no-print`；`Profile.css` 负责 A4 页面规则。
+- 打印：所有不该出现在 PDF 的元素加 `no-print`；`Profile.css` 负责 A4 页面规则，简历正文排版在 `styles/resume.css`，后台编辑器预览复用同一份。
 
 ## 8. 知识库产物
 
@@ -147,12 +156,12 @@ CI 在 `npm run lint` 之后跑这一步。它挡的是「底层为了省事反�
 | 页面行为 | `src/pages/**/*.test.tsx` |
 | 纯工具 | `src/utils/*.test.ts` |
 
-`npm test` 是 vitest run；`npm run lint` 是 oxlint。当前 19 个测试文件、155 例，构建前 CI 会全跑。
+`npm test` 是 vitest run；`npm run lint` 是 oxlint。当前 20 个测试文件、161 例，构建前 CI 会全跑。
 
 ## 11. 已知的、刻意保留的债
 
 - `AuthProvider` 直接渲染 `components/AuthModal`，`components/AuthMenu` 又依赖 `auth`；这是 auth 与通用 UI 的层间环，运行时无碍，但拆 auth 时要一起动。要彻底解环，需要把弹窗改成由布局层注入。
-- `pages/Tools/Tools.css`（约 1300 行）与 `pages/Admin/Admin.css`（约 1200 行）仍是单文件；在出现第三个独立区域或频繁冲突时再拆。
+- `pages/Tools/Tools.css`（约 1300 行）与 `pages/Admin/Admin.css`（约 1200 行）仍是单文件；在出现第三个独立区域或频繁冲突时再拆。简历分区已单独拆出 `pages/Admin/ResumeAdmin.css`。
 - `pages/Space/SpaceMemos.tsx`（约 630 行）同时管列表、日历、编辑器三种视图；拆之前先用现有测试锁行为。
 - `api/*.ts` 的响应类型是手写的，没有从 OpenAPI 生成；契约靠后端 `docs/api.md` + 前端 `check-contract.mjs`。
 - `MarkdownView` 是最大的懒加载块（约 918KB），不要把它拖回主包。

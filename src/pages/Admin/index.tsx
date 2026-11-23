@@ -6,10 +6,11 @@ import ActivityTab from './ActivityTab'
 import AnalyticsTab from './AnalyticsTab'
 import PostsTab from './PostsTab'
 import InvitesTab from './InvitesTab'
+import ResumesTab from './ResumesTab'
 import UsersTab from './UsersTab'
 import './Admin.css'
 
-type AdminTab = 'posts' | 'invites' | 'users' | 'activity' | 'analytics'
+type AdminTab = 'posts' | 'invites' | 'users' | 'activity' | 'analytics' | 'resumes'
 
 interface TabDef {
   key: AdminTab
@@ -29,6 +30,12 @@ interface TabDef {
 const TABS: TabDef[] = [
   { key: 'users', label: '用户', permission: 'user:read:any', panel: <UsersTab /> },
   { key: 'posts', label: '文章', panel: <PostsTab /> },
+  {
+    key: 'resumes',
+    label: '简历',
+    permission: 'resume:manage:any',
+    panel: <ResumesTab />,
+  },
   { key: 'activity', label: '日志', permission: 'activity:read:any', panel: <ActivityTab /> },
   { key: 'analytics', label: '分析', permission: 'activity:read:any', panel: <AnalyticsTab /> },
   {
@@ -59,7 +66,7 @@ export default function Admin() {
     <div className="admin-page">
       <header className="admin-header">
         <h1>管理后台</h1>
-        <p>管理用户、文章、活跃日志与访问分析；邀请码从用户页进入单独管理。</p>
+        <p>管理用户、文章、简历、活跃日志与访问分析；邀请码从用户页进入单独管理。</p>
       </header>
 
       <div className="admin-tabs" role="tablist" aria-label="管理分区">

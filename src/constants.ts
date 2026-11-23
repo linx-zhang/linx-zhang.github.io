@@ -36,3 +36,8 @@ export const ACTIVITY_VISITOR_DEDUPE_MS = 5 * 60_000
 
 /** 批量删除单次最大条数（backend batch-delete 上限） */
 export const BATCH_DELETE_MAX = 50
+
+/** 简历管理：标题 / 备注 / HTML 正文上限（backend RESUME_*） */
+export const RESUME_TITLE_MAX = 100
+export const RESUME_NOTE_MAX = 200
+export const RESUME_HTML_MAX = 50_000

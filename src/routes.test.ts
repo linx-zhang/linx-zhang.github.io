@@ -8,6 +8,10 @@ describe('isKnownDeepLink', () => {
     expect(isKnownDeepLink('/space')).toBe(true)
   })
 
+  it('简历分享短链也要从 404 兜底里恢复', () => {
+    expect(isKnownDeepLink('/r/abcdefghijkl')).toBe(true)
+  })
+
   it('非应用路径仍交给 404', () => {
     expect(isKnownDeepLink('/spaceship')).toBe(false)
   })

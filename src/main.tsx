@@ -106,6 +106,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             </Route>
             {/* 简历保留独立页语义（不套站点导航），但已与全站共用同一套登录态与访问统计 */}
             <Route path={APP_ROUTES.profile} element={<Profile />} />
+            {/* 限时分享短链：与简历页同一组件，只是数据源换成 share code */}
+            <Route path={`${APP_ROUTES.resumeShare}/:code`} element={<Profile />} />
           </Routes>
         </AuthProvider>
       </ErrorBoundary>

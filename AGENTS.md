@@ -22,7 +22,7 @@ push 到 `main` 触发 `.github/workflows/build.yml`，job `build` 依次执行�
 | 1 | 装依赖 | `npm ci`（node 22 + npm 缓存） |
 | 2 | 静态检查 | `npm run lint` → **oxlint** |
 | 3 | 分层依赖 | `npm run check:layers` → **scripts/check-layers.mjs** |
-| 4 | 单元测试 | `npm test` → **vitest run**（当前 155 例） |
+| 4 | 单元测试 | `npm test` → **vitest run**（当前 161 例） |
 | 5 | 契约漂移 | `git clone --depth 1 .../cf-api-worker.git /tmp/cf-api-worker` 后 `node scripts/check-contract.mjs --api /tmp/cf-api-worker` |
 | 6 | 构建 | `npm run build` = **`tsc -b`** + `node scripts/build-docs.mjs` |
 | 7 | 产物完整 | `docs/index.html`、`docs/404.html`、`docs/wiki/index.json`、`docs/assets/` 存在 |
@@ -78,11 +78,11 @@ Invoke-WebRequest "https://api-worker.linx-zhang.workers.dev/api/posts?limit=3&o
 - `PRAGMA auto_vacuum/page_count/freelist_count` 被拒（`ITE_AUTH` / 7500），`page_size` 可读。
 - 读线上：`& ".\node_modules\.bin\wrangler.cmd" d1 execute api-worker-db --remote --json --command "<单行 SQL>"`。
 
-## 3. 契约常量（10 项，CI 挡漂移）
+## 3. 契约常量（13 项，CI 挡漂移）
 
 真源在**后端**，前端 `src/constants.ts` 是手抄副本，`scripts/check-contract.mjs` 的 `CHECKS` 表逐项比对：
 
-`PAGE_SIZE=20`（`deps.py:DEFAULT_PAGE_LIMIT`）、`MEMO_BODY_MAX=2000`、`POST_TITLE_MAX=200`、`COMMENT_BODY_MAX=5000`、`CLIP_TITLE_MAX=80`、`CLIP_BODY_MAX=20_000`、`ACTIVITY_MAX_BATCH=50`、`ACTIVITY_MAX_VISITOR_BATCH=20`、`ACTIVITY_HEARTBEAT_MS=60_000`、`ACTIVITY_VISITOR_WINDOW_MS=30_000`（单位差 ×1000）。
+`PAGE_SIZE=20`（`deps.py:DEFAULT_PAGE_LIMIT`）、`MEMO_BODY_MAX=2000`、`POST_TITLE_MAX=200`、`COMMENT_BODY_MAX=5000`、`CLIP_TITLE_MAX=80`、`CLIP_BODY_MAX=20_000`、`ACTIVITY_MAX_BATCH=50`、`ACTIVITY_MAX_VISITOR_BATCH=20`、`BATCH_DELETE_MAX=50`、`ACTIVITY_VISITOR_WINDOW_MS=30_000`（单位差 ×1000）、`RESUME_TITLE_MAX=100`、`RESUME_NOTE_MAX=200`、`RESUME_HTML_MAX=50_000`。
 
 改任何一边的数值都要同时改另一边，否则 CI 红。新增常量记得加进 `CHECKS` 表并本地跑一次：
 

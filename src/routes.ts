@@ -3,6 +3,8 @@ export const APP_ROUTES = {
   wiki: '/wiki',
   blog: '/blog',
   profile: '/profile',
+  /** 简历分享短链前缀：/r/<code>，code 由后端签发 */
+  resumeShare: '/r',
   space: '/space',
   tools: '/tools',
   admin: '/admin',
@@ -20,6 +22,7 @@ export function isKnownDeepLink(path: string): boolean {
     pathname.startsWith(`${APP_ROUTES.tools}/`) ||
     pathname === APP_ROUTES.admin ||
     pathname === APP_ROUTES.profile ||
+    pathname.startsWith(`${APP_ROUTES.resumeShare}/`) ||
     pathname === APP_ROUTES.space ||
     pathname.startsWith(`${APP_ROUTES.space}/`)
   )

@@ -1,0 +1,358 @@
+/* 简历管理分区：列表、编辑器、分享弹窗共用一套按钮与卡片 */
+
+.resume-admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.resume-admin-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.resume-admin-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.resume-button {
+  height: var(--admin-control-h);
+  padding: 0 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.resume-button:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+.resume-button:disabled {
+  border-color: #e5e7eb;
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+.resume-button-primary {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #fff;
+}
+.resume-button-primary:hover:not(:disabled) {
+  border-color: #111827;
+  background: #111827;
+}
+
+.resume-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.resume-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+.resume-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.resume-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.resume-card-title h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.98rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.resume-badge {
+  flex: none;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.72rem;
+}
+.resume-card-id {
+  flex: none;
+  color: #9ca3af;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+}
+.resume-card-note {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.resume-card-note.empty {
+  color: #9ca3af;
+  font-style: italic;
+}
+.resume-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  color: #6b7280;
+  font-size: 0.76rem;
+}
+.resume-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.25rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #f3f4f6;
+}
+.resume-action {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.resume-action:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+.resume-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.resume-action-danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+.resume-action-danger:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+/* --- 编辑器 --- */
+.resume-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.resume-editor-loading {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+.resume-editor-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+.resume-editor-meta .modal-field > span {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.resume-editor-meta em {
+  color: #9ca3af;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 400;
+}
+.resume-editor-meta small {
+  margin-left: auto;
+  color: #9ca3af;
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+.resume-editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 0.75rem;
+  min-height: 0;
+}
+.resume-editor-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.resume-editor-pane-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: #374151;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.resume-editor-pane-head small {
+  color: #9ca3af;
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+.resume-editor-pane-head small.over {
+  color: #b91c1c;
+}
+.resume-editor-textarea {
+  width: 100%;
+  min-height: 58vh;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fbfbfc;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  resize: vertical;
+  tab-size: 2;
+}
+.resume-editor-textarea:focus {
+  outline: none;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.08);
+}
+.resume-editor-preview {
+  height: 58vh;
+  padding: 1.4rem 1.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  overflow: auto;
+}
+.resume-editor-hint {
+  margin-right: auto;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+.resume-readonly-preview {
+  max-height: 68vh;
+  padding: 1.5rem 2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  overflow: auto;
+}
+
+/* --- 分享 --- */
+.share-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.share-create {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+.share-create .modal-field {
+  flex: 0 0 180px;
+}
+.share-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+}
+.share-list-head h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+.share-list-head span {
+  color: #6b7280;
+  font-size: 0.78rem;
+}
+.share-empty {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+.share-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.share-item {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+.share-item-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.share-code {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.25rem 0.45rem;
+  border-radius: 5px;
+  background: #f3f4f6;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+}
+.share-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  margin-top: 0.4rem;
+  color: #6b7280;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 900px) {
+  .resume-list {
+    grid-template-columns: 1fr;
+  }
+  .resume-editor-layout {
+    grid-template-columns: 1fr;
+  }
+  .resume-editor-textarea,
+  .resume-editor-preview {
+    min-height: 42vh;
+    height: 42vh;
+  }
+}
+@media (max-width: 640px) {
+  .resume-editor-meta {
+    grid-template-columns: 1fr;
+  }
+  .share-create {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .share-create .modal-field {
+    flex: 0 0 auto;
+  }
+}

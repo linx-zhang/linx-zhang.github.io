@@ -11,11 +11,12 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /wiki/* : Docs 文档详情（多级 slug）
   - /blog : Blog 列表 + 页内写作面板
   - /blog/:id : PostDetail 文章详情与评论
-  - /admin : 管理后台，RequirePermission 的 `anyOf={ADMIN_AREA_PERMISSIONS}`（post:update:any / post:delete:any / user:read:any / activity:read:any / invite_code:read:any 任一即可进入，分区各自再校验）；tab 条通过 ?tab=users|posts|activity|analytics 深链（默认 users），邀请码是独立分区 ?tab=invites，不占 tab 条，入口在用户页标题行
+  - /admin : 管理后台，RequirePermission 的 `anyOf={ADMIN_AREA_PERMISSIONS}`（post:update:any / post:delete:any / user:read:any / activity:read:any / invite_code:read:any / resume:manage:any 任一即可进入，分区各自再校验）；tab 条通过 ?tab=users|posts|resumes|activity|analytics 深链（默认 users），邀请码是独立分区 ?tab=invites，不占 tab 条，入口在用户页标题行
   - /space/memos : 个人空间·备忘录（列表 / 日历 ?view=calendar）；/space/consumables : 个人空间·消耗品；/space 为板块根，默认落备忘录；未登录只显示页内登录门
   - /tools : 工具箱入口（7 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip / hash）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
-  - /profile : 独立简历页（不套 RootLayout，A4 打印优化）
-- Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 只在 401 时清 token 并广播该事件（403 是「没有这个权限」的业务结果，不清登录态）；登录/注册这类端点传 `skipAuthReset: true`，避免「凭据错」被当成 token 失效把登录框关掉。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self、clip:delete:own|delete:any。
+  - /profile : 独立简历页（不套 RootLayout，A4 打印优化），默认简历从后端取，无默认时回退内置模板
+  - /r/:code : 简历限时分享短链，同一页面渲染，code 过期 / 撤销 / 简历删除后提示失效
+- Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 只在 401 时清 token 并广播该事件（403 是「没有这个权限」的业务结果，不清登录态）；登录/注册这类端点传 `skipAuthReset: true`，避免「凭据错」被当成 token 失效把登录框关掉。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self、clip:delete:own|delete:any、resume:manage:any。
 - User profile: users 有 nickname / first_name / last_name / avatar_url；展示名优先级 昵称 → 「名 姓」→ 邮箱前缀，已删除用户为「已注销」。GET /auth/me 与登录/注册响应带这四字段（无值为 null）；PATCH /auth/me 走 account:update:self，只接受这四字段（传 email/role 会 422），返回完整用户对象（含 permissions）；PATCH /admin/users/{id} 同时接受四字段与 email/role。
 - Custom UI（无 antd / 任何第三方 UI 库）: src/components/Select 自定义下拉；src/components/DateRangePicker 自定义日期范围（复用 useFloatingPanel 的定位/翻转/点击外部与 resize+scroll 关闭）；DatePicker 单日选择；src/components/ConfirmDialog + useConfirm；src/components/Modal / DialogShell 通用弹窗；src/components/Avatar 头像（图片加载失败回退首字母）；src/components/MarkdownEditor 写作面板（工具栏命令在 commands.ts）；src/components/AuthMenu、ProfileDialog、AuthModal、RequirePermission、ListState、RouteFallback、ErrorBoundary。DateRangePicker 的 value 为 { from?, to? }（本地日 YYYY-MM-DD），页面按本地日界转 ISO 再交给后端。
 - Shared CSS: 跨页共用的控件样式（.blog-button / .comment-submit / .comment-error 等）统一放 src/styles/shared.css 并由 src/main.tsx 引入，跟随主包加载——懒加载页面（Blog）的 CSS 不会在别的页面加载，控件样式写进页面 CSS 会导致 /admin 这类页面出现无样式裸文字按钮。
@@ -27,6 +28,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - Bundle: 分包做在「重依赖」上，而不是按页面铺开。页面级只懒加载三个把 react-markdown / Prism / rehype 带进来的页面（Docs / Blog / PostDetail）；工具箱的七个工具组件各自 `lazy()`（JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool / CalendarTool），写作面板里的 MarkdownView 也是懒加载。Home、DocsHome、Space、Admin、Tools 入口、Profile 仍在主包（`docs/assets/index-*.js`），切常用页不闪占位。
 - Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
 - Print Rule: 所有非打印 UI 加 className="no-print"，@media print 隐藏；简历页使用 A4 版式。
+- Resume: 后台 `?tab=resumes` 管理多份 HTML 简历（标题 / 备注 / 正文），默认简历供 `/profile`，分享按 1 小时 / 24 小时 / 7 天 / 30 天签发 12 位短码（`/r/<code>`）。正文入库保留原文，渲染前统一过 `src/utils/resumeHtml.ts` 白名单（标签、类名、`href` 协议），后台编辑器预览与阅读页同一套净化。
 - Markdown/HTML Loading: 文档不再经 import.meta.glob 内联进 bundle。构建期 `scripts/build-wiki.mjs` 把 `raw-docs` 下的 md 复制成 `public/wiki/<slug>.md`（运行时用 MarkdownView 渲染，不预渲染 HTML），html 原样保真产成 `public/wiki-files/<slug>.html`（缺 `<html>` 的片段补壳，外链脚本改本地 `/wiki/vendor/`），并产出 `public/wiki/index.json`。**HTML 必须放在 SPA 路由之外**：GitHub Pages 会把 `/wiki/<slug>` 解析成 `/wiki/<slug>.html`，产物留在 `/wiki` 下会让直连/刷新被静态文件截走。前端运行时 `fetch('/wiki/index.json')` 取清单：md 取源文本就地渲染、正文列居中，html 用 iframe 直连（应用型页面固定 85vh，片段式由 `postMessage` 上报高度自适应）。硬约定：html 文档禁止外链 CDN。
 -->
 
@@ -44,7 +46,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **窄屏布局**：≤640px 时顶栏拆两行（站点名 + 登录在上、导航通栏在下），导航禁止换行、超出时横向滚动且隐藏滚动条；知识库侧栏在 ≤768px 默认收起，收起后由左上角浮动按钮展开（侧栏真正做到 0 宽，不留空白列）
 - **账号体系**：登录 / 注册（邀请码）、权限码驱动的菜单与操作按钮、个人资料弹窗（昵称 / 名 / 姓 / 头像，保存后顶栏即时更新）
 - **博客**：文章列表（标题 / 作者模糊筛选、「我的」开关按 `author_id` 精确过滤，条件全部进 URL）、详情、Markdown 渲染、评论与回复、页内写作面板（可切全屏：左写右预览、底部操作条常驻、Esc 退出）
-- **管理后台**：文章列表与批量删除、用户管理（资料与账号分段的编辑弹窗、管理员重置密码：可手动指定或自动生成，并一次性展示生效密码）、邀请码（独立分区，入口在用户页标题行）、活跃日志、访问分析
+- **管理后台**：文章列表与批量删除、用户管理（资料与账号分段的编辑弹窗、管理员重置密码：可手动指定或自动生成，并一次性展示生效密码）、简历管理（多份 HTML 简历、默认切换、复制为草稿、限时分享短链）、邀请码（独立分区，入口在用户页标题行）、活跃日志、访问分析
 - **自定义基础组件**：Select、DateRangePicker、ConfirmDialog、Modal、Avatar 均为自研，未引入第三方 UI 库
 - **活跃采集**：登录后 60 秒心跳、路由级 `page_view`、离开时 `page_leave`（带停留时长，`fetch` + `keepalive` 携带 Bearer）
 - **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki-files/<slug>.html`（放在 SPA 路由之外，避免 Pages 的 `.html` 兜底抢走 `/wiki/<slug>`），站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
@@ -244,10 +246,10 @@ linx-zhang.github.io/
 │  │  ├─ DocsHome/          # 知识库分类总览
 │  │  ├─ Docs/              # 单篇文档（md 就地渲染 / html iframe 直连，支持全屏阅读）
 │  │  ├─ Blog/              # 列表 + 写作面板、详情 + 评论
-│  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ResetPasswordDialog / ActivityTab / AnalyticsTab）
+│  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ResetPasswordDialog / ResumesTab / ResumeEditor / ShareDialog / ActivityTab / AnalyticsTab）
 │  │  ├─ Space/             # 个人空间（备忘录 / 待办 + 自绘日历 + 消耗品周期看板）
 │  │  ├─ Tools/             # 工具箱：index.tsx 注册表 + JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool / CalendarTool
-│  │  └─ Profile/           # 独立简历页（PDF 导出）
+│  │  └─ Profile/           # 独立简历页（PDF 导出；默认简历取 API，无默认回退模板）
 │  ├─ hooks/
 │  │  ├─ useCopy.ts         # 复制按钮统一反馈（copiedKey 区分同屏多个按钮）
 │  │  ├─ useResource.ts     # 单次请求的状态机（loading / ready / error / missing）
@@ -320,7 +322,7 @@ linx-zhang.github.io/
 - 正文文字：`#1f2937`；次要文字：`#4b5563`；边框分割线：`#e5e7eb`
 - 页面与组件样式就近维护在各自的 `*.css`，通过组件内 `import './xxx.css'` 引入
 - 不引入第三方 UI 库；下拉、日期范围、弹窗、确认框均使用 `src/components/` 下的自研组件
-- 打印：所有不应出现在 PDF 中的 UI 统一加 `className="no-print"`，`Profile.css` 中使用 `@page { size: A4; margin: 15mm 16mm; }`；`.print-only` 元素仅在打印时显示
+- 打印：所有不应出现在 PDF 中的 UI 统一加 `className="no-print"`，`Profile.css` 中使用 `@page { size: A4; margin: 15mm 16mm; }`；`.print-only` 元素仅在打印时显示；简历正文排版与后台预览共用 `styles/resume.css`
 
 ### 维护清单（上下文重置后先读这一段）
 
