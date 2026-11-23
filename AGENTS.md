@@ -44,10 +44,10 @@ $env:Path = "C:\Users\LinxZhang\.local\bin;C:\Program Files\nodejs;C:\Windows\Sy
 $env:UV_PYTHON = "3.14"
 Set-Location -LiteralPath "D:\this_code\cloudflare-workers\api-worker"
 
-uv run --frozen pytest -q          # 当前 143 passed（含 tests/test_routes.py 的路由层用例）
+uv run --frozen pytest -q          # 当前 152 passed（含 tests/test_routes.py 的路由层用例）
 uv run --frozen ruff check src tests scripts   # 当前 All checks passed
 uv run --frozen python scripts/check-layers.py  # 应输出 Layer check OK
-uv run --frozen python scripts/check-api-doc.py  # routes: 43 doc rows: 43
+uv run --frozen python scripts/check-api-doc.py  # routes: 55 doc rows: 55
 
 # 只在改了 migrations/*.sql 时（不要加 --yes，会吐 help 并崩溃）
 "y" | .\node_modules\.bin\wrangler.cmd d1 migrations apply api-worker-db --remote
@@ -105,6 +105,7 @@ node scripts/check-contract.mjs --api "D:\this_code\cloudflare-workers\api-worke
 - 存活行 partial index 已在线上：`idx_posts_live_created_id`、`idx_memos_live_user_created`、`idx_memos_live_user_done`、`idx_comments_live_post_created_id`（0015），以及消耗品的 `idx_consumable_items_live_user_created`、`idx_consumable_cycles_live_item_started`、`idx_consumable_cycles_live_item_ended`（0016）。旧的全量索引保留（带 author/q/done 过滤的查询还要用）。
 - `posts` 列表计划仍是 `SCAN ... USING INDEX idx_posts_live_created_id`——表只有几十行，规划器认为全扫更便宜，但扫的是只含存活行的索引，属预期。
 - 消耗品还有一条**唯一** partial index：`idx_consumable_cycles_open_item`（`item_id WHERE ended_on IS NULL AND deleted_at IS NULL`），保证一个物品同时只有一轮进行中；接口 409 只是友好提示，真正的兜底在这条索引。
+- 简历有两条索引（0017）：`idx_resumes_live_created_id` 服务后台列表，`idx_resumes_single_default` 是 `is_default = 1 AND deleted_at IS NULL` 的唯一索引，保证全站同时只有一份默认简历；切换默认必须在同一事务里先清旧、再设新。
 - 日更 cron 四步：activity 保留 30 天 → cache 清理 → memos 墓碑 90 天硬删（`src/tasks/memo_tombstone.py`）→ 分析账本折一次；`0 * * * *` 的小时触发器只折分析账本。memos 表是 AUTOINCREMENT，硬删后 id 依然永不复用。
 
 ## 6. 已知缺口（别误以为有闸门）

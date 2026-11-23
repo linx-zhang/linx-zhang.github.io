@@ -14,79 +14,81 @@ pin: 4
 
 | 侧 | 文件 | 行数 |
 | --- | --- | --- |
-| 前端 `src/` | 142 | 20938 |
-| 前端 `scripts/`（构建脚本） | 5 | 677 |
-| 后端（`src` + `migrations` + `scripts`） | 59 | 5634 |
-| 合计 | 206 | 27249 |
+| 前端 `src/` | 152 | 24469 |
+| 前端 `scripts/`（构建脚本） | 6 | 770 |
+| 后端（`src` + `migrations` + `scripts`） | 67 | 7856 |
+| 合计 | 219 | 32325 |
 
-前后端行数比 **3.72 : 1**（20938 : 5634）。这个比例很能说明性格：这是一个「以界面为主」的项目，后端只负责把数据写进 D1 再读出来，没有复杂的领域模型。
+前后端行数比 **3.12 : 1**（24469 : 7856）。这个比例很能说明性格：这是一个「以界面为主」的项目，后端只负责把数据写进 D1 再读出来，没有复杂的领域模型。
 
-（后端另有 `tests/` 13 个文件 1725 行、143 个用例，不计入上表——它是验证代码，不是运行时代码。）
+（后端另有 `tests/` 14 个文件 2330 行、152 个用例，不计入上表——它是验证代码，不是运行时代码。）
 
-## 二、前端：142 个文件怎么分布
+## 二、前端：152 个文件怎么分布
 
 按目录：
 
 | 目录 | 行数 | 占比 | 内容 |
 | --- | --- | --- | --- |
-| `pages` | 13311 | 63.6% | 九个页面 + 后台五个分区 + 七个工具 |
-| `components` | 4418 | 21.1% | 自研组件（组件目录与样式文件各算一份） |
-| `api` | 922 | 4.4% | 模块 + 请求层单测：client / auth / blog / admin / memos / clips / errors |
-| `utils` | 688 | 3.3% | 日历、农历、剪贴板、文档索引、格式化、Markdown 编辑 |
-| `hooks` | 611 | 2.9% | 分页/资源状态 hook 与对应测试 |
-| `activity` | 511 | 2.4% | 事件采集与上报（含匿名窗口预算与去重） |
-| 根目录 | 192 | 0.9% | `main.tsx`、`routes.ts`、`constants.ts`、`types.ts` 等 |
-| `auth` | 149 | 0.7% | Provider、权限 hook、后台入口权限集合 |
-| `styles` | 63 | 0.3% | `layers.css` + `shared.css` |
-| `types` | 48 | 0.2% | 跨模块共用类型 |
-| `test` | 25 | 0.1% | vitest setup |
+| `pages` | 15606 | 63.8% | 九个页面 + 后台五个分区 + 七个工具 |
+| `components` | 4753 | 19.4% | 自研组件（组件目录与样式文件各算一份） |
+| `api` | 1135 | 4.6% | 模块 + 请求层单测：client / auth / blog / admin / memos / clips / resumes / errors |
+| `utils` | 1056 | 4.3% | 日历、农历、剪贴板、文档索引、格式化、Markdown 编辑、简历净化 |
+| `hooks` | 702 | 2.9% | 分页/资源状态 hook 与对应测试 |
+| `activity` | 560 | 2.3% | 事件采集与上报（含匿名窗口预算与去重） |
+| 根目录 | 222 | 0.9% | `main.tsx`、`routes.ts`、`constants.ts`、`types.ts` 等 |
+| `styles` | 192 | 0.8% | `layers.css` + `shared.css` |
+| `auth` | 161 | 0.7% | Provider、权限 hook、后台入口权限集合 |
+| `types` | 53 | 0.2% | 跨模块共用类型 |
+| `test` | 29 | 0.1% | vitest setup |
 
 按扩展名：
 
 | 类型 | 文件 | 行数 |
 | --- | --- | --- |
-| `.tsx` | 62 | 10258 |
-| `.ts` | 51 | 3960 |
-| `.css` | 29 | 6720 |
+| `.tsx` | 66 | 11893 |
+| `.ts` | 55 | 4846 |
+| `.css` | 31 | 7730 |
 
-样式占了前端的 **32.1%**——这个比例在「没有 UI 库」的项目里是正常的：按钮、下拉、日期面板、弹窗、表格、后台五分区全靠自己的 CSS。
+样式占了前端的 **31.6%**——这个比例在「没有 UI 库」的项目里是正常的：按钮、下拉、日期面板、弹窗、表格、后台五分区全靠自己的 CSS。
 
-## 三、后端：39 个 py 文件、5634 行（含迁移/脚本）、42 个路由装饰器（+ 根路由 = 43 个端点）
+## 三、后端：45 个 py 文件、7856 行（含迁移/脚本）、55 个端点
 
 按目录：
 
 | 目录 | 行数 | 占比 |
 | --- | --- | --- |
-| `src/api` | 2953 | 52.4% |
-| `src/services` | 927 | 16.5% |
-| `scripts`（冒烟/运维/文档校验/分层检查，不进 Worker） | 561 | 10.0% |
-| `src/core` | 358 | 6.4% |
-| `src/infra` | 328 | 5.8% |
-| `migrations` | 273 | 4.8% |
-| `src/tasks` | 185 | 3.3% |
-| 根（`entry.py`） | 49 | 0.9% |
+| `src/api` | 3936 | 50.1% |
+| `src/services` | 1356 | 17.3% |
+| `scripts`（冒烟/运维/文档校验/分层检查，不进 Worker） | 1058 | 13.5% |
+| `src/core` | 464 | 5.9% |
+| `src/infra` | 398 | 5.1% |
+| `migrations` | 347 | 4.4% |
+| `src/tasks` | 235 | 3.0% |
+| 根（`entry.py`） | 62 | 0.8% |
 
 路由分布：
 
 | 文件 | 行数 | 端点 | 说明 |
 | --- | --- | --- | --- |
-| `routers/admin.py` | 348 | 6 | 用户管理 + 活动日志 + 分析汇总 |
-| `routers/posts.py` | 265 | 7 | 列表/详情/新建/修改/删除/批量删/相邻篇 |
-| `routers/activity.py` | 210 | 2 | 登录批量上报 + 匿名窗口 |
-| `routers/clips.py` | 164 | 3 | 创建/读/删 |
-| `routers/auth.py` | 230 | 5 | 登录/注册/me/改资料/退出 |
-| `routers/memos.py` | 204 | 5 | 备忘录 CRUD + 汇总 |
-| `routers/comments.py` | 133 | 2 | 评论列表 / 发评论（删除挂在 posts 前缀下） |
-| `routers/consumables.py` | 460 | 8 | 物品、周期与用完确认 |
-| `routers/invites.py` | 85 | 3 | 邀请码列表 / 新建 / 删除 |
+| `routers/admin.py` | 394 | 6 | 用户管理 + 活动日志 + 分析汇总 |
+| `routers/posts.py` | 306 | 7 | 列表/详情/新建/修改/删除/批量删/相邻篇 |
+| `routers/activity.py` | 245 | 2 | 登录批量上报 + 匿名窗口 |
+| `routers/clips.py` | 197 | 3 | 创建/读/删 |
+| `routers/auth.py` | 272 | 5 | 登录/注册/me/改资料/退出 |
+| `routers/memos.py` | 233 | 5 | 备忘录 CRUD + 汇总 |
+| `routers/comments.py` | 152 | 3 | 评论列表 / 发评论 / 删除（删除挂在 `/comments` 前缀下） |
+| `routers/consumables.py` | 512 | 8 | 物品、周期与用完确认 |
+| `routers/invites.py` | 96 | 3 | 邀请码列表 / 新建 / 删除 |
+| `routers/resumes.py` | 319 | 12 | 简历 CRUD、默认切换、复制、分享签发与撤销 |
+| `app.py` | — | 1 | 根路径健康检查 |
 
 每个端点的鉴权、请求与响应形状不再重复列在这里，唯一真源是后端仓库的 `docs/api.md`（`python scripts/check-api-doc.py` 会核对它有没有漏写路由）。
 
-数据侧：**9 张业务表**（`users`、`posts`、`comments`、`invite_codes`、`activity_events`、`memos`、`cache_entries`、`consumable_items`、`consumable_cycles`）、**16 个 migration**、全部增量式，无一次推倒重建。
+数据侧：**11 张表**（`users`、`posts`、`comments`、`invite_codes`、`activity_events`、`memos`、`cache_entries`、`consumable_items`、`consumable_cycles`、`resumes`、`resume_shares`）、**17 个 migration**、全部增量式；只有 `0012` 为匿名访客重建过一次 `activity_events`，没有全库推倒重建。
 
 ## 四、依赖与产物
 
-运行时依赖 **14 个**，devDependencies **10 个**（其中 `vitest` / `@testing-library/react` / `jsdom` 三个只服务于单测，不进产物）：
+运行时依赖 **14 个**，devDependencies **9 个**（其中 `vitest` / `@testing-library/react` / `jsdom` 三个只服务于单测，不进产物）：
 
 | 依赖 | 用途 |
 | --- | --- |
@@ -106,10 +108,10 @@ pin: 4
 
 | 类别 | 文件数 | 体积 |
 | --- | --- | --- |
-| JS chunk | 18 | 2200.2 KB |
-| CSS | 5 | 130.0 KB |
+| JS chunk | 18 | 2163.6 KB |
+| CSS | 5 | 132.5 KB |
 
-其中 `MarkdownView-*.js` 939.8 KB，占 JS 总量 **42.7%**；首屏主包 `index-*.js` 689.1 KB 占 31.3%。也就是说，**近一半的 JS 是「只有读文章/写文章时才需要」的 Markdown 栈**，它被完整地关在懒加载边界后面。
+其中 `MarkdownView-*.js` 917.8 KB，占 JS 总量 **42.4%**；首屏主包 `index-*.js` 687.8 KB 占 31.8%。也就是说，**近一半的 JS 是「只有读文章/写文章时才需要」的 Markdown 栈**，它被完整地关在懒加载边界后面。
 
 ## 五、复杂度热点
 
@@ -117,25 +119,25 @@ pin: 4
 
 | 文件 | 行数 | 性质 |
 | --- | --- | --- |
-| `pages/Admin/Admin.css` | 1184 | 后台五分区共用样式 |
-| `pages/Tools/Tools.css` | 1110 | 工具箱列表 + 七个工具页 |
-| `pages/Blog/Blog.css` | 597 | 列表 + 详情 + 写作面板 |
-| `pages/Space/SpaceMemos.tsx` | 588 | 列表 / 月历共用取数 + 输入区 + 就地编辑 |
-| `api/models.py` | 516 | 全资源请求 / 响应模型 |
-| `pages/Blog/PostDetail.tsx` | 468 | 正文 + 评论 + 上下篇 |
-| `api/routers/consumables.py` | 460 | 物品、周期与用完确认 |
-| `components/DateRangePicker/index.tsx` | 453 | 日期范围面板：双月网格 + 快捷项 + 键盘 |
-| `pages/Space/SpaceConsumables.css` | 421 | 消耗品看板样式 |
-| `pages/Space/SpaceCalendar.tsx` | 379 | 月网格 + 当天面板 + 未排到期日折叠 |
-| `pages/Space/SpaceMemos.css` | 355 | 备忘录列表、输入区、就地编辑 |
-| `api/routers/admin.py` | 348 | 用户管理 + 活动日志 + 分析汇总 |
+| `pages/Tools/Tools.css` | 1298 | 工具箱列表 + 七个工具页 |
+| `pages/Admin/Admin.css` | 1201 | 后台五分区共用样式 |
+| `api/models.py` | 787 | 全资源请求 / 响应模型 |
+| `pages/Space/SpaceMemos.tsx` | 630 | 列表 / 月历共用取数 + 输入区 + 就地编辑 |
+| `pages/Blog/Blog.css` | 604 | 列表 + 详情 + 写作面板 |
+| `api/routers/consumables.py` | 512 | 物品、周期与用完确认 |
+| `pages/Blog/PostDetail.tsx` | 503 | 正文 + 评论 + 上下篇 |
+| `pages/Space/SpaceConsumables.css` | 499 | 消耗品看板样式 |
+| `components/DateRangePicker/index.tsx` | 483 | 日期范围面板：双月网格 + 快捷项 + 键盘 |
+| `pages/Space/SpaceMemos.css` | 411 | 备忘录列表、输入区、就地编辑 |
+| `src/services/analytics_merge.py` | 407 | 分析账本纯折叠 / 渲染（无 DB、无时钟） |
+| `pages/Space/SpaceCalendar.tsx` | 403 | 月网格 + 当天面板 + 未排到期日折叠 |
 
 两个观察：
 
-1. **样式是行数大户，但结构简单**。`Admin.css` 单文件 1184 行，平均每行都是选择器或声明，没有嵌套逻辑，读起来累但改起来不危险。个人空间拆完后，样式热点不再集中在单个文件：最大的 `SpaceConsumables.css` 只有 421 行。前端最大的逻辑文件是 `SpaceMemos.tsx` 588 行；原来的 916 行消耗品组件已拆成 `useConsumables.ts` + 表单 / 单卡 / 详情三块，页面只剩 128 行编排。
-2. **后端最大的文件性质不同**。`models.py` 516 行是「长而可读」（全是声明），`consumables.py` 460 行与 `admin.py` 348 行是「长而该继续拆」；邀请码三个端点已独立成 `invites.py`（85 行），URL 未变。
+1. **样式是行数大户，但结构简单**。`Tools.css` 1298 行、`Admin.css` 1201 行，平均每行都是选择器或声明，没有嵌套逻辑，读起来累但改起来不危险。个人空间拆完后，样式热点不再集中在单个文件：最大的 `SpaceConsumables.css` 只有 499 行。前端最大的逻辑文件是 `SpaceMemos.tsx` 630 行；原来的 916 行消耗品组件已拆成 `useConsumables.ts` + 表单 / 单卡 / 详情三块，页面只剩 140 行编排。简历分区也单独拆出了 `ResumeAdmin.css`（366 行），不再往 `Admin.css` 里继续堆。
+2. **后端最大的文件性质不同**。`models.py` 787 行是「长而可读」（全是声明），`consumables.py` 512 行、`admin.py` 394 行与 `resumes.py` 319 行是「长而该继续拆」；邀请码三个端点已独立成 `invites.py`（96 行），URL 未变。
 
-局部密度：`src` 里 257 个 `useState`、66 个 `useEffect`，分布在 62 个 `.tsx` 里，平均每个组件约 4 个状态——说明没有把全局状态堆到一个 store 里。`aria-*` 出现 168 次，无障碍不是补丁式加上的。
+局部密度：`src` 里 154 个 `useState`、33 个 `useEffect`，分布在 66 个 `.tsx` 里，平均每个组件约 2–3 个状态与半个副作用——说明没有把全局状态堆到一个 store 里。`aria-*` 出现 161 次，无障碍不是补丁式加上的。
 
 ## 六、结构性指标：唯一出口的数量
 
@@ -162,15 +164,15 @@ pin: 4
 
 | 优先级 | 项 | 现状 | 说明 |
 | --- | --- | --- | --- |
-| P2 | `Admin.css` 1184 行 | 五分区共用一个文件 | 目前靠注释分节，暂不拆——拆成多文件后按需加载会让后台首屏多出若干请求 |
-| P2 | `api/models.py` 516 行 | 全资源模型同文件 | 全是声明、无逻辑，按资源拆只改善定位；等下一次大改再动 |
-| P2 | 跨仓常量漂移 | `src/constants.ts` 与后端约束各写一份 | 前端 CI 已加 `check-contract.mjs` 对 10 项逐项比对；后端单独改仍要等前端 push 才暴露 |
+| P2 | `Admin.css` 1201 行 | 五分区共用一个文件 | 目前靠注释分节，暂不拆——拆成多文件后按需加载会让后台首屏多出若干请求；简历分区已单独拆出 `ResumeAdmin.css` |
+| P2 | `api/models.py` 787 行 | 全资源模型同文件 | 全是声明、无逻辑，按资源拆只改善定位；等下一次大改再动 |
+| P2 | 跨仓常量漂移 | `src/constants.ts` 与后端约束各写一份 | 前端 CI 已加 `check-contract.mjs` 对 13 项逐项比对；后端单独改仍要等前端 push 才暴露 |
 | P2 | 文章列表与相邻篇两段 SQL | 谓词已复用，SQL 仍分开 | 再加筛选维度时容易只改一处 |
-| P3 | 页面级测试仍空缺 | 已有 155 例单测（19 个文件）+ 前后端 CI 闸门 | 覆盖的是「最容易静默出错」的逻辑；页面交互仍靠冒烟脚本与手测 |
+| P3 | 页面级测试仍空缺 | 已有 162 例单测（21 个文件）+ 前后端 CI 闸门 | 覆盖的是「最容易静默出错」的逻辑；页面交互仍靠冒烟脚本与手测 |
 
 ## 八、结论
 
-- **体量**：前端约一百个 ts/tsx、29 个 CSS；后端 39 个 py 文件（连同迁移与脚本共 59 个文本文件）5564 行、**43 个端点**（42 个路由装饰器 + 根路由）、**9 张业务表**、**16 个 migration**。属于「一个人能完整持有」的规模，任何一处改动都能在半天内评估完影响面。
-- **重心**：63.6% 的前端代码在页面层，32.1% 是样式，组件层只占 21.1%——这是「页面驱动」而不是「组件库驱动」的形态，与自研控件的选择一致。
+- **体量**：前端 152 个文件（其中 121 个 ts/tsx、31 个 CSS）；后端 45 个 py 文件（连同迁移与脚本共 67 个文本文件）7856 行、**55 个端点**、**11 张表**、**17 个 migration**。属于「一个人能完整持有」的规模，任何一处改动都能在半天内评估完影响面。
+- **重心**：63.8% 的前端代码在页面层，31.6% 是样式，组件层只占 19.4%——这是「页面驱动」而不是「组件库驱动」的形态，与自研控件的选择一致。
 - **复杂度**：热点集中在 `routers/consumables.py`（8 端点同文件）与 `routers/admin.py`（6 端点同文件），外加一处结构性成本（跨仓常量靠契约脚本兜底）。没有隐藏的深坑：没有全局 store、没有循环依赖、没有第二套请求实现。测试与 CI 兜住了最容易静默出错的那几层（请求解包、分页 hook、权限门、常量漂移），页面交互仍靠手测。
 - **扩展成本**：新增页面 ≈ 1 条路由 + 1 个 api 函数 + 1 个目录；新增后端资源 ≈ 1 个 router + 1 组模型 + 1 个 migration。这个成本没有随代码量上升而变差，是这套结构最值钱的地方。

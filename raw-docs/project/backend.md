@@ -4,7 +4,7 @@ pin: 3
 
 # 深入后端：Cloudflare Worker + D1 的工程化
 
-后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**39 个 py 文件（连同迁移与脚本共 59 个文本文件、5564 行）、42 个路由装饰器（+ 根路由 = 43 个端点）、9 张业务表、16 个 migration**（另有 `tests/` 13 个文件 1712 行、143 个用例，不计入运行时代码）。
+后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**45 个 py 文件（连同迁移与脚本共 67 个文本文件、7856 行）、55 个端点、11 张表、17 个 migration**（另有 `tests/` 14 个文件 2330 行、152 个用例，不计入运行时代码）。
 
 它要支撑的东西不算少：登录与角色、文章增删改查与相邻篇、评论、访问事件与匿名事件、备忘录、日常消耗品、共享剪切板短链、邀请码、用户管理、重置密码、缓存与限流、定时清理。全部跑在一个 Worker 里，没有微服务、没有消息队列、没有 Redis。
 
@@ -44,13 +44,13 @@ _GEO_HEADERS = (
 
 | 目录 | 行数 | 职责 |
 | --- | --- | --- |
-| `src/api` | 2509 | 应用装配、路由、依赖、请求/响应模型 |
-| `src/services` | 1098 | 跨路由业务逻辑：邀请码、匿名路径白名单、分析 SQL、账本编排、纯折叠 |
-| `scripts` | 575 | 文档校验、schema 导出、发文助手（其中 `scripts/agent` 469 行是冒烟与运维脚本，不进 Worker 包） |
-| `src/core` | 426 | 权限码表、JWT、常量、时间工具 |
+| `src/api` | 3936 | 应用装配、路由、依赖、请求/响应模型 |
+| `src/services` | 1356 | 跨路由业务逻辑：邀请码、简历与分享、匿名路径白名单、分析 SQL、账本编排、纯折叠 |
+| `scripts` | 1058 | 文档校验、schema 导出、发文助手（其中 `scripts/agent` 是冒烟与运维脚本，不进 Worker 包） |
+| `src/core` | 464 | 权限码表、JWT、常量、时间工具 |
 | `src/infra` | 398 | D1 访问、缓存、配置、密码哈希 |
-| `migrations` | 305 | 16 个增量迁移 |
-| `src/tasks` | 218 | 定时任务（事件保留、缓存清理、memos 墓碑、账本折叠） |
+| `migrations` | 347 | 17 个增量迁移 |
+| `src/tasks` | 235 | 定时任务（事件保留、缓存清理、memos 墓碑、账本折叠） |
 | `src/entry.py` | 62 | 运行时入口 |
 
 分层的判定标准很朴素：**能不能脱离 FastAPI 单独测试**。`core/*` 全部与框架无关（权限码表就是纯字典 + 一个 `has_permission`），`infra/*` 只依赖 D1 binding，路由层只做「校验 → 调服务 → 返回」。
@@ -192,7 +192,7 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 
 调用方传了这三个名字，直接 422，而不是「忽略它们然后返回第一页」——后者会被读成「第二页怎么还是第一页」，是最难查的一类静默错误。
 
-## 九、数据层：9 张表、16 个 migration
+## 九、数据层：11 张表、17 个 migration
 
 | 表 | 用途 |
 | --- | --- |
@@ -205,14 +205,16 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 | `consumable_items` | 日常消耗品（名称、类别、可选数量/单位、提前提醒天数） |
 | `consumable_cycles` | 消耗品周期：一次开封→用完一行，`ended_on IS NULL` 表示进行中 |
 | `cache_entries` | 缓存行（key、value、过期时间） |
+| `resumes` | HTML 简历（标题、备注、正文、默认标记） |
+| `resume_shares` | 简历限时分享：12 位码、过期时间、撤销时间 |
 
-16 个 migration 全是增量式，没有一次「推倒重建」的历史。四处值得记住的做法：
+17 个 migration 里只有 `0012_activity_anonymous` 为放开匿名访客重建过 `activity_events`，其余都是纯增量；没有一次全库推倒重建。四处值得记住的做法：
 
 - **迁移只加不删**：`0003_user_soft_delete` 加 `deleted_at`、`0009_token_invalidated_at` 加失效戳、`0010_list_order_indexes` 只加索引。回滚靠「代码兼容旧列」，而不是「数据库回退」。
 - **表结构大改时重建再改名**：`0012_activity_anonymous` 先建 `activity_events_v12`、灌数据、再改名，避免在原表上做破坏性 DDL。
-- **状态交给约束，不交给接口自觉**：`0016_consumables` 用 partial unique index（`item_id WHERE ended_on IS NULL AND deleted_at IS NULL`）保证一个物品同时只有一轮进行中；并发点两次也写不出两条。
+- **状态交给约束，不交给接口自觉**：`0016_consumables` 用 partial unique index（`item_id WHERE ended_on IS NULL AND deleted_at IS NULL`）保证一个物品同时只有一轮进行中；并发点两次也写不出两条。`0017_resumes` 同样用 `is_default = 1 AND deleted_at IS NULL` 的 partial unique index 保证全站最多一份默认简历，服务层先清旧再设新，只是让「暂时没有默认」这个窗口可以回退到内置模板。
 
-软删除是统一约定：`posts`、`users`、`memos`、`consumable_items` 都靠 `deleted_at IS NULL` 过滤，列表、相邻篇、权限查询全都要带上这个条件——少写一处，就会出现「删掉的文章还能被翻到」。消耗品的软删还要连带把它的周期一起标记，否则重建同名物品时会带出旧历史。
+软删除是统一约定：`posts`、`users`、`memos`、`consumable_items`、`resumes` 都靠 `deleted_at IS NULL` 过滤，列表、相邻篇、权限查询全都要带上这个条件——少写一处，就会出现「删掉的文章还能被翻到」。消耗品的软删还要连带把它的周期一起标记，否则重建同名物品时会带出旧历史；简历软删后分享短链也必须失效，公开读要重新检查 `resumes.deleted_at`。
 
 ## 十、缓存与限流：留在同一个数据库
 

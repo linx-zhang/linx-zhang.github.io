@@ -52,7 +52,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki-files/<slug>.html`（放在 SPA 路由之外，避免 Pages 的 `.html` 兜底抢走 `/wiki/<slug>`），站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
 - **GitHub 风格排版**：`github-markdown-css` + `react-markdown` + `prism-one-light`
 - **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
-- **工具箱**：`/tools` 七张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v1/v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）、万年历（农历 / 节气 / 放假调休，可跳到空间看当天待办）
+- **工具箱**：`/tools` 七张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）、万年历（农历 / 节气 / 放假调休，可跳到空间看当天待办）
 - **GitHub Pages 部署**：`.github/workflows/build.yml` 在 push `main` 时 lint + test + build，用 `upload-pages-artifact` / `deploy-pages` 发布 `docs/`，产物不入库；`public/404.html` 兜底 SPA 深链刷新
 
 ---
@@ -85,7 +85,7 @@ npm run preview
 # 运行 oxlint
 npm run lint
 
-# 跑单元测试（vitest，19 个文件 155 例）
+# 跑单元测试（vitest，21 个文件 162 例）
 npm run test
 ```
 
@@ -143,7 +143,7 @@ npm run test
 
 ## 🧩 管理后台
 
-`/admin` 的 tab 条是四个分区（内容 → 人 → 观测），另有不占 tab 条的邀请码分区：
+`/admin` 的 tab 条是五个分区（人 → 内容 → 简历 → 观测），另有不占 tab 条的邀请码分区：
 
 | tab | 内容 |
 | --- | --- |
@@ -187,7 +187,7 @@ npm run test
 | `json` | JSON 格式化 / 压缩 / 树形折叠 | 本地 |
 | `sql` | SQL 格式化 + 语法高亮 | 本地（`sql-formatter` 负责排版，`highlight.ts` 自研分词上色，不引 UI / 编辑器库） |
 | `timestamp` | 时间戳与日期互转（10 位秒 / 13 位毫秒） | 本地 |
-| `random` | UUID（v1 / v4 / v7）与密码生成 | 本地（crypto） |
+| `random` | UUID（v4 / v7）与密码生成 | 本地（crypto） |
 | `clip` | 共享剪切板：贴日志生成免登录短链 | 后端 `/clips` + D1 cache |
 | `hash` | 文件哈希：拖放 / 点选文件，MD5・SHA-1・SHA-256・SHA-512 多选 | 本地（`hash-wasm`，8MB 分块，WASM 按需 `import()`） |
 | `calendar` | 万年历：月视图带农历、节气、节日与放假 / 调休角标 | 本地（`lunar-javascript`，按天缓存） |
@@ -220,7 +220,7 @@ linx-zhang.github.io/
 │  ├─ constants.ts          # 前后端契约常量（分页大小、各字段长度上限、批量上限、心跳间隔）
 │  ├─ types.ts              # 跨模块共用的类型
 │  ├─ activity/             # ActivityTracker + useActivityTracker（page_view / heartbeat / page_leave）
-│  ├─ api/                  # client.ts（fetch 封装 / token / ApiError）、errors.ts（错误文案）、auth.ts、blog.ts、admin.ts、memos.ts、clips.ts
+│  ├─ api/                  # client.ts（fetch 封装 / token / ApiError）、errors.ts（错误文案）、auth.ts、blog.ts、admin.ts、memos.ts、clips.ts、resumes.ts
 │  ├─ auth/                 # AuthProvider、usePermission
 │  ├─ components/
 │  │  ├─ Layout/            # RootLayout 全站主壳、WikiLayout 知识库子壳
@@ -272,7 +272,9 @@ linx-zhang.github.io/
 │  └─ postbuild-wiki-index.mjs # 把 SPA 入口复制成 docs/wiki/index.html，否则 /wiki 会被 Pages 命中 wiki/index.json
 ├─ raw-docs/                # 笔记源文件；仅 .md / .markdown / .html 参与构建
 │  ├─ project/              # 本站工程长文（overview / frontend / backend / metrics，pin 置顶）
-│  └─ notes/                # 语言与工具速查：cpp / golang / js / python / devops 二级主题
+│  ├─ notes/                # 语言与工具速查：cpp / golang / js / python / devops 二级主题
+│  ├─ systems/              # 企业系统源码解析：统一认证、客服调度、会话与消息、机器人
+│  └─ rbac/                 # 多租户 RBAC：元数据、功能/行/列权限、组织、审计与风险
 ├─ public/                  # favicon.svg（取自 icons.svg 的 #documentation-icon）、icons.svg 图标 sprite、404.html（SPA 深链兜底）
 │  └─ wiki/                 # 生成物（gitignore）：<slug>.md、<slug>.html、index.json、vendor/
 ├─ .cache/wiki-vendor/      # 外链脚本的本地缓存（跨构建复用，gitignore）
@@ -296,7 +298,7 @@ linx-zhang.github.io/
   - 文件里没有 `<html>`（片段式文档）：补 `doctype/html/head/meta/title` 外壳，摘掉外链 `<link rel="stylesheet">`，套上同款排版样式
   - 引用了外链脚本（CDN）：构建期下载一次存到 `.cache/wiki-vendor/`，改写为 `/wiki/vendor/<file>` 本地路径
 - 产出 `public/wiki/index.json`：`slug / title / type / category / topic / filePath / href / standalone / pin`（md 的 `href` 指向 `/wiki/<slug>.md`，html 的指向 `/wiki-files/<slug>.html`）
-- **分类与置顶**：`category` 取 slug 第一段（`project` / `notes`），`topic` 取第二段（`python` / `cpp`…）；md 文件头可写 `pin: 1`（正整数越小越靠前），列表排序「置顶在前 + 其余按标题字典序」，分类 chip 按篇数降序
+- **分类与置顶**：`category` 取 slug 第一段（`project` / `notes` / `systems` / `rbac`），`topic` 取第二段（`python` / `cpp`…）；md 文件头可写 `pin: 1`（正整数越小越靠前），列表排序「置顶在前 + 其余按标题字典序」，分类 chip 按篇数降序
 
 ### 2. 运行期：索引 + 分类型渲染
 
