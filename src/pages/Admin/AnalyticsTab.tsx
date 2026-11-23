@@ -8,18 +8,11 @@ import { parseServerTimestamp } from '@/utils/format'
 const DAY_OPTIONS = [7, 30] as const
 
 /**
- * IP 只在这里脱敏显示：库里存全量是为了能把同一地址的多次访问串起来，
- * 但页面上没必要把完整地址摆在最显眼的位置。
+ * 后台只给管理员看，IPv4 / IPv6 都原样显示，不再打星号。
+ * IPv6 可能很长，换行交给 .analytics-network code 处理，避免被截断。
  */
-function maskIp(ip: string | null): string {
-  if (!ip) return '—'
-  if (ip.includes(':')) {
-    const groups = ip.split(':')
-    return `${groups.slice(0, 2).join(':')}:…`
-  }
-  const parts = ip.split('.')
-  if (parts.length !== 4) return ip
-  return `${parts[0]}.${parts[1]}.*.*`
+function displayIp(ip: string | null): string {
+  return ip || '—'
 }
 
 function formatDwell(ms: number): string {
@@ -193,7 +186,7 @@ export default function AnalyticsTab() {
                         {actorLabel(actor)}
                       </span>
                       <span className="analytics-network" data-label="IP / 地区">
-                        <code>{maskIp(actor.ip)}</code>
+                        <code>{displayIp(actor.ip)}</code>
                         <em>{actorPlace(actor)}</em>
                       </span>
                       <span data-label="浏览">{actor.page_views}</span>

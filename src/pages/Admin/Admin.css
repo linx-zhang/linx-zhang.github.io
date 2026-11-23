@@ -1129,6 +1129,10 @@
 .analytics-network code {
   color: #374151;
   font-size: 0.82rem;
+  line-height: 1.35;
+  /* IPv6 最长 39 字符，窄列下允许在任意位置折行，不能省略成 … */
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 .analytics-network em {
   color: #9ca3af;
