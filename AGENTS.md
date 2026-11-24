@@ -44,7 +44,7 @@ $env:Path = "C:\Users\LinxZhang\.local\bin;C:\Program Files\nodejs;C:\Windows\Sy
 $env:UV_PYTHON = "3.14"
 Set-Location -LiteralPath "D:\this_code\cloudflare-workers\api-worker"
 
-uv run --frozen pytest -q          # 当前 156 passed（含 tests/test_routes.py 的路由层用例）
+uv run --frozen pytest -q          # 当前 157 passed（含 tests/test_routes.py 的路由层用例）
 uv run --frozen ruff check src tests scripts   # 当前 All checks passed
 uv run --frozen python scripts/check-layers.py  # 应输出 Layer check OK
 uv run --frozen python scripts/check-api-doc.py  # routes: 55 doc rows: 55
