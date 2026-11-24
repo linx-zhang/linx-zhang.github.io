@@ -50,7 +50,7 @@ _GEO_HEADERS = (
 | `src/core` | 464 | 权限码表、JWT、常量、时间工具 |
 | `src/infra` | 398 | D1 访问、缓存、配置、密码哈希 |
 | `migrations` | 347 | 17 个增量迁移 |
-| `src/tasks` | 235 | 定时任务（事件保留、缓存清理、memos 墓碑、账本折叠） |
+| `src/tasks` | 定时任务（事件保留、缓存清理、memos 墓碑、消耗品墓碑、失效分享短链、账本折叠） |
 | `src/entry.py` | 62 | 运行时入口 |
 
 分层的判定标准很朴素：**能不能脱离 FastAPI 单独测试**。`core/*` 全部与框架无关（权限码表就是纯字典 + 一个 `has_permission`），`infra/*` 只依赖 D1 binding，路由层只做「校验 → 调服务 → 返回」。
@@ -233,7 +233,9 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 1. 账本一行存在 `cache_entries`（key `analytics:ledger:v2`，`timeout=None`），内容是 `cursor` + 最近的每日桶 + 每个身份按天拆的明细；
 2. 请求时先读账本，再查一次 `MAX(id)`，把 `cursor < id <= MAX(id)` 的增量折叠进内存；
 3. 只对请求窗口（7 或 30 天）内的天桶求和后渲染；**暖读不写库**，所以并发刷新不会互相覆盖；
-4. 小时级 cron（`0 * * * *`）才真正把账本写回，日更 cron 顺手再做保留清理、墓碑与账本各一次。账本缺失、结构损坏或尾巴超过 500 行时，回落到 `build_summary`（全量重建的参考实现）并把它存下来。
+4. 小时级 cron（`0 * * * *`）才真正把账本写回；日更 cron 只做保留清理与墓碑，不再顺手折账本——小时级只差 45 分钟，且管理页读取时本来就会在内存补折尾巴。账本缺失、结构损坏或尾巴超过 500 行时，回落到 `build_summary`（全量重建的参考实现）并把它存下来。
+
+日更清理的取舍：`activity_events` 留 30 天，`memos` 墓碑留 180 天，`consumable_items` / `consumable_cycles` 墓碑留 90 天，`resume_shares` 一旦撤销、过期或指向已软删简历立即删。`users`、`resumes`、`posts`、`comments`、`invite_codes` 永不清理——账号、简历、博客内容与邀请历史都是有价值数据，软删墓碑也保留；简历只删它失效的分享短链，不碰简历正文。
 
 折叠本身是纯函数（`services/analytics_merge.py`，不碰数据库、不读时钟），因此「账本路径」与「参考实现」能逐字段对账；这条断言在 `tests/test_analytics_ledger.py` 里对 `days=7` 与 `days=30` 各做一遍。
 

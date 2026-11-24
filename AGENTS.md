@@ -44,7 +44,7 @@ $env:Path = "C:\Users\LinxZhang\.local\bin;C:\Program Files\nodejs;C:\Windows\Sy
 $env:UV_PYTHON = "3.14"
 Set-Location -LiteralPath "D:\this_code\cloudflare-workers\api-worker"
 
-uv run --frozen pytest -q          # 当前 152 passed（含 tests/test_routes.py 的路由层用例）
+uv run --frozen pytest -q          # 当前 156 passed（含 tests/test_routes.py 的路由层用例）
 uv run --frozen ruff check src tests scripts   # 当前 All checks passed
 uv run --frozen python scripts/check-layers.py  # 应输出 Layer check OK
 uv run --frozen python scripts/check-api-doc.py  # routes: 55 doc rows: 55
@@ -106,7 +106,9 @@ node scripts/check-contract.mjs --api "D:\this_code\cloudflare-workers\api-worke
 - `posts` 列表计划仍是 `SCAN ... USING INDEX idx_posts_live_created_id`——表只有几十行，规划器认为全扫更便宜，但扫的是只含存活行的索引，属预期。
 - 消耗品还有一条**唯一** partial index：`idx_consumable_cycles_open_item`（`item_id WHERE ended_on IS NULL AND deleted_at IS NULL`），保证一个物品同时只有一轮进行中；接口 409 只是友好提示，真正的兜底在这条索引。
 - 简历有两条索引（0017）：`idx_resumes_live_created_id` 服务后台列表，`idx_resumes_single_default` 是 `is_default = 1 AND deleted_at IS NULL` 的唯一索引，保证全站同时只有一份默认简历；切换默认必须在同一事务里先清旧、再设新。
-- 日更 cron 四步：activity 保留 30 天 → cache 清理 → memos 墓碑 90 天硬删（`src/tasks/memo_tombstone.py`）→ 分析账本折一次；`0 * * * *` 的小时触发器只折分析账本。memos 表是 AUTOINCREMENT，硬删后 id 依然永不复用。
+- 日更 cron 五步：activity 保留 30 天 → cache 清理 → memos 墓碑 180 天硬删 → 消耗品 items/cycles 墓碑 90 天硬删 → 失效简历分享短链立即删；日更**不再**折分析账本，`0 * * * *` 的小时触发器只折分析账本。memos / consumable_items 都是 AUTOINCREMENT，硬删后 id 依然永不复用。
+  - **永不清理**：`users`、`resumes`、`posts`、`comments`、`invite_codes`——账号、简历、博客与邀请历史都是有价值数据；`resumes` 即使软删也保留，只删它失效的 `resume_shares`。
+  - 消耗品删除顺序固定：先 `consumable_cycles` 再 `consumable_items`（外键 `item_id → consumable_items.id`），父行只有在没有子周期时才会被删。
 
 ## 6. 已知缺口（别误以为有闸门）
 
