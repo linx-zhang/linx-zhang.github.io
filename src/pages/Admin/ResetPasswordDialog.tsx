@@ -3,6 +3,7 @@ import { authErrorMessage } from '@/api/errors'
 import { adminApi } from '@/api/admin'
 import type { AdminUser, ResetPasswordResult } from '@/api/admin'
 import Modal from '@/components/Modal'
+import { passwordIssue } from '@/utils/passwordPolicy'
 import { copyText } from '@/utils/clipboard'
 
 export interface ResetPasswordDialogProps {
@@ -32,9 +33,12 @@ export default function ResetPasswordDialog({
 
   const submit = async () => {
     if (pending) return
-    if (password && (password.length < 8 || password.length > 128)) {
-      setError('密码长度需为 8–128 个字符')
-      return
+    if (password) {
+      const issue = passwordIssue(password)
+      if (issue) {
+        setError(issue)
+        return
+      }
     }
     setPending(true)
     setError('')
@@ -133,7 +137,7 @@ export default function ResetPasswordDialog({
               value={password}
               disabled={pending}
               autoComplete="new-password"
-              placeholder="8–128 个字符"
+              placeholder="至少 8 位，避开常见密码"
               onChange={(event) => {
                 setPassword(event.target.value)
                 setError('')

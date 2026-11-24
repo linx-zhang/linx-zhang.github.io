@@ -4,6 +4,7 @@ import { authErrorMessage } from '@/api/errors'
 import { authApi } from '@/api/auth'
 import type { AuthUser, LoginPayload } from '@/api/auth'
 import DialogShell from '@/components/DialogShell'
+import { passwordIssue } from '@/utils/passwordPolicy'
 import './AuthModal.css'
 
 type Mode = 'login' | 'register'
@@ -47,8 +48,10 @@ export default function AuthModal({ initialMode, onClose, onSuccess }: AuthModal
     else if (!EMAIL_PATTERN.test(trimmedEmail)) errors.email = '邮箱格式不正确'
 
     if (!password) errors.password = '请输入密码'
-    else if (mode === 'register' && (password.length < 8 || password.length > 128))
-      errors.password = '密码长度需为 8–128 个字符'
+    else if (mode === 'register') {
+      const issue = passwordIssue(password)
+      if (issue) errors.password = issue
+    }
 
     return errors
   }
@@ -158,7 +161,7 @@ export default function AuthModal({ initialMode, onClose, onSuccess }: AuthModal
                   setError('')
                 }}
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                placeholder={mode === 'register' ? '8–128 个字符' : '输入密码'}
+                placeholder={mode === 'register' ? '至少 8 位，避开常见密码' : '输入密码'}
                 aria-invalid={Boolean(fieldErrors.password)}
                 aria-describedby={fieldErrors.password ? 'auth-password-error' : undefined}
                 className={fieldErrors.password ? 'invalid' : undefined}

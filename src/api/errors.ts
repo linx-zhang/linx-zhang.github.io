@@ -15,6 +15,7 @@ const CODE_MESSAGES: Record<string, string> = {
   email_exists: '该邮箱已注册，直接登录即可',
   invalid_email: '邮箱格式不正确',
   invalid_password: '密码长度需为 8–128 个字符',
+  weak_password: '密码强度不够，请换一个更独特的密码',
   invalid_invite_code: '邀请码无效、已过期或已被使用',
   rate_limited: '操作太频繁，请稍后再试',
   validation_error: '提交的内容不符合要求，请检查后重试',
