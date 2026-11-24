@@ -57,11 +57,6 @@ export function useInfiniteList<T>(
   // 两者在纯翻页时相等；但删掉一条 / 勾掉一条后本地列表会变短，
   // 再用固定页宽算 offset 会跳过服务端的一条。
   const offsetRef = useRef(0)
-  const itemsRef = useRef(items)
-
-  useEffect(() => {
-    itemsRef.current = items
-  }, [items])
 
   useEffect(() => {
     if (!enabled) return
@@ -95,7 +90,10 @@ export function useInfiniteList<T>(
   }
 
   const loadMore = () => {
-    offsetRef.current = itemsRef.current.length
+    // 直接读本次渲染的 items。不要改成由 effect 同步的 ref：DOM 已经显示
+    // 新条目、effect 还没跑时，ref 会退回旧长度（常见是 0），于是下一页拿回
+    // 第一页再追加，列表变成 40 条并出现重复 key。
+    offsetRef.current = items.length
     appendRef.current = true
     setStatus('loading')
     setError('')
