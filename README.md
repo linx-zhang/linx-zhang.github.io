@@ -13,7 +13,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /blog/:id : PostDetail 文章详情与评论
   - /admin : 管理后台，RequirePermission 的 `anyOf={ADMIN_AREA_PERMISSIONS}`（post:update:any / post:delete:any / user:read:any / activity:read:any / invite_code:read:any / resume:manage:any 任一即可进入，分区各自再校验）；tab 条通过 ?tab=users|posts|resumes|activity|analytics 深链（默认 users），邀请码是独立分区 ?tab=invites，不占 tab 条，入口在用户页标题行
   - /space/memos : 个人空间·备忘录（列表 / 日历 ?view=calendar）；/space/consumables : 个人空间·消耗品；/space 为板块根，默认落备忘录；未登录只显示页内登录门
-  - /tools : 工具箱入口（7 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip / hash）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
+  - /tools : 工具箱入口（7 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip / hash / calendar）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化），默认简历从后端取，无默认时回退内置模板
   - /r/:code : 简历限时分享短链，同一页面渲染，code 过期 / 撤销 / 简历删除后提示失效
 - Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 只在 401 时清 token 并广播该事件（403 是「没有这个权限」的业务结果，不清登录态）；登录/注册这类端点传 `skipAuthReset: true`，避免「凭据错」被当成 token 失效把登录框关掉。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self、clip:delete:own|delete:any、resume:manage:any。
@@ -121,7 +121,7 @@ npm run test
 
 - 路由表直接写在 `src/main.tsx`，路径常量集中在 `src/routes.ts`；**Docs / Blog / PostDetail 是 `lazy()` 按需加载**（外面套 `Suspense` + `RouteFallback`），工具箱的每个工具组件也在 `Tools/index.tsx` 里各自 `lazy()`，其余页面静态引入
 - `/wiki/*` 由 `Docs` 组件通过 `useParams()['*']` 解析多级 slug
-- `/admin` 的 tab 条用查询参数深链：`?tab=users`（默认）、`?tab=posts`、`?tab=activity`、`?tab=analytics`；邀请码是独立分区 `?tab=invites`，不占 tab 条，入口在用户页标题行「邀请码 →」，从邀请码页可「← 返回用户管理」
+- `/admin` 的 tab 条用查询参数深链：`?tab=users`（默认）、`?tab=posts`、`?tab=resumes`、`?tab=activity`、`?tab=analytics`；邀请码是独立分区 `?tab=invites`，不占 tab 条，入口在用户页标题行「邀请码 →」，从邀请码页可「← 返回用户管理」
 - `/space` 放在 `RootLayout` 内（沿用全站导航与页脚），未登录时只渲染页内登录门，不用 `RequirePermission` 踢回；导航「个人空间」项对所有访客常驻（未登录也能看日期、农历与说明）
 - `/space` 两种视图：默认「列表」（分页追加），「日历」按 `due_at` 画月网格（周一开头，蓝点待办 / 灰点已完成 / 红点逾期），点某天看当天条目并可直接勾完成；没有到期日的条目收在「未排到期日」折叠区（只预览一页，数量取 summary.undated）。`?view=calendar` 可深链，万年历详情的「查看我的待办」就链到 `/space?view=calendar&date=<当天>`
 - `/profile` 不包裹 `RootLayout`，因此没有全站导航与页脚
@@ -134,7 +134,7 @@ npm run test
 - 路由守卫：`RequirePermission` 负责未登录引导与无权限提示
 - 传输层集中在 `src/api/client.ts`：`request()` 负责拼 base、注入 Bearer、解析 `{code,detail,data}` 信封、把错误转成 `ApiError(status, code, detail)`；base 常量 `API_BASE` 也在这里（硬编码，不读环境变量）
 - 401（以及未跳过时的 403）由 `request()` 统一清 token 并广播 `auth:unauthorized`；管理接口传 `skipForbiddenLogout` 以展示后端错误详情
-- 后端权限码：`account:*`、`post:*`、`comment:*`、`invite_code:*`、`user:*`、`activity:*`（细分为 `*:own` / `*:any` / `*:self`）
+- 后端权限码：`account:*`、`post:*`、`comment:*`、`invite_code:*`、`user:*`、`activity:*`、`clip:*`、`resume:manage:any`（细分为 `*:own` / `*:any` / `*:self`）
 - 个人资料：`PATCH /auth/me`（权限 `account:update:self`）只接受 `nickname` / `first_name` / `last_name` / `avatar_url`，不能修改邮箱与角色；管理端 `PATCH /admin/users/{id}` 额外接受 `email` / `role`
 - 重置密码：`POST /admin/users/{id}/reset-password`（权限 `user:reset_password:any`，仅管理员可见按钮）可传 `{ password }` 指定新密码，留空则由后端生成 16 位临时密码；生效的密码只在响应的 `data.password` 出现一次（`data.generated` 区分来源）。同时写入 `token_invalidated_at`（迁移 0009 由 `password_changed_at` 改名而来），重置前签发的 token 会立即 401，前端据 `auth:unauthorized` 退出登录
 - 展示名优先级：昵称 → 「名 姓」→ 邮箱前缀；已删除用户显示「已注销」。头像统一使用 `Avatar`：有 `avatar_url` 显示图片，加载失败回退首字母
@@ -220,7 +220,7 @@ linx-zhang.github.io/
 │  ├─ constants.ts          # 前后端契约常量（分页大小、各字段长度上限、批量上限、心跳间隔）
 │  ├─ types.ts              # 跨模块共用的类型
 │  ├─ activity/             # ActivityTracker + useActivityTracker（page_view / heartbeat / page_leave）
-│  ├─ api/                  # client.ts（fetch 封装 / token / ApiError）、errors.ts（错误文案）、auth.ts、blog.ts、admin.ts、memos.ts、clips.ts、resumes.ts
+│  ├─ api/                  # client.ts（fetch 封装 / token / ApiError）、errors.ts（错误文案）、auth.ts、blog.ts、admin.ts、memos.ts、consumables.ts、clips.ts、resumes.ts
 │  ├─ auth/                 # AuthProvider、usePermission
 │  ├─ components/
 │  │  ├─ Layout/            # RootLayout 全站主壳、WikiLayout 知识库子壳

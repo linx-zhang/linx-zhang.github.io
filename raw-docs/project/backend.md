@@ -4,7 +4,7 @@ pin: 3
 
 # 深入后端：Cloudflare Worker + D1 的工程化
 
-后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**45 个 py 文件（连同迁移与脚本共 67 个文本文件、7856 行）、55 个端点、11 张表、17 个 migration**（另有 `tests/` 14 个文件 2330 行、152 个用例，不计入运行时代码）。
+后端是挂在 `linx-api-78i.pages.dev` 上的一个 Cloudflare Python Worker，用 FastAPI 的写法跑在 Workers 运行时上，数据落在 D1（SQLite）。规模：**47 个 py 文件（`src` 43 + `scripts` 4；连同迁移与脚本共 69 个文本文件、7998 行）、55 个端点、11 张表、17 个 migration**（另有 `tests/` 15 个文件 2565 行、157 个用例，不计入运行时代码）。
 
 它要支撑的东西不算少：登录与角色、文章增删改查与相邻篇、评论、访问事件与匿名事件、备忘录、日常消耗品、共享剪切板短链、邀请码、用户管理、重置密码、缓存与限流、定时清理。全部跑在一个 Worker 里，没有微服务、没有消息队列、没有 Redis。
 
@@ -50,12 +50,12 @@ _GEO_HEADERS = (
 | `src/core` | 464 | 权限码表、JWT、常量、时间工具 |
 | `src/infra` | 398 | D1 访问、缓存、配置、密码哈希 |
 | `migrations` | 347 | 17 个增量迁移 |
-| `src/tasks` | 定时任务（事件保留、缓存清理、memos 墓碑、消耗品墓碑、失效分享短链、账本折叠） |
+| `src/tasks` | 377 | 定时任务（事件保留、缓存清理、memos 墓碑、消耗品墓碑、失效分享短链、账本折叠） |
 | `src/entry.py` | 62 | 运行时入口 |
 
 分层的判定标准很朴素：**能不能脱离 FastAPI 单独测试**。`core/*` 全部与框架无关（权限码表就是纯字典 + 一个 `has_permission`），`infra/*` 只依赖 D1 binding，路由层只做「校验 → 调服务 → 返回」。
 
-## 四、应用装配：九行注册表
+## 四、应用装配：十一行注册表
 
 `api/app.py` 里没有任何业务代码，只有中间件、路由注册、异常处理器安装：
 
@@ -68,10 +68,12 @@ api.include_router(posts.router, prefix="/posts")
 api.include_router(comments.router, prefix="/posts")
 api.include_router(comments.delete_router, prefix="/comments")
 api.include_router(admin.router, prefix="/admin")
+api.include_router(invites.router, prefix="/admin")
 api.include_router(activity.router, prefix="/activity")
 api.include_router(memos.router, prefix="/memos")
-api.include_router(clips.router, prefix="/clips")
 api.include_router(consumables.router, prefix="/consumables")
+api.include_router(clips.router, prefix="/clips")
+api.include_router(resumes.router, prefix="/resumes")
 
 app.include_router(api)
 ```
@@ -87,7 +89,7 @@ CORS 也不是默认配置：Starlette 对预检请求回 200，而这个 API �
 每个响应都是 `{ code, detail, data }`：
 
 - `code` 是机器可读的错误码（`unauthorized`、`forbidden`、`validation_error`、`rate_limited`…）；
-- `detail` 是给人看的中文句子；
+- `detail` 是给人看的英文句子（`resource not found`、`permission denied`…）；
 - `data` 是业务载荷，`204` 时没有 body。
 
 `install_error_handlers()` 把 FastAPI 的三类异常全部映射进同一个形状：`ApiError`（业务错误）、`RequestValidationError`（422）、`StarletteHTTPException`（404/405 等）。前端 `request()` 因此只需要认一种结构：
@@ -101,7 +103,7 @@ if (typeof body === 'object' && body !== null) {
 }
 ```
 
-字符串常量集中在 `core/constants.py`，路由里不写死中文。这一条在跨仓协作里尤其重要：前端只判断状态码与 `code`，文案由后端给，避免两边各写一份中文然后慢慢漂移。
+字符串常量集中在 `core/constants.py`，路由里不写死文案。这一条在跨仓协作里尤其重要：前端只判断状态码与 `code`，文案由后端给，避免两边各写一份然后慢慢漂移。
 
 ## 六、认证：角色永远从数据库读
 
@@ -128,7 +130,7 @@ if invalidated_at and _issued_before_reset(payload.get("iat"), invalidated_at):
 | 集合 | 数量 | 说明 |
 | --- | --- | --- |
 | `_MEMBER_PERMISSIONS` | 9 | 所有登录用户：读改自己账号、发文章、改删自己的文章、发评论、删自己的评论、写自己的事件、删自己的剪切板 |
-| `_ADMIN_PERMISSIONS` | 12 | 管理员额外：改删任意文章/评论、邀请码三条、用户四条、读任意事件、删任意剪切板 |
+| `_ADMIN_PERMISSIONS` | 13 | 管理员额外：改删任意文章/评论、邀请码三条、用户四条、读任意事件、删任意剪切板、管理简历 |
 | `PUBLIC_PERMISSIONS` | 2 | 只描述公开端点：`post:read:any`、`comment:read:any`，永不合并进用户权限 |
 
 `user` 与 `internal` 共用 member 集合，这是刻意的：内部账号不是特权，只是来源不同。
@@ -262,9 +264,9 @@ LEGACY_PAGING_PARAMS = ("page", "page_size", "pageSize")
 
 ## 十三、热点与技术债
 
-按行数，最大的三个文件是 `api/models.py`（678 行）、`api/routers/consumables.py`（512 行）、`api/routers/admin.py`（394 行）。`src/services` 仍是分析这条线最厚的地方（约 757 行，分在 SQL、账本编排、纯折叠三个文件里），读改任何一处都要同时看另外两个。
+按行数，最大的三个文件是 `api/models.py`（787 行）、`api/routers/consumables.py`（512 行）、`api/routers/admin.py`（394 行）。`src/services` 仍是分析这条线最厚的地方（约 930 行，分在 SQL、账本编排、纯折叠三个文件里），读改任何一处都要同时看另外两个。
 
-- `models.py` 678 行全是请求/响应模型与校验规则，行数多但结构单一，属于「长而可读」，暂不动。
+- `models.py` 787 行全是请求/响应模型与校验规则，行数多但结构单一，属于「长而可读」，暂不动。
 - `admin.py` 已从 470 行收到 394 行：邀请码三个端点拆到 `routers/invites.py`（96 行），路径仍是 `/api/admin/invite-codes`，URL 未变；剩下的用户管理、活动日志、分析汇总继续留在这里。
 - `consumables.py` 512 行装物品 CRUD、周期、用完确认；三块共享同一套物品/周期模型，暂时合在一起比利大于弊，等下一个消耗品功能再评估。
 - `posts.py` 的 `_filter_conditions` 已经复用，但列表与相邻篇仍是两段 SQL；如果再加「按标签筛选」，谓词复用是唯一不会漂移的写法。

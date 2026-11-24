@@ -93,7 +93,7 @@ npm run lint       # oxlint
 
 - 登录态：token 存 `localStorage` 的 `blog_access_token`，启动时请求 `GET /api/auth/me` 拿用户与权限码
 - 权限码由后端下发、前端只消费，形如 `resource:action:scope`（`post:update:own`、`user:delete:any`、`activity:read:any`…）；`RequirePermission` 负责未登录引导与无权限提示
-- 个人空间、备忘录全部 self-scoped，owner 由 token 决定；`/admin` 用 `ADMIN_AREA_PERMISSIONS` 五选一（文章改/删、用户读、日志读、邀请码读任一）作为入口，更细的分区再各自校验
+- 个人空间、备忘录全部 self-scoped，owner 由 token 决定；`/admin` 用 `ADMIN_AREA_PERMISSIONS` 六选一（文章改/删、用户读、日志读、邀请码读、简历管理任一）作为入口，更细的分区再各自校验
 - 重置密码后旧 token 立即失效，前端收到 `auth:unauthorized` 自动退出
 
 ## 已知取舍

@@ -8,7 +8,7 @@ pin: 2
 
 这种约束下，前端架构要解决的不是「怎么把页面画出来」，而是三件更硬的事：**在只有静态文件的环境里保住路由与深链**、**把接口契约收敛到一个入口**、**在没有框架兜底的情况下让列表、浮层、权限这些高频结构只有一份实现**。
 
-先给结论：152 个文件、24469 行（`.tsx` 11893 / `.ts` 4846 / `.css` 7730），31 个 CSS 文件，19 个自研组件、4 个通用 hook。规模不大，但每一层都只留一个出口。
+先给结论：152 个文件、24466 行（`.tsx` 11886 / `.ts` 4846 / `.css` 7734），31 个 CSS 文件，19 个自研组件、4 个通用 hook。规模不大，但每一层都只留一个出口。
 
 ## 一、约束反过来决定架构
 
@@ -126,7 +126,7 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 
 ## 六、样式：全局层 + 页面层
 
-25 个 CSS 文件、6621 行，结构是「两层」：
+31 个 CSS 文件、7734 行，结构是「两层」：
 
 - `styles/layers.css` + `styles/shared.css`：跨页面共用的按钮、错误提示、根级重置。
 - 各页面自己的 `*.css`：只写本页布局。
@@ -137,7 +137,7 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 
 同理，`html { scrollbar-gutter: stable }` 是为了修一个很隐蔽的抖动：列表从「短（无滚动条）」切到「长（有滚动条）」时，居中容器会被滚动条宽度推着左右抖——筛选、翻页、空态来回切最容易看见。
 
-页面样式里体量最大的现在是 `pages/Tools/Tools.css`（1298 行）、`pages/Admin/Admin.css`（1201 行）、`pages/Blog/Blog.css`（604 行）。个人空间已按组件归属拆开：`Space.css` 只留页头、登录门、板块 tab 与视图切换这些外壳（242 行），备忘录 `SpaceMemos.css`（411 行）、消耗品 `SpaceConsumables.css`（499 行）、月历 `SpaceCalendar.css`（383 行）各自就近 `import`，切板块时随组件一起加载。拆的是「谁用这份样式」，不是颜色变量——全站仍直接写 hex，不引入 CSS 变量层。
+页面样式里体量最大的现在是 `pages/Tools/Tools.css`（1298 行）、`pages/Admin/Admin.css`（1205 行）、`pages/Blog/Blog.css`（604 行）。个人空间已按组件归属拆开：`Space.css` 只留页头、登录门、板块 tab 与视图切换这些外壳（242 行），备忘录 `SpaceMemos.css`（411 行）、消耗品 `SpaceConsumables.css`（499 行）、月历 `SpaceCalendar.css`（383 行）各自就近 `import`，切板块时随组件一起加载。拆的是「谁用这份样式」，不是颜色变量——全站仍直接写 hex，不引入 CSS 变量层。
 
 ## 七、体积：懒加载的账
 
@@ -146,14 +146,14 @@ throw new ApiError(response.status, 'invalid_response', '响应不是 JSON，接
 | 产物 | 体积 | 说明 |
 | --- | --- | --- |
 | `MarkdownView-*.js` | 917.8 KB | `react-markdown` + `rehype-raw` + `prism` 全在它里面 |
-| `index-*.js` | 687.8 KB | 首屏主包：React、Router、布局、首页、列表、空间、后台外壳、简历页 |
+| `index-*.js` | 687.7 KB | 首屏主包：React、Router、布局、首页、列表、空间、后台外壳、简历页 |
 | `SqlTool-*.js` | 260.9 KB | SQL 工具按需加载 |
-| `index-*.css` | 80.5 KB | 全局 + 首屏页面样式（含后台与简历） |
+| `index-*.css` | 80.6 KB | 全局 + 首屏页面样式（含后台与简历） |
 | `MarkdownView-*.css` | 35.2 KB | `github-markdown-css` + `prism-one-light` |
 
-18 个 JS chunk 合计 2163.6 KB，其中 MarkdownView 一个就占了 42.4%。这块钱花得值：它只在打开文章、知识库阅读、写作预览时出现，首屏不碰它。反过来，主包 687.8 KB 里有相当一部分是「常用页不闪占位」的代价——空间、工具箱、后台外壳、简历页都静态进包，换来的是切页零等待。
+18 个 JS chunk 合计 2163.4 KB，其中 MarkdownView 一个就占了 42.4%。这块钱花得值：它只在打开文章、知识库阅读、写作预览时出现，首屏不碰它。反过来，主包 687.7 KB 里有相当一部分是「常用页不闪占位」的代价——空间、工具箱、后台外壳、简历页都静态进包，换来的是切页零等待。
 
-CSS 合计 132.5 KB，主包 80.5 KB、MarkdownView 35.2 KB，基本和页面体量对应。
+CSS 合计 132.5 KB，主包 80.6 KB、MarkdownView 35.2 KB，基本和页面体量对应。
 
 ## 八、几个写进代码里的约定
 
@@ -165,9 +165,9 @@ CSS 合计 132.5 KB，主包 80.5 KB、MarkdownView 35.2 KB，基本和页面体
 
 ## 九、热点与下一步
 
-按行数排，前两名是样式：`Tools.css` 1110、`Admin.css` 1184；个人空间拆完后单文件最大 421。逻辑侧最大的是 `Space/SpaceMemos.tsx` 588 行、`Blog/PostDetail.tsx` 468 行、`Space/SpaceCalendar.tsx` 379 行、`Blog/index.tsx` 372 行、`Space/ConsumableDetail.tsx` 346 行；`Space/index.tsx` 是 136 行外壳（登录门 + 页头 + 板块 tab + 视图切换 + 分发），`SpaceConsumables.tsx` 收到 128 行，只留看板编排。
+按行数排，前两名是样式：`Tools.css` 1298、`Admin.css` 1205；个人空间拆完后单文件最大 499。逻辑侧最大的是 `Space/SpaceMemos.tsx` 630 行、`Blog/PostDetail.tsx` 503 行、`Space/SpaceCalendar.tsx` 403 行、`Blog/index.tsx` 398 行、`Space/ConsumableDetail.tsx` 362 行；`Space/index.tsx` 是 150 行外壳（登录门 + 页头 + 板块 tab + 视图切换 + 分发），`SpaceConsumables.tsx` 收到 140 行，只留看板编排。
 
-`SpaceConsumables` 已按「数据层 + 展示块」拆开：`useConsumables.ts` 管列表、排序、计数和四个写操作，`ConsumableForm`（新建）、`ConsumableCard`（单卡与用完三选一）、`ConsumableDetail`（字段修正 + 周期历史）各自独立，公用 `consumableFormat.ts` 的类别、状态与数值校验。`SpaceMemos.tsx` 630 行已经把列表、输入区、就地编辑与月历窗口取数编排收在一处，排序单独放 `memoSort.ts` 并有单测；再拆的收益不如前面几处明显。`Admin.css` 1201 行则是后台多个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
+`SpaceConsumables` 已按「数据层 + 展示块」拆开：`useConsumables.ts` 管列表、排序、计数和四个写操作，`ConsumableForm`（新建）、`ConsumableCard`（单卡与用完三选一）、`ConsumableDetail`（字段修正 + 周期历史）各自独立，公用 `consumableFormat.ts` 的类别、状态与数值校验。`SpaceMemos.tsx` 630 行已经把列表、输入区、就地编辑与月历窗口取数编排收在一处，排序单独放 `memoSort.ts` 并有单测；再拆的收益不如前面几处明显。`Admin.css` 1205 行则是后台多个分区共用一个文件，等后台再长分区时，按分区加注释分节比拆文件更实际。
 
 ## 十、取舍清单
 
