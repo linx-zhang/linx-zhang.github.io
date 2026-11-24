@@ -37,7 +37,7 @@ describe('useInfiniteList', () => {
     await waitFor(() => expect(result.current.pageIndex).toBe(1))
     await waitFor(() => expect(result.current.items).toHaveLength(4))
 
-    expect(fetcher).toHaveBeenLastCalledWith(PAGE_SIZE, PAGE_SIZE)
+    expect(fetcher).toHaveBeenLastCalledWith(PAGE_SIZE, 2)
     expect(result.current.items.map((it) => it.id)).toEqual([
       'p1-0',
       'p1-1',

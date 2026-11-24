@@ -28,8 +28,11 @@ export interface InfiniteListApi<T> {
  * 「先看到一页、再按需追加」的无限列表（个人空间）。
  *
  * 语义边界（这正是此前的缺陷来源）：追加与刷新是两条路。
- * - loadMore 只会追加第 N 页（N > 0）；
+ * - loadMore 只追加下一段，不会覆盖已加载内容；
  * - reload 一定清空并回到第 0 页，绝不会把同一页再追加一遍。
+ *
+ * 追加的 offset 用「已经加载的条数」而不是 pageIndex * PAGE_SIZE：
+ * 纯翻页时两者相等；删掉/勾掉一条后本地列表变短，再用固定页宽会跳过服务端一条。
  */
 export function useInfiniteList<T>(
   fetcher: (limit: number, offset: number) => Promise<Page<T>>,
@@ -50,12 +53,21 @@ export function useInfiniteList<T>(
 
   // 本次请求是「首页替换」还是「追加」：由触发动作决定，而不是由 pageIndex 猜
   const appendRef = useRef(false)
+  // 下一页从「已经看到的条数」开始，而不是 pageIndex * PAGE_SIZE。
+  // 两者在纯翻页时相等；但删掉一条 / 勾掉一条后本地列表会变短，
+  // 再用固定页宽算 offset 会跳过服务端的一条。
+  const offsetRef = useRef(0)
+  const itemsRef = useRef(items)
+
+  useEffect(() => {
+    itemsRef.current = items
+  }, [items])
 
   useEffect(() => {
     if (!enabled) return
     let cancelled = false
     fetcherRef
-      .current(PAGE_SIZE, pageIndex * PAGE_SIZE)
+      .current(PAGE_SIZE, pageIndex === 0 ? 0 : offsetRef.current)
       .then((result) => {
         if (cancelled) return
         if (appendRef.current && pageIndex > 0) {
@@ -83,6 +95,7 @@ export function useInfiniteList<T>(
   }
 
   const loadMore = () => {
+    offsetRef.current = itemsRef.current.length
     appendRef.current = true
     setStatus('loading')
     setError('')
@@ -91,6 +104,7 @@ export function useInfiniteList<T>(
 
   const reload = () => {
     appendRef.current = false
+    offsetRef.current = 0
     setStatus('loading')
     setError('')
     setItemsState([])
