@@ -49,12 +49,13 @@
 .exp-item,
 .proj-item {
   margin-top: 1.4rem;
-  break-inside: avoid; /* 仅单条经历不被腰斩，大 section 允许分页 */
+  break-inside: auto; /* 单条经历可能整页放不下，交给浏览器自然分页 */
 }
 .exp-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  break-after: avoid; /* 标题不要单独留在页尾 */
 }
 .exp-head h3 {
   margin: 0;
@@ -71,6 +72,10 @@
   margin: 0.6rem 0 0;
   color: #374151;
   line-height: 1.65;
+}
+.exp-item li,
+.proj-item li {
+  break-inside: avoid; /* 单条 bullet 不跨页，避免半句话留在下一页 */
 }
 .profile-print-root p {
   margin: 0;
@@ -98,6 +103,19 @@
   }
   .profile-header-bar {
     margin-bottom: 0.8rem !important;
+  }
+  .resume-section h2,
+  .proj-item h3 {
+    break-after: avoid; /* 区块标题跟着正文走，不单独压在页尾 */
+  }
+  .profile-print-root p {
+    orphans: 3;
+    widows: 3;
+  }
+  .exp-item li,
+  .proj-item li {
+    orphans: 2;
+    widows: 2;
   }
   /* 首个区块顶部清零，避免和 header 留白叠加 */
   .resume-section:first-of-type {
