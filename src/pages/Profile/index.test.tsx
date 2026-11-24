@@ -36,5 +36,9 @@ describe('Profile', () => {
       expect(container.querySelector('.profile-header-bar .action-group')).toBeTruthy()
     })
     expect(container.querySelector('.profile-actions-host')).toBeTruthy()
+    // 返回入口与更新时间是页面外壳，不能混进简历标题下的操作胶囊
+    expect(container.querySelector('.profile-print-root .profile-page-meta')).toBeNull()
+    expect(container.querySelector('.action-group a[href="/"]')).toBeNull()
+    expect(screen.getByText(/更新于/)).toBeTruthy()
   })
 })

@@ -130,23 +130,37 @@ export default function Profile() {
     )
   }
 
+  const pageMeta = (
+    <div className="profile-page-meta no-print">
+      <a className="profile-back" href="/">
+        <span aria-hidden="true">←</span> 返回首页
+      </a>
+      {state.updatedAt && (
+        <span className="profile-updated">更新于 {formatTimestamp(state.updatedAt)}</span>
+      )}
+    </div>
+  )
+
   const actions = (
-    <>
-      <div className="action-group no-print">
+    <div className="action-group no-print">
+      <div className="action-links">
         <a href="mailto:xxx@qq.com">邮箱</a>
         <a href="https://github.com/linx-zhang">GitHub</a>
         <a href="https://www.zhihu.com/people/linx.z/answers">知乎</a>
-        <a href="/">返回首页</a>
-        <button onClick={handlePrint} className="print-btn">导出 PDF</button>
       </div>
-      {state.updatedAt && (
-        <p className="resume-updated no-print">更新于 {formatTimestamp(state.updatedAt)}</p>
-      )}
-    </>
+      <button onClick={handlePrint} className="print-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+          <path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" />
+        </svg>
+        导出 PDF
+      </button>
+    </div>
   )
 
   return (
     <div className="profile-preview-wrap">
+      {pageMeta}
+
       {!actionsHost && !(readyHtml && readyHtml.includes('profile-header-bar')) && (
         <div className="profile-actions-fallback">{actions}</div>
       )}

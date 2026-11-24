@@ -8,42 +8,99 @@
   line-height: 1.65;
 }
 
-/* 操作栏不参与打印：挂在简历标题下方，分享访客也能直接导出或回首页 */
-.action-group {
-  margin-top: 1.15rem;
+/* 简历上方的页面元信息：返回入口在左，更新时间在右，和正文分开 */
+.profile-page-meta {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+.profile-back {
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.profile-back:hover {
+  color: #1f2937;
+}
+.profile-updated {
+  white-space: nowrap;
+}
+
+/* 操作栏不参与打印：挂在简历标题下方，分享访客也能直接导出 */
+.action-group {
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f9fafb;
+}
+.action-links {
+  display: flex;
+  align-items: center;
 }
 .action-group a {
-  color: #2563eb;
+  color: #4b5563;
   text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  transition: color 0.2s, background 0.2s;
 }
 .action-group a:hover {
-  text-decoration: underline;
+  color: #1f2937;
+  background: #eef2f7;
 }
 .print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 2px;
   border: none;
   background: #1f2937;
   color: #fff;
-  padding: 6px 14px;
-  border-radius: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
   transition: background 0.2s;
+}
+.print-btn svg {
+  width: 15px;
+  height: 15px;
 }
 .print-btn:hover {
   background: #111827;
 }
 
-/* 分享链接与默认简历都会显示的时间戳；不打印 */
-.resume-updated {
-  margin: 0.55rem 0 0;
-  color: #9ca3af;
-  font-size: 0.8rem;
+/* 没有可挂载的简历标题时，操作栏退回内容上方并居中 */
+.profile-actions-fallback {
   text-align: center;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 430px) {
+  .action-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: 14px;
+  }
+  .action-links {
+    width: 100%;
+    justify-content: center;
+  }
+  .print-btn {
+    margin: 2px auto 0;
+  }
 }
 
 .profile-status {
