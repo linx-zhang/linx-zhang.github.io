@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import Select from '@/components/Select'
 import {
   MBTI_DIMENSIONS,
   MBTI_POLE_DETAILS,
@@ -15,13 +16,10 @@ type Tab = 'mbti' | 'zodiac'
 type Phase = 'intro' | 'test' | 'result'
 
 const TOTAL = MBTI_QUESTIONS.length
-
-/** 数字输入允许手敲，也允许键盘上下键；越界时夹回范围内。 */
-function clampNumber(value: string, min: number, max: number, fallback: number): number {
-  const parsed = Number.parseInt(value, 10)
-  if (!Number.isFinite(parsed)) return fallback
-  return Math.min(max, Math.max(min, parsed))
-}
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
+  value: String(index + 1),
+  label: String(index + 1),
+}))
 
 export default function PersonalityTool() {
   const [tab, setTab] = useState<Tab>('mbti')
@@ -49,6 +47,14 @@ export default function PersonalityTool() {
 
   const maxDay = daysInMonth(month)
   const safeDay = Math.min(day, maxDay)
+  const dayOptions = useMemo(
+    () =>
+      Array.from({ length: maxDay }, (_, index) => ({
+        value: String(index + 1),
+        label: String(index + 1),
+      })),
+    [maxDay],
+  )
   const birthdaySign = zodiacFor(month, safeDay)
   const selectedSign = selectedZodiacId
     ? ZODIAC_SIGNS.find((item) => item.id === selectedZodiacId) ?? null
@@ -88,7 +94,7 @@ export default function PersonalityTool() {
   }
 
   const changeMonth = (value: string) => {
-    const nextMonth = clampNumber(value, 1, 12, month)
+    const nextMonth = Number(value)
     setSelectedZodiacId(null)
     setMonth(nextMonth)
     setDay((prev) => Math.min(prev, daysInMonth(nextMonth)))
@@ -96,7 +102,7 @@ export default function PersonalityTool() {
 
   const changeDay = (value: string) => {
     setSelectedZodiacId(null)
-    setDay(clampNumber(value, 1, maxDay, safeDay))
+    setDay(Number(value))
   }
 
   const showZodiac = (id: string) => {
@@ -148,13 +154,17 @@ export default function PersonalityTool() {
                 每题只选更像你的那一句，按第一反应答就好。这里给的是倾向，不是心理诊断，也不拿四个字母给一个人下定义。
               </p>
 
-              <div className="persona-dim-list">
+              <div className="persona-spectrum">
                 {MBTI_DIMENSIONS.map((dimension) => (
-                  <div key={dimension.key} className="persona-dim-row">
-                    <span className="persona-dim-key">
+                  <div key={dimension.key} className="persona-spectrum-row">
+                    <span className="persona-spectrum-key">
                       {dimension.left}/{dimension.right}
                     </span>
-                    <div className="persona-dim-options">
+                    <div
+                      className="persona-spectrum-switch"
+                      role="group"
+                      aria-label={`${dimension.left}/${dimension.right} 倾向`}
+                    >
                       {(['left', 'right'] as const).map((side) => {
                         const pole = side === 'left' ? dimension.left : dimension.right
                         const name = side === 'left' ? dimension.leftName : dimension.rightName
@@ -177,6 +187,7 @@ export default function PersonalityTool() {
                   </div>
                 ))}
               </div>
+              <p className="persona-spectrum-help">点任意倾向，查看具体表现和一个场景。</p>
 
               {activePole && (
                 <div
@@ -326,36 +337,24 @@ export default function PersonalityTool() {
           <div className="persona-zodiac-controls">
             <div className="persona-birth-fields">
               <span className="persona-birth-label">生日</span>
-              <label className="persona-birth-field">
-                <span className="persona-sr-only">出生月份</span>
-                <input
-                  className="persona-birth-input"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={12}
-                  value={month}
-                  aria-label="出生月份"
-                  onFocus={(event) => event.currentTarget.select()}
-                  onChange={(event) => changeMonth(event.currentTarget.value)}
-                />
-                <span className="persona-birth-unit">月</span>
-              </label>
-              <label className="persona-birth-field">
-                <span className="persona-sr-only">出生日期</span>
-                <input
-                  className="persona-birth-input"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={maxDay}
-                  value={safeDay}
-                  aria-label="出生日期"
-                  onFocus={(event) => event.currentTarget.select()}
-                  onChange={(event) => changeDay(event.currentTarget.value)}
-                />
-                <span className="persona-birth-unit">日</span>
-              </label>
+              <Select
+                value={String(month)}
+                onChange={changeMonth}
+                options={MONTH_OPTIONS}
+                ariaLabel="出生月份"
+                className="persona-select"
+                panelMinWidth={56}
+              />
+              <span className="persona-birth-unit">月</span>
+              <Select
+                value={String(safeDay)}
+                onChange={changeDay}
+                options={dayOptions}
+                ariaLabel="出生日期"
+                className="persona-select"
+                panelMinWidth={56}
+              />
+              <span className="persona-birth-unit">日</span>
             </div>
             <span className="persona-birth-date">
               公历 {month} 月 {safeDay} 日

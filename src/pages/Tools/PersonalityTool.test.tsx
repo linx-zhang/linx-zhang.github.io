@@ -159,20 +159,23 @@ describe('PersonalityTool', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '去看星座速查' }))
     expect(screen.getByText(/你出生那天/)).toBeTruthy()
-    expect(screen.getByLabelText('出生月份')).toBeTruthy()
+    expect(screen.getByRole('button', { name: '出生月份' })).toBeTruthy()
   })
 
-  it('生日用数字输入，点底部星座卡能看详情并回到生日结果', () => {
+  it('生日用数字下拉，点底部星座卡能看详情并回到生日结果', () => {
     const { container } = render(<PersonalityTool />)
     fireEvent.click(screen.getByRole('tab', { name: '星座速查' }))
 
-    const month = screen.getByLabelText('出生月份') as HTMLInputElement
-    const day = screen.getByLabelText('出生日期') as HTMLInputElement
-    expect(month.type).toBe('number')
-    expect(day.type).toBe('number')
+    fireEvent.click(screen.getByRole('button', { name: '出生月份' }))
+    const monthOptions = screen.getAllByRole('option')
+    expect(monthOptions).toHaveLength(12)
+    expect(monthOptions[0].textContent).toBe('1')
+    fireEvent.click(screen.getByRole('option', { name: '4' }))
 
-    fireEvent.change(month, { target: { value: '4' } })
-    fireEvent.change(day, { target: { value: '20' } })
+    fireEvent.click(screen.getByRole('button', { name: '出生日期' }))
+    expect(screen.getAllByRole('option').length).toBe(30)
+    fireEvent.click(screen.getByRole('option', { name: '20' }))
+
     expect(container.querySelector('.persona-zodiac-title strong')?.textContent).toBe('金牛座')
 
     fireEvent.click(screen.getByRole('button', { name: /狮子座/ }))
