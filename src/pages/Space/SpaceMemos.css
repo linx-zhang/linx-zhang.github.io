@@ -116,6 +116,15 @@
   white-space: pre-wrap;
   text-align: left;
   cursor: text;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.space-memo-text:focus-visible {
+  outline: 2px solid #cbd5e1;
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 .space-memo-text.is-clamped {
@@ -141,10 +150,25 @@
   font: inherit;
   font-size: 0.74rem;
   cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.space-memo-toggle:hover {
+.space-memo-toggle:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.space-memo-toggle:active {
   color: #4b5563;
+}
+
+@media (hover: hover) {
+  .space-memo-toggle:hover {
+    color: #4b5563;
+  }
 }
 
 .space-memo-toggle:focus-visible {
