@@ -149,7 +149,15 @@
 @media (max-width: 640px) {
   .doc-item-head {
     flex-direction: column;
+    align-items: stretch;
     gap: 4px;
+  }
+  /* 标题是 flex 子项，横排时靠 ellipsis 截断；竖排必须显式拉满宽度，否则会按内容撑出屏幕 */
+  .doc-title {
+    width: 100%;
+  }
+  .doc-pin {
+    align-self: flex-start;
   }
   .doc-actions {
     gap: 12px;

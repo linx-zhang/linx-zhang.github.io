@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useDocList } from '@/utils/useDocs';
 
@@ -30,6 +30,19 @@ export default function WikiLayout() {
   );
   const { docs } = useDocList();
   const [keyword, setKeyword] = useState('');
+
+  // 跨过 768px 时同步一次：缩到窄屏先收起，拉回桌面再展开。
+  // 桌面首次进入仍按 useState 的初值展开，不改变原有观感。
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 768px)');
+    const onChange = (event: MediaQueryListEvent) => setSidebarOpen(!event.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
+  const closeOnMobile = () => {
+    if (window.matchMedia('(max-width: 768px)').matches) setSidebarOpen(false);
+  };
 
   // 侧栏按分类分组：分类就是 slug 第一段，组内按 index.json 的标题顺序；
   // 组名用展示名（categoryLabel），目录名只做 slug 前缀
@@ -72,13 +85,23 @@ export default function WikiLayout() {
 
   return (
     <div className={`wiki-layout ${sidebarOpen ? '' : 'is-collapsed'}`}>
+      {/* 窄屏抽屉的遮罩：桌面不显示，点空白处收起目录 */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="wiki-sidebar-scrim no-print"
+          aria-label="关闭知识库目录"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* 侧边栏 (打印时隐藏) */}
       <aside className={`wiki-sidebar no-print ${sidebarOpen ? 'open' : 'closed'}`}>
         {/* 标题 + 搜索固定在侧栏顶部，长目录滚动时不会把入口带走 */}
         <div className="sidebar-top">
           <div className="sidebar-head">
             {/* 左上角标题：使用 NavLink 并加上 end 属性，只有在准确访问 /wiki 时才高亮。也可兼作返回首页按钮 */}
-            <NavLink to="/wiki" end className="sidebar-title">
+            <NavLink to="/wiki" end className="sidebar-title" onClick={closeOnMobile}>
               知识库目录
             </NavLink>
             <button
@@ -147,7 +170,11 @@ export default function WikiLayout() {
                     <ul className="tree-items">
                       {group.items.map((doc) => (
                         <li key={doc.slug}>
-                          <NavLink to={`/wiki/${doc.slug}`} title={doc.title}>
+                          <NavLink
+                            to={`/wiki/${doc.slug}`}
+                            title={doc.title}
+                            onClick={closeOnMobile}
+                          >
                             <Highlight text={doc.title} keyword={keyword} />
                           </NavLink>
                         </li>

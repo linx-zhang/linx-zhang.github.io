@@ -117,14 +117,6 @@
   white-space: nowrap;
 }
 
-.persona-pair-mark {
-  flex: none;
-  margin-left: auto;
-  color: #9ca3af;
-  font-size: 0.9rem;
-  line-height: 1;
-}
-
 .persona-pair-btn:hover {
   border-color: #d1d5db;
   background: #fff;
@@ -136,8 +128,7 @@
 }
 
 .persona-pair-btn.is-active .persona-pair-key,
-.persona-pair-btn.is-active .persona-pair-names,
-.persona-pair-btn.is-active .persona-pair-mark {
+.persona-pair-btn.is-active .persona-pair-names {
   color: #fff;
 }
 

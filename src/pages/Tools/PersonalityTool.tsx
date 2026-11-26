@@ -176,9 +176,6 @@ export default function PersonalityTool() {
                       <span className="persona-pair-names">
                         {dimension.leftName} · {dimension.rightName}
                       </span>
-                      <span className="persona-pair-mark" aria-hidden="true">
-                        {open ? '−' : '+'}
-                      </span>
                     </button>
                   )
                 })}
