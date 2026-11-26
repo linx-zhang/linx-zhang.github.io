@@ -122,6 +122,8 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
+  /* 手机 Safari 对部分元素不认 line-clamp，再用行高兜一层四行高度 */
+  max-height: calc(1.55em * 4);
   overflow: hidden;
 }
 

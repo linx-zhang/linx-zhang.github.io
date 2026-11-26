@@ -101,7 +101,7 @@ function MemoText({
 }) {
   const [expanded, setExpanded] = useState(false)
   const [overflowing, setOverflowing] = useState(false)
-  const textRef = useRef<HTMLButtonElement>(null)
+  const textRef = useRef<HTMLDivElement>(null)
   const measuredWidthRef = useRef(0)
   const clampedRef = useRef(false)
 
@@ -156,15 +156,21 @@ function MemoText({
 
   return (
     <div className="space-memo-main">
-      <button
+      <div
         ref={textRef}
-        type="button"
         className={expanded ? 'space-memo-text' : 'space-memo-text is-clamped'}
+        role="button"
+        tabIndex={0}
         onClick={onEdit}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return
+          event.preventDefault()
+          onEdit()
+        }}
         title="点一下修改"
       >
         {body}
-      </button>
+      </div>
       <div className="space-memo-foot">
         <span className="space-memo-meta">{children}</span>
         {showToggle && (
