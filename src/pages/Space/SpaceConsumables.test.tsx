@@ -57,6 +57,7 @@ function item(overrides: Partial<Consumable>): Consumable {
 beforeEach(() => {
   Object.values(api).forEach((fn) => fn.mockReset())
   api.list.mockResolvedValue({ items: [] })
+  api.cycles.mockResolvedValue({ items: [] })
 })
 
 describe('SpaceConsumables', () => {
@@ -188,6 +189,19 @@ describe('SpaceConsumables', () => {
 
     await waitFor(() => expect(api.startCycle).toHaveBeenCalled())
     expect(screen.queryByText('周期历史')).toBeNull()
+  })
+
+  it('点卡片进入详情，卡片内的操作按钮不会顺手把详情再切走', async () => {
+    api.list.mockResolvedValue({ items: [item({})] })
+    render(<SpaceConsumables />)
+
+    fireEvent.click(await screen.findByText('厨房纸巾'))
+    expect(await screen.findByText('还没有完整的周期。')).toBeTruthy()
+    expect(screen.getByText('周期历史')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: '用完了' }))
+    expect(screen.getByText(/这一轮用了/)).toBeTruthy()
+    expect(screen.getByText('周期历史')).toBeTruthy()
   })
 
   it('待补货的条目一键补货，预计天数沿用上一轮', async () => {

@@ -51,6 +51,12 @@
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #fff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.space-memo:hover {
+  border-color: #dfe3e9;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
 }
 
 .space-memo.is-done {
@@ -90,26 +96,63 @@
   color: #fff;
 }
 
-/* 整条都可点：正文与元信息合在一个按钮里，鼠标是文本光标，避免像普通按钮 */
+/* 正文与元信息共占主列；正文本身可点，展开按钮单独一条，避免按钮套按钮 */
 .space-memo-main {
-  display: block;
   flex: 1;
   min-width: 0;
+}
+
+.space-memo-text {
+  display: block;
+  width: 100%;
   padding: 0;
   border: none;
   background: none;
   color: inherit;
   font: inherit;
-  text-align: left;
-  cursor: text;
-}
-
-.space-memo-text {
-  display: block;
   font-size: 0.95rem;
   line-height: 1.55;
   word-break: break-word;
   white-space: pre-wrap;
+  text-align: left;
+  cursor: text;
+}
+
+.space-memo-text.is-clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+/* 展开条：铺满正文宽度，只留一枚宽扁箭头；收起时转 180° */
+.space-memo-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 24px;
+  margin: 0.28rem 0 0;
+  padding: 0.3rem 0 0.12rem;
+  border: none;
+  background: none;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.space-memo-toggle:hover {
+  color: #1f2937;
+}
+
+.space-memo-toggle svg {
+  width: 38px;
+  height: 13px;
+  flex: 0 0 auto;
+  transition: transform 0.18s ease;
+}
+
+.space-memo-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
 }
 
 .space-memo.is-done .space-memo-text {

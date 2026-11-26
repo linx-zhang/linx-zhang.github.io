@@ -156,13 +156,13 @@ CI 在 `npm run lint` 之后跑这一步。它挡的是「底层为了省事反�
 | 页面行为 | `src/pages/**/*.test.tsx` |
 | 纯工具 | `src/utils/*.test.ts` |
 
-`npm test` 是 vitest run；`npm run lint` 是 oxlint。当前 23 个测试文件、169 例，构建前 CI 会全跑。
+`npm test` 是 vitest run；`npm run lint` 是 oxlint。当前 23 个测试文件、170 例，构建前 CI 会全跑。
 
 ## 11. 已知的、刻意保留的债
 
 - `AuthProvider` 直接渲染 `components/AuthModal`，`components/AuthMenu` 又依赖 `auth`；这是 auth 与通用 UI 的层间环，运行时无碍，但拆 auth 时要一起动。要彻底解环，需要把弹窗改成由布局层注入。
 - `pages/Tools/Tools.css`（约 1300 行）与 `pages/Admin/Admin.css`（约 1200 行）仍是单文件；在出现第三个独立区域或频繁冲突时再拆。简历分区已单独拆出 `pages/Admin/ResumeAdmin.css`。
-- `pages/Space/SpaceMemos.tsx`（约 630 行）同时管列表、日历、编辑器三种视图；拆之前先用现有测试锁行为。
+- `pages/Space/SpaceMemos.tsx`（约 680 行）同时管列表、日历、编辑器三种视图；拆之前先用现有测试锁行为。
 - `api/*.ts` 的响应类型是手写的，没有从 OpenAPI 生成；契约靠后端 `docs/api.md` + 前端 `check-contract.mjs`。
 - `MarkdownView` 是最大的懒加载块（约 918KB），不要把它拖回主包。
 - 请求没有全局超时；长请求靠页面状态机与用户操作兜底。

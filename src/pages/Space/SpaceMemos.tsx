@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { FormEvent, KeyboardEvent, MouseEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type { FormEvent, KeyboardEvent, MouseEvent, ReactNode } from 'react'
 import DatePicker from '@/components/DatePicker'
 import { useConfirm } from '@/components/ConfirmDialog/useConfirm'
 import { errorMessage } from '@/api/errors'
@@ -83,6 +83,64 @@ export async function loadCalendarMemos(range: CalendarRange): Promise<Memo[]> {
   }
   const undated = await memoApi.list({ undated: true }, CALENDAR_UNDATED_PREVIEW, 0)
   return [...rows, ...undated.items]
+}
+
+const MEMO_COLLAPSE_LINES = 4
+// 量不到 scrollHeight 时的兜底（测试环境 / 首帧）；正常宽度由实际溢出决定
+const MEMO_COLLAPSE_FALLBACK_CHARS = 110
+
+function MemoText({
+  body,
+  onEdit,
+  children,
+}: {
+  body: string
+  onEdit: () => void
+  children: ReactNode
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [overflowing, setOverflowing] = useState(false)
+  const textRef = useRef<HTMLButtonElement>(null)
+
+  useLayoutEffect(() => {
+    const node = textRef.current
+    if (!node) return
+    setOverflowing(node.scrollHeight > node.clientHeight + 1)
+  }, [body, expanded])
+
+  const longByText =
+    body.length > MEMO_COLLAPSE_FALLBACK_CHARS ||
+    body.split('\n').length > MEMO_COLLAPSE_LINES
+  const showToggle = overflowing || longByText || expanded
+
+  return (
+    <div className="space-memo-main">
+      <button
+        ref={textRef}
+        type="button"
+        className={expanded ? 'space-memo-text' : 'space-memo-text is-clamped'}
+        onClick={onEdit}
+        title="点一下修改"
+      >
+        {body}
+      </button>
+      {showToggle && (
+        <button
+          type="button"
+          className="space-memo-toggle"
+          aria-label={expanded ? '收起' : '展开全文'}
+          aria-expanded={expanded}
+          title={expanded ? '收起' : '展开全文'}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          <svg viewBox="0 0 30 10" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+            <path d="M3 2.5 15 7.5 27 2.5" />
+          </svg>
+        </button>
+      )}
+      <span className="space-memo-meta">{children}</span>
+    </div>
+  )
 }
 
 /**
@@ -567,21 +625,13 @@ export default function SpaceMemos({ userId, view, initialDay }: Props) {
                       </span>
                     </button>
 
-                    <button
-                      type="button"
-                      className="space-memo-main"
-                      onClick={() => startEdit(memo)}
-                      title="点一下修改"
-                    >
-                      <span className="space-memo-text">{memo.body}</span>
-                      <span className="space-memo-meta">
-                        {due && (
-                          <span className={`space-tag space-tag-${due.tone}`}>{due.text}</span>
-                        )}
-                        {memo.done && memo.done_at && <span>完成于 {formatDate(memo.done_at)}</span>}
-                        {!memo.done && <span>{formatDate(memo.created_at)}</span>}
-                      </span>
-                    </button>
+                    <MemoText body={memo.body} onEdit={() => startEdit(memo)}>
+                      {due && (
+                        <span className={`space-tag space-tag-${due.tone}`}>{due.text}</span>
+                      )}
+                      {memo.done && memo.done_at && <span>完成于 {formatDate(memo.done_at)}</span>}
+                      {!memo.done && <span>{formatDate(memo.created_at)}</span>}
+                    </MemoText>
 
                     <button
                       type="button"

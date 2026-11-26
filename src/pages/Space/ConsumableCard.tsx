@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { MouseEvent } from 'react'
 import { errorMessage } from '@/api/errors'
 import type { Consumable } from '@/api/consumables'
 import ConsumableDetail from './ConsumableDetail'
@@ -31,6 +32,14 @@ export default function ConsumableCard({
 
   const meta = categoryMeta(item.category)
 
+  /** 点卡片空白处进入详情；卡片里的按钮、展开后的表单保持各自行为 */
+  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
+    if (expanded || finishing) return
+    const target = event.target as HTMLElement
+    if (target.closest('button, input, textarea, select, a')) return
+    onToggleDetail()
+  }
+
   const run = async (action: () => Promise<void>) => {
     setBusy(true)
     setError('')
@@ -45,7 +54,10 @@ export default function ConsumableCard({
   }
 
   return (
-    <article className={`space-item is-${item.status}`}>
+    <article
+      className={`space-item is-${item.status}${expanded ? ' is-open' : ''}`}
+      onClick={handleCardClick}
+    >
       <div className="space-item-head">
         <span className="space-item-icon" aria-hidden="true">
           {meta.icon}
