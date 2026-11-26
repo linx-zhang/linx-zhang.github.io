@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import {
   MBTI_DIMENSIONS,
+  MBTI_POLE_DETAILS,
   MBTI_QUESTIONS,
   MBTI_TYPES,
   ZODIAC_SIGNS,
@@ -68,6 +69,20 @@ describe('MBTI 精简版评分', () => {
     invalid.ei1 = 'S'
     expect(() => scoreMbti(invalid)).toThrow()
   })
+
+  it('八个倾向都有详细解释和场景例子', () => {
+    expect(Object.keys(MBTI_POLE_DETAILS)).toHaveLength(8)
+    for (const dimension of MBTI_DIMENSIONS) {
+      const left = MBTI_POLE_DETAILS[dimension.left]
+      const right = MBTI_POLE_DETAILS[dimension.right]
+      expect(left.dimension).toBe(dimension.key)
+      expect(right.dimension).toBe(dimension.key)
+      expect(left.signs.length).toBeGreaterThanOrEqual(2)
+      expect(right.signs.length).toBeGreaterThanOrEqual(2)
+      expect(left.example.length).toBeGreaterThan(0)
+      expect(right.example.length).toBeGreaterThan(0)
+    }
+  })
 })
 
 describe('星座速查', () => {
@@ -114,6 +129,21 @@ describe('星座速查', () => {
 })
 
 describe('PersonalityTool', () => {
+  it('点「E 外向」在下方展开解释，再点「I 内向」切换', () => {
+    render(<PersonalityTool />)
+
+    fireEvent.click(screen.getByRole('button', { name: /E\s*外向/ }))
+    expect(screen.getByRole('region', { name: 'E 外向 详细解释' })).toBeTruthy()
+    expect(screen.getByText(/临时被拉进一桌不熟的人/)).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: /I\s*内向/ }))
+    expect(screen.getByRole('region', { name: 'I 内向 详细解释' })).toBeTruthy()
+    expect(screen.getByText(/同一桌不熟的人/)).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: '收起' }))
+    expect(screen.queryByRole('region', { name: /详细解释/ })).toBeNull()
+  })
+
   it('12 次选择后出结果，并能切到星座页', () => {
     const { container } = render(<PersonalityTool />)
 
@@ -129,6 +159,27 @@ describe('PersonalityTool', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '去看星座速查' }))
     expect(screen.getByText(/你出生那天/)).toBeTruthy()
-    expect(screen.getByRole('button', { name: '出生月份' })).toBeTruthy()
+    expect(screen.getByLabelText('出生月份')).toBeTruthy()
+  })
+
+  it('生日用数字输入，点底部星座卡能看详情并回到生日结果', () => {
+    const { container } = render(<PersonalityTool />)
+    fireEvent.click(screen.getByRole('tab', { name: '星座速查' }))
+
+    const month = screen.getByLabelText('出生月份') as HTMLInputElement
+    const day = screen.getByLabelText('出生日期') as HTMLInputElement
+    expect(month.type).toBe('number')
+    expect(day.type).toBe('number')
+
+    fireEvent.change(month, { target: { value: '4' } })
+    fireEvent.change(day, { target: { value: '20' } })
+    expect(container.querySelector('.persona-zodiac-title strong')?.textContent).toBe('金牛座')
+
+    fireEvent.click(screen.getByRole('button', { name: /狮子座/ }))
+    expect(container.querySelector('.persona-zodiac-title strong')?.textContent).toBe('狮子座')
+    expect(screen.getByRole('button', { name: '回到生日结果' })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: '回到生日结果' }))
+    expect(container.querySelector('.persona-zodiac-title strong')?.textContent).toBe('金牛座')
   })
 })

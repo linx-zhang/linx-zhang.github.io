@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
-import Select from '@/components/Select'
 import {
   MBTI_DIMENSIONS,
+  MBTI_POLE_DETAILS,
   MBTI_QUESTIONS,
   ZODIAC_SIGNS,
   daysInMonth,
@@ -15,10 +15,13 @@ type Tab = 'mbti' | 'zodiac'
 type Phase = 'intro' | 'test' | 'result'
 
 const TOTAL = MBTI_QUESTIONS.length
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
-  value: String(index + 1),
-  label: `${index + 1} 月`,
-}))
+
+/** 数字输入允许手敲，也允许键盘上下键；越界时夹回范围内。 */
+function clampNumber(value: string, min: number, max: number, fallback: number): number {
+  const parsed = Number.parseInt(value, 10)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.min(max, Math.max(min, parsed))
+}
 
 export default function PersonalityTool() {
   const [tab, setTab] = useState<Tab>('mbti')
@@ -30,6 +33,8 @@ export default function PersonalityTool() {
   const answersRef = useRef<Record<string, MbtiPole>>({})
   // 最后一题的答案与 phase 在同一次事件里更新；单独留一份最终答案，避免结果页读到旧的 answers。
   const [finalAnswers, setFinalAnswers] = useState<MbtiAnswers | null>(null)
+  // 介绍页的倾向说明：点 E/I 等按钮时在下方展开，不另开弹窗。
+  const [detailPole, setDetailPole] = useState<MbtiPole | null>(null)
 
   const mbtiResult = useMemo(
     () => (finalAnswers ? scoreMbti(finalAnswers) : null),
@@ -38,23 +43,24 @@ export default function PersonalityTool() {
 
   const [month, setMonth] = useState(() => new Date().getMonth() + 1)
   const [day, setDay] = useState(() => new Date().getDate())
+  // 点底部星座卡时单独记住查看的星座；改生日就回到生日结果。
+  const [selectedZodiacId, setSelectedZodiacId] = useState<string | null>(null)
+  const zodiacCardRef = useRef<HTMLDivElement>(null)
+
   const maxDay = daysInMonth(month)
   const safeDay = Math.min(day, maxDay)
-  const sign = zodiacFor(month, safeDay)
-
-  const dayOptions = useMemo(
-    () =>
-      Array.from({ length: maxDay }, (_, index) => ({
-        value: String(index + 1),
-        label: `${index + 1} 日`,
-      })),
-    [maxDay],
-  )
+  const birthdaySign = zodiacFor(month, safeDay)
+  const selectedSign = selectedZodiacId
+    ? ZODIAC_SIGNS.find((item) => item.id === selectedZodiacId) ?? null
+    : null
+  const sign = selectedSign ?? birthdaySign
+  const activePole = detailPole ? MBTI_POLE_DETAILS[detailPole] : null
 
   const startTest = () => {
     setAnswers({})
     answersRef.current = {}
     setFinalAnswers(null)
+    setDetailPole(null)
     setQuestionIndex(0)
     setPhase('test')
   }
@@ -82,9 +88,31 @@ export default function PersonalityTool() {
   }
 
   const changeMonth = (value: string) => {
-    const nextMonth = Number(value)
+    const nextMonth = clampNumber(value, 1, 12, month)
+    setSelectedZodiacId(null)
     setMonth(nextMonth)
     setDay((prev) => Math.min(prev, daysInMonth(nextMonth)))
+  }
+
+  const changeDay = (value: string) => {
+    setSelectedZodiacId(null)
+    setDay(clampNumber(value, 1, maxDay, safeDay))
+  }
+
+  const showZodiac = (id: string) => {
+    setSelectedZodiacId(id)
+    const scroll = () => {
+      zodiacCardRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+    }
+    if (typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(scroll)
+    } else {
+      scroll()
+    }
+  }
+
+  const togglePole = (pole: MbtiPole) => {
+    setDetailPole((current) => (current === pole ? null : pole))
   }
 
   return (
@@ -120,16 +148,66 @@ export default function PersonalityTool() {
                 每题只选更像你的那一句，按第一反应答就好。这里给的是倾向，不是心理诊断，也不拿四个字母给一个人下定义。
               </p>
 
-              <div className="persona-chips">
+              <div className="persona-dim-list">
                 {MBTI_DIMENSIONS.map((dimension) => (
-                  <span key={dimension.key} className="persona-chip">
-                    <strong>
+                  <div key={dimension.key} className="persona-dim-row">
+                    <span className="persona-dim-key">
                       {dimension.left}/{dimension.right}
-                    </strong>
-                    {dimension.leftName} / {dimension.rightName}
-                  </span>
+                    </span>
+                    <div className="persona-dim-options">
+                      {(['left', 'right'] as const).map((side) => {
+                        const pole = side === 'left' ? dimension.left : dimension.right
+                        const name = side === 'left' ? dimension.leftName : dimension.rightName
+                        const open = detailPole === pole
+                        return (
+                          <button
+                            key={pole}
+                            type="button"
+                            className={open ? 'persona-pole-btn is-active' : 'persona-pole-btn'}
+                            aria-expanded={open}
+                            aria-controls="mbti-pole-detail"
+                            onClick={() => togglePole(pole)}
+                          >
+                            <strong>{pole}</strong>
+                            {name}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
                 ))}
               </div>
+
+              {activePole && (
+                <div
+                  id="mbti-pole-detail"
+                  className="persona-pole-panel"
+                  role="region"
+                  aria-label={`${activePole.pole} ${activePole.name} 详细解释`}
+                >
+                  <div className="persona-pole-head">
+                    <div className="persona-pole-id">
+                      <span className="persona-pole-badge">{activePole.pole}</span>
+                      <strong>{activePole.name}</strong>
+                      <span>{activePole.dimension}</span>
+                    </div>
+                    <button type="button" className="persona-link" onClick={() => setDetailPole(null)}>
+                      收起
+                    </button>
+                  </div>
+                  <p className="persona-pole-summary">{activePole.oneLine}</p>
+                  <ul className="persona-pole-list">
+                    {activePole.signs.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <p className="persona-pole-example">
+                    <span>一个场景</span>
+                    {activePole.example}
+                  </p>
+                  <p className="persona-pole-watch">{activePole.watch}</p>
+                </div>
+              )}
 
               <div className="persona-actions">
                 <button type="button" className="tool-button tool-button-primary" onClick={startTest}>
@@ -246,31 +324,53 @@ export default function PersonalityTool() {
           </div>
 
           <div className="persona-zodiac-controls">
-            <div className="persona-birth-select">
-              <span>生日</span>
-              <Select
-                value={String(month)}
-                onChange={changeMonth}
-                options={MONTH_OPTIONS}
-                ariaLabel="出生月份"
-                className="persona-select"
-                panelMinWidth={96}
-              />
-              <Select
-                value={String(safeDay)}
-                onChange={(value) => setDay(Number(value))}
-                options={dayOptions}
-                ariaLabel="出生日期"
-                className="persona-select"
-                panelMinWidth={96}
-              />
+            <div className="persona-birth-fields">
+              <span className="persona-birth-label">生日</span>
+              <label className="persona-birth-field">
+                <span className="persona-sr-only">出生月份</span>
+                <input
+                  className="persona-birth-input"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={12}
+                  value={month}
+                  aria-label="出生月份"
+                  onFocus={(event) => event.currentTarget.select()}
+                  onChange={(event) => changeMonth(event.currentTarget.value)}
+                />
+                <span className="persona-birth-unit">月</span>
+              </label>
+              <label className="persona-birth-field">
+                <span className="persona-sr-only">出生日期</span>
+                <input
+                  className="persona-birth-input"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={maxDay}
+                  value={safeDay}
+                  aria-label="出生日期"
+                  onFocus={(event) => event.currentTarget.select()}
+                  onChange={(event) => changeDay(event.currentTarget.value)}
+                />
+                <span className="persona-birth-unit">日</span>
+              </label>
             </div>
             <span className="persona-birth-date">
               公历 {month} 月 {safeDay} 日
             </span>
           </div>
 
-          <div className="persona-zodiac-card">
+          {selectedSign && (
+            <p className="persona-zodiac-source">
+              正在看手动选中的星座
+              <button type="button" className="persona-zodiac-reset" onClick={() => setSelectedZodiacId(null)}>
+                回到生日结果
+              </button>
+            </p>
+          )}
+          <div ref={zodiacCardRef} className="persona-zodiac-card">
             <span className="persona-zodiac-symbol" aria-hidden="true">
               {sign.symbol}
             </span>
@@ -295,23 +395,29 @@ export default function PersonalityTool() {
           <div className="persona-zodiac-all">
             <div className="persona-section-head">
               <h3>12 星座速查</h3>
-              <span>交界日每年可能差一天</span>
+              <span>点任意星座看详细解释</span>
             </div>
             <div className="persona-zodiac-grid">
-              {ZODIAC_SIGNS.map((item) => (
-                <div
-                  key={item.id}
-                  className={item.id === sign.id ? 'persona-zodiac-item is-active' : 'persona-zodiac-item'}
-                >
-                  <span className="persona-zodiac-mini-symbol" aria-hidden="true">
-                    {item.symbol}
-                  </span>
-                  <div>
-                    <strong>{item.name}</strong>
-                    <span>{item.dateText}</span>
-                  </div>
-                </div>
-              ))}
+              {ZODIAC_SIGNS.map((item) => {
+                const active = item.id === sign.id
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={active ? 'persona-zodiac-item is-active' : 'persona-zodiac-item'}
+                    aria-pressed={active}
+                    onClick={() => showZodiac(item.id)}
+                  >
+                    <span className="persona-zodiac-mini-symbol" aria-hidden="true">
+                      {item.symbol}
+                    </span>
+                    <span className="persona-zodiac-item-text">
+                      <strong>{item.name}</strong>
+                      <span>{item.dateText}</span>
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 

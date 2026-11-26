@@ -22,7 +22,7 @@ push 到 `main` 触发 `.github/workflows/build.yml`，job `build` 依次执行�
 | 1 | 装依赖 | `npm ci`（node 22 + npm 缓存） |
 | 2 | 静态检查 | `npm run lint` → **oxlint** |
 | 3 | 分层依赖 | `npm run check:layers` → **scripts/check-layers.mjs** |
-| 4 | 单元测试 | `npm test` → **vitest run**（当前 203 例） |
+| 4 | 单元测试 | `npm test` → **vitest run**（当前 206 例） |
 | 5 | 契约漂移 | `git clone --depth 1 .../cf-api-worker.git /tmp/cf-api-worker` 后 `node scripts/check-contract.mjs --api /tmp/cf-api-worker` |
 | 6 | 构建 | `npm run build` = **`tsc -b`** + `node scripts/build-docs.mjs` |
 | 7 | 产物完整 | `docs/index.html`、`docs/404.html`、`docs/wiki/index.json`、`docs/assets/` 存在 |

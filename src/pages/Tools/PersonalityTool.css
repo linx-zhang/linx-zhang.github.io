@@ -71,28 +71,167 @@
   line-height: 1.7;
 }
 
-.persona-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+.persona-dim-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
   margin-top: 1rem;
 }
 
-.persona-chip {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.35rem;
-  padding: 0.3rem 0.55rem;
+.persona-dim-row {
+  min-width: 0;
+  padding: 0.45rem 0.5rem 0.5rem;
   border: 1px solid #e5e7eb;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #fbfbfc;
-  color: #6b7280;
-  font-size: 0.76rem;
 }
 
-.persona-chip strong {
+.persona-dim-key {
+  color: #9ca3af;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.persona-dim-options {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+
+.persona-pole-btn {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.22rem;
+  min-width: 0;
+  min-height: 30px;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #fff;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.74rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.persona-pole-btn strong {
   color: #1f2937;
   font-weight: 600;
+}
+
+.persona-pole-btn:hover {
+  border-color: #d1d5db;
+  color: #1f2937;
+}
+
+.persona-pole-btn.is-active {
+  border-color: #1f2937;
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+/* 点开某个倾向后，在按钮下方就地展开说明，不弹窗、不跳页 */
+.persona-pole-panel {
+  margin-top: 0.65rem;
+  padding: 0.85rem 0.95rem 0.9rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #fbfbfc;
+}
+
+.persona-pole-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.persona-pole-id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.persona-pole-badge {
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 6px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.persona-pole-id strong {
+  color: #1f2937;
+  font-size: 0.92rem;
+}
+
+.persona-pole-id span:not(.persona-pole-badge) {
+  color: #9ca3af;
+  font-size: 0.68rem;
+}
+
+.persona-pole-summary {
+  margin: 0.55rem 0 0;
+  color: #374151;
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+
+.persona-pole-list {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  color: #4b5563;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.persona-pole-list li::marker {
+  color: #9ca3af;
+}
+
+.persona-pole-example {
+  margin: 0.65rem 0 0;
+  padding-left: 0.6rem;
+  border-left: 2px solid #d1d5db;
+  color: #374151;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.persona-pole-example span {
+  display: block;
+  margin-bottom: 0.1rem;
+  color: #9ca3af;
+  font-size: 0.68rem;
+}
+
+.persona-pole-watch {
+  margin: 0.55rem 0 0;
+  color: #9ca3af;
+  font-size: 0.73rem;
+  line-height: 1.6;
+}
+
+.persona-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .persona-actions {
@@ -232,7 +371,10 @@
 
 .persona-choice:focus-visible,
 .persona-tab:focus-visible,
-.persona-link:focus-visible {
+.persona-link:focus-visible,
+.persona-pole-btn:focus-visible,
+.persona-zodiac-item:focus-visible,
+.persona-zodiac-reset:focus-visible {
   outline: 2px solid rgba(31, 41, 55, 0.35);
   outline-offset: 2px;
 }
@@ -340,27 +482,93 @@
   background: #fbfbfc;
 }
 
-.persona-birth-select {
+.persona-birth-fields {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
 }
 
-.persona-birth-select > span {
+.persona-birth-label {
   color: #6b7280;
   font-size: 0.78rem;
 }
 
-.persona-select {
-  width: 5.4rem;
+.persona-birth-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+}
+
+.persona-birth-input {
+  width: 3.1rem;
   min-height: 36px;
+  padding: 0 0.35rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
   font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  touch-action: manipulation;
+}
+
+.persona-birth-input::-webkit-outer-spin-button,
+.persona-birth-input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.persona-birth-input:hover {
+  border-color: #d1d5db;
+}
+
+.persona-birth-input:focus-visible {
+  border-color: #6b7280;
+  outline: 2px solid rgba(31, 41, 55, 0.25);
+  outline-offset: 1px;
+}
+
+.persona-birth-unit {
+  color: #9ca3af;
+  font-size: 0.76rem;
 }
 
 .persona-birth-date {
   margin-left: auto;
   color: #9ca3af;
   font-size: 0.78rem;
+}
+
+.persona-zodiac-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.8rem 0 0;
+  color: #9ca3af;
+  font-size: 0.72rem;
+}
+
+.persona-zodiac-reset {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font: inherit;
+  font-size: 0.72rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.persona-zodiac-reset:hover {
+  color: #1f2937;
 }
 
 .persona-zodiac-card {
@@ -479,15 +687,30 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  width: 100%;
   min-width: 0;
   padding: 0.5rem 0.55rem;
   border: 1px solid #f3f4f6;
   border-radius: 8px;
   background: #fbfbfc;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color 0.12s ease,
+    background-color 0.12s ease;
+}
+
+.persona-zodiac-item:hover {
+  border-color: #d1d5db;
+  background: #fff;
 }
 
 .persona-zodiac-item.is-active {
-  border-color: #d1d5db;
+  border-color: #1f2937;
   background: #fff;
 }
 
@@ -499,7 +722,7 @@
   text-align: center;
 }
 
-.persona-zodiac-item > div {
+.persona-zodiac-item-text {
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -514,7 +737,7 @@
   white-space: nowrap;
 }
 
-.persona-zodiac-item span:not(.persona-zodiac-mini-symbol) {
+.persona-zodiac-item-text span {
   overflow: hidden;
   color: #9ca3af;
   font-size: 0.66rem;
@@ -563,6 +786,14 @@
 }
 
 @media (max-width: 420px) {
+  .persona-dim-list {
+    grid-template-columns: 1fr;
+  }
+
+  .persona-zodiac-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .persona-code {
     font-size: 2rem;
     letter-spacing: 0.08em;
