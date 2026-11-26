@@ -129,19 +129,16 @@ describe('星座速查', () => {
 })
 
 describe('PersonalityTool', () => {
-  it('点「E 外向」在下方展开解释，再点「I 内向」切换', () => {
+  it('点「E/I」一组按钮，左右同时展开解释，再点收起', () => {
     render(<PersonalityTool />)
 
-    fireEvent.click(screen.getByRole('button', { name: /E\s*外向/ }))
-    expect(screen.getByRole('region', { name: 'E 外向 详细解释' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /E\/I/ }))
+    expect(screen.getByRole('region', { name: 'E/I 外向与内向 对比解释' })).toBeTruthy()
     expect(screen.getByText(/临时被拉进一桌不熟的人/)).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: /I\s*内向/ }))
-    expect(screen.getByRole('region', { name: 'I 内向 详细解释' })).toBeTruthy()
     expect(screen.getByText(/同一桌不熟的人/)).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: '收起' }))
-    expect(screen.queryByRole('region', { name: /详细解释/ })).toBeNull()
+    expect(screen.queryByRole('region', { name: /对比解释/ })).toBeNull()
   })
 
   it('12 次选择后出结果，并能切到星座页', () => {

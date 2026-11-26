@@ -9,7 +9,7 @@ import {
   scoreMbti,
   zodiacFor,
 } from './personality'
-import type { MbtiAnswers, MbtiPole } from './personality'
+import type { MbtiAnswers, MbtiDimensionKey, MbtiPole } from './personality'
 import './PersonalityTool.css'
 
 type Tab = 'mbti' | 'zodiac'
@@ -31,8 +31,8 @@ export default function PersonalityTool() {
   const answersRef = useRef<Record<string, MbtiPole>>({})
   // 最后一题的答案与 phase 在同一次事件里更新；单独留一份最终答案，避免结果页读到旧的 answers。
   const [finalAnswers, setFinalAnswers] = useState<MbtiAnswers | null>(null)
-  // 介绍页的倾向说明：点 E/I 等按钮时在下方展开，不另开弹窗。
-  const [detailPole, setDetailPole] = useState<MbtiPole | null>(null)
+  // 介绍页的四组倾向说明：一组一个按钮，点开在下方左右对照。
+  const [detailDimension, setDetailDimension] = useState<MbtiDimensionKey | null>(null)
 
   const mbtiResult = useMemo(
     () => (finalAnswers ? scoreMbti(finalAnswers) : null),
@@ -60,13 +60,17 @@ export default function PersonalityTool() {
     ? ZODIAC_SIGNS.find((item) => item.id === selectedZodiacId) ?? null
     : null
   const sign = selectedSign ?? birthdaySign
-  const activePole = detailPole ? MBTI_POLE_DETAILS[detailPole] : null
+  const activeDimension = detailDimension
+    ? MBTI_DIMENSIONS.find((dimension) => dimension.key === detailDimension) ?? null
+    : null
+  const activeLeft = activeDimension ? MBTI_POLE_DETAILS[activeDimension.left] : null
+  const activeRight = activeDimension ? MBTI_POLE_DETAILS[activeDimension.right] : null
 
   const startTest = () => {
     setAnswers({})
     answersRef.current = {}
     setFinalAnswers(null)
-    setDetailPole(null)
+    setDetailDimension(null)
     setQuestionIndex(0)
     setPhase('test')
   }
@@ -117,8 +121,8 @@ export default function PersonalityTool() {
     }
   }
 
-  const togglePole = (pole: MbtiPole) => {
-    setDetailPole((current) => (current === pole ? null : pole))
+  const toggleDimension = (key: MbtiDimensionKey) => {
+    setDetailDimension((current) => (current === key ? null : key))
   }
 
   return (
@@ -154,69 +158,74 @@ export default function PersonalityTool() {
                 每题只选更像你的那一句，按第一反应答就好。这里给的是倾向，不是心理诊断，也不拿四个字母给一个人下定义。
               </p>
 
-              <div className="persona-spectrum">
-                {MBTI_DIMENSIONS.map((dimension) => (
-                  <div key={dimension.key} className="persona-spectrum-row">
-                    <span className="persona-spectrum-key">
-                      {dimension.left}/{dimension.right}
-                    </span>
-                    <div
-                      className="persona-spectrum-switch"
-                      role="group"
-                      aria-label={`${dimension.left}/${dimension.right} 倾向`}
+              <div className="persona-pairs">
+                {MBTI_DIMENSIONS.map((dimension) => {
+                  const open = detailDimension === dimension.key
+                  return (
+                    <button
+                      key={dimension.key}
+                      type="button"
+                      className={open ? 'persona-pair-btn is-active' : 'persona-pair-btn'}
+                      aria-expanded={open}
+                      aria-controls="mbti-dimension-detail"
+                      onClick={() => toggleDimension(dimension.key)}
                     >
-                      {(['left', 'right'] as const).map((side) => {
-                        const pole = side === 'left' ? dimension.left : dimension.right
-                        const name = side === 'left' ? dimension.leftName : dimension.rightName
-                        const open = detailPole === pole
-                        return (
-                          <button
-                            key={pole}
-                            type="button"
-                            className={open ? 'persona-pole-btn is-active' : 'persona-pole-btn'}
-                            aria-expanded={open}
-                            aria-controls="mbti-pole-detail"
-                            onClick={() => togglePole(pole)}
-                          >
-                            <strong>{pole}</strong>
-                            {name}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
+                      <span className="persona-pair-key">
+                        {dimension.left}/{dimension.right}
+                      </span>
+                      <span className="persona-pair-names">
+                        {dimension.leftName} · {dimension.rightName}
+                      </span>
+                      <span className="persona-pair-mark" aria-hidden="true">
+                        {open ? '−' : '+'}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
-              <p className="persona-spectrum-help">点任意倾向，查看具体表现和一个场景。</p>
+              <p className="persona-pairs-help">点任意一组，左右对照看具体表现和一个场景。</p>
 
-              {activePole && (
+              {activeDimension && activeLeft && activeRight && (
                 <div
-                  id="mbti-pole-detail"
-                  className="persona-pole-panel"
+                  id="mbti-dimension-detail"
+                  className="persona-compare-panel"
                   role="region"
-                  aria-label={`${activePole.pole} ${activePole.name} 详细解释`}
+                  aria-label={`${activeDimension.left}/${activeDimension.right} ${activeDimension.leftName}与${activeDimension.rightName} 对比解释`}
                 >
-                  <div className="persona-pole-head">
-                    <div className="persona-pole-id">
-                      <span className="persona-pole-badge">{activePole.pole}</span>
-                      <strong>{activePole.name}</strong>
-                      <span>{activePole.dimension}</span>
+                  <div className="persona-compare-head">
+                    <div className="persona-compare-title">
+                      <span className="persona-compare-badge">
+                        {activeDimension.left}/{activeDimension.right}
+                      </span>
+                      <strong>
+                        {activeDimension.leftName} ↔ {activeDimension.rightName}
+                      </strong>
                     </div>
-                    <button type="button" className="persona-link" onClick={() => setDetailPole(null)}>
+                    <button type="button" className="persona-link" onClick={() => setDetailDimension(null)}>
                       收起
                     </button>
                   </div>
-                  <p className="persona-pole-summary">{activePole.oneLine}</p>
-                  <ul className="persona-pole-list">
-                    {activePole.signs.map((item) => (
-                      <li key={item}>{item}</li>
+                  <div className="persona-compare-grid">
+                    {[activeLeft, activeRight].map((detail) => (
+                      <div key={detail.pole} className="persona-compare-col">
+                        <div className="persona-compare-pole">
+                          <span>{detail.pole}</span>
+                          <strong>{detail.name}</strong>
+                        </div>
+                        <p className="persona-pole-summary">{detail.oneLine}</p>
+                        <ul className="persona-pole-list">
+                          {detail.signs.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                        <p className="persona-pole-example">
+                          <span>一个场景</span>
+                          {detail.example}
+                        </p>
+                        <p className="persona-pole-watch">{detail.watch}</p>
+                      </div>
                     ))}
-                  </ul>
-                  <p className="persona-pole-example">
-                    <span>一个场景</span>
-                    {activePole.example}
-                  </p>
-                  <p className="persona-pole-watch">{activePole.watch}</p>
+                  </div>
                 </div>
               )}
 
@@ -343,7 +352,7 @@ export default function PersonalityTool() {
                 options={MONTH_OPTIONS}
                 ariaLabel="出生月份"
                 className="persona-select"
-                panelMinWidth={56}
+                panelMinWidth={96}
               />
               <span className="persona-birth-unit">月</span>
               <Select
@@ -352,7 +361,7 @@ export default function PersonalityTool() {
                 options={dayOptions}
                 ariaLabel="出生日期"
                 className="persona-select"
-                panelMinWidth={56}
+                panelMinWidth={96}
               />
               <span className="persona-birth-unit">日</span>
             </div>

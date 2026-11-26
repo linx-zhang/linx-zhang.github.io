@@ -52,7 +52,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki-files/<slug>.html`（放在 SPA 路由之外，避免 Pages 的 `.html` 兜底抢走 `/wiki/<slug>`），站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
 - **GitHub 风格排版**：`github-markdown-css` + `react-markdown` + `prism-one-light`
 - **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
-- **工具箱**：`/tools` 八张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）、万年历（农历 / 节气 / 放假调休，可跳到空间看当天待办）、MBTI 精简版 + 星座速查（12 组二选一，四维结果，八个倾向用分段控件，点开看说明和场景；生日用数字下拉，选项只显示 1–12 / 1–31，点底部星座卡也能看详情）
+- **工具箱**：`/tools` 八张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）、万年历（农历 / 节气 / 放假调休，可跳到空间看当天待办）、MBTI 精简版 + 星座速查（12 组二选一，四维结果，四个维度按钮，点开左右对照说明与场景；生日用数字下拉，选项只显示 1–12 / 1–31，点底部星座卡也能看详情）
 - **GitHub Pages 部署**：`.github/workflows/build.yml` 在 push `main` 时 lint + test + build，用 `upload-pages-artifact` / `deploy-pages` 发布 `docs/`，产物不入库；`public/404.html` 兜底 SPA 深链刷新
 
 ---
@@ -191,7 +191,7 @@ npm run test
 | `clip` | 共享剪切板：贴日志生成免登录短链 | 后端 `/clips` + D1 cache |
 | `hash` | 文件哈希：拖放 / 点选文件，MD5・SHA-1・SHA-256・SHA-512 多选 | 本地（`hash-wasm`，8MB 分块，WASM 按需 `import()`） |
 | `calendar` | 万年历：月视图带农历、节气、节日与放假 / 调休角标 | 本地（`lunar-javascript`，按天缓存） |
-| `mbti` | MBTI 精简版：12 组二选一，E/I・S/N・T/F・J/P 四维结果，八个倾向用分段控件，点开看说明与场景；星座速查：生日用纯数字下拉（1–12 月 / 1–31 日），按公历查太阳星座，点底部星座卡看详情 | 本地（纯数据 + 评分函数） |
+| `mbti` | MBTI 精简版：12 组二选一，E/I・S/N・T/F・J/P 四维结果，四个维度按钮，点开左右对照说明与场景；星座速查：生日用纯数字下拉（1–12 月 / 1–31 日），按公历查太阳星座，点底部星座卡看详情 | 本地（纯数据 + 评分函数） |
 
 ### 共享剪切板的接口约定
 
