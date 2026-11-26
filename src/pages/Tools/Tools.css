@@ -32,7 +32,7 @@
 .tools-grid {
   display: grid;
   /* 4 列：容器 928px 下每格 224px，提示文案正好一行；6 列会压到 145px 把文案挤成三行。
-     固定列数而不是 auto-fit，避免窄一点就多算一列。7 个工具时排 4+3。 */
+     固定列数而不是 auto-fit，避免窄一点就多算一列。8 个工具时排 4+4。 */
   grid-template-columns: repeat(4, 1fr);
   gap: 0.7rem;
   margin-top: 1.4rem;

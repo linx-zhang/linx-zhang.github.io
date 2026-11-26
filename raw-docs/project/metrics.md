@@ -29,7 +29,7 @@ pin: 4
 
 | 目录 | 行数 | 占比 | 内容 |
 | --- | --- | --- | --- |
-| `pages` | 15709 | 63.9% | 九个页面 + 后台五个分区 + 七个工具 |
+| `pages` | 15709 | 63.9% | 九个页面 + 后台五个分区 + 八个工具 |
 | `components` | 4753 | 19.3% | 自研组件（组件目录与样式文件各算一份） |
 | `api` | 1135 | 4.6% | 模块 + 请求层单测：client / auth / blog / admin / memos / consumables / clips / resumes / errors |
 | `utils` | 1056 | 4.3% | 日历、农历、剪贴板、文档索引、格式化、Markdown 编辑、简历净化 |
@@ -119,7 +119,7 @@ pin: 4
 
 | 文件 | 行数 | 性质 |
 | --- | --- | --- |
-| `pages/Tools/Tools.css` | 1298 | 工具箱列表 + 七个工具页 |
+| `pages/Tools/Tools.css` | 1298 | 工具箱列表 + 八个工具页 |
 | `pages/Admin/Admin.css` | 1205 | 后台五分区共用样式 |
 | `api/models.py` | 787 | 全资源请求 / 响应模型 |
 | `pages/Space/SpaceMemos.tsx` | 630 | 列表 / 月历共用取数 + 输入区 + 就地编辑 |

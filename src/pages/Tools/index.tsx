@@ -10,6 +10,7 @@ const RandomTool = lazy(() => import('./RandomTool'))
 const ClipTool = lazy(() => import('./ClipTool'))
 const HashTool = lazy(() => import('./HashTool'))
 const CalendarTool = lazy(() => import('./CalendarTool'))
+const PersonalityTool = lazy(() => import('./PersonalityTool'))
 
 interface ToolMeta {
   slug: string
@@ -98,6 +99,19 @@ const TOOLS: ToolMeta[] = [
         <path d="M5.8 10.4h12.4" />
         <path d="M9.2 4.8v2.6M14.8 4.8v2.6" />
         <path d="M9 13.6h2.4M12.9 13.6h2.2" />
+      </ToolIcon>
+    ),
+  },
+  {
+    slug: 'mbti',
+    label: 'MBTI · 星座',
+    Component: PersonalityTool,
+    hint: '12 题 · 四维 · 生日查星座',
+    detail: '12 组二选一看清 E/I、S/N、T/F、J/P 四组倾向；也可以按公历生日查太阳星座和常见印象。',
+    icon: (
+      <ToolIcon>
+        <circle cx="12" cy="12" r="6.8" />
+        <path d="M12 6.8l1.5 3.7 3.7 1.5-3.7 1.5-1.5 3.7-1.5-3.7-3.7-1.5 3.7-1.5z" />
       </ToolIcon>
     ),
   },

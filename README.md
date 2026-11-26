@@ -13,7 +13,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
   - /blog/:id : PostDetail 文章详情与评论
   - /admin : 管理后台，RequirePermission 的 `anyOf={ADMIN_AREA_PERMISSIONS}`（post:update:any / post:delete:any / user:read:any / activity:read:any / invite_code:read:any / resume:manage:any 任一即可进入，分区各自再校验）；tab 条通过 ?tab=users|posts|resumes|activity|analytics 深链（默认 users），邀请码是独立分区 ?tab=invites，不占 tab 条，入口在用户页标题行
   - /space/memos : 个人空间·备忘录（列表 / 日历 ?view=calendar）；/space/consumables : 个人空间·消耗品；/space 为板块根，默认落备忘录；未登录只显示页内登录门
-  - /tools : 工具箱入口（7 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip / hash / calendar）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
+  - /tools : 工具箱入口（8 张卡片）；/tools/:slug : 单个工具整页（json / sql / timestamp / random / clip / hash / calendar / mbti）；/tools/clip/:code : 共享剪切板阅读页（免登录，:code 为 32 位 uuid4 hex）
   - /profile : 独立简历页（不套 RootLayout，A4 打印优化），默认简历从后端取，无默认时回退内置模板
   - /r/:code : 简历限时分享短链，同一页面渲染，code 过期 / 撤销 / 简历删除后提示失效
 - Auth: 登录/注册成功后 token 存 localStorage（blog_access_token）；AuthProvider 启动时拉 GET /auth/me 获取 user + permissions，并监听 window 的 auth:unauthorized 事件清理登录态。request() 只在 401 时清 token 并广播该事件（403 是「没有这个权限」的业务结果，不清登录态）；登录/注册这类端点传 `skipAuthReset: true`，避免「凭据错」被当成 token 失效把登录框关掉。- Permission codes（后端下发、前端只消费）: account:read:self / account:update:self、post:create|update:own|update:any|delete:own|delete:any、comment:create|delete:own|delete:any、invite_code:read:any|create:any|delete:any、user:read:any|update:any|delete:any|reset_password:any、activity:read:any|write:self、clip:delete:own|delete:any、resume:manage:any。
@@ -23,9 +23,9 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - Activity tracking: src/activity/useActivityTracker.ts 在登录后上报 page_view（路由变化）、heartbeat（可见时每 60 秒）、page_leave（visibilitychange/pagehide，带 duration_ms，且每个隐藏周期只发一次）。page_leave 用 fetch(..., { keepalive: true }) 携带 Authorization: Bearer，不用 sendBeacon（无法附加请求头）；事件内存队列批量提交，失败静默丢弃。
 - Space memos: src/api/memos.ts 调 /memos（GET 列表 / GET /memos/summary 计数 / POST / PATCH / DELETE），全部 self-scoped，owner 由 token 决定。`due_at` 存 **UTC 时刻** `YYYY-MM-DD HH:MM:SS`（前端把「本地那一天的 23:59:59」换算成 UTC 再上送，后端只做字符串比较），列表里标红「今天到期 / 已过期」，不发提醒；勾选完成写入 `done_at`，取消勾选后端清空它；删除是软删除（`deleted_at`）。列表顺序与后端一致：有到期日的按 `due_at` 升序（逾期的自然排最前），没有到期日的排后面、按创建时间倒序；「已完成」分段改按 `done_at` 倒序。列表按 offset 累加「加载更多」，计数单独走 summary 接口（含 `undated`），列表本身不带 total。正文超过 4 行默认折叠，展开/收起放在底部信息行右侧（灰色小字 + 小箭头，`aria-label` 仍保留），短正文不出现该控件。月历只按当前可见网格取 `due_from`/`due_to` 窗口的到期条目，未排到期日另取一页预览，不再为了画一个月把全部备忘录拉回来。
 - Space consumables: src/api/consumables.ts 调 `/api/consumables`（GET 全量列表 / POST 新建并开第一轮 / PATCH / DELETE / GET cycles / POST cycles / POST finish / PATCH cycle）。口径是**周期为主**：一次「开封→用完」一行，日常只点一次「用完了」，再选「先不买」或「继续记」；下一轮预计天数取最近至多两轮实测均值。`started_on` / `ended_on` / `due_on` 是**本地日** `YYYY-MM-DD`，请求带 `today=本地日期`，服务端按它现算状态、剩余天数与进度；`quantity` / `unit` 只展示不参与计算。整张卡可点击进入详情，卡内按钮（用完了 / 补货 / 详情）不被卡片点击劫持；两个板块共用页头日期·星期·农历，分别走 `/space/memos` 与 `/space/consumables`。
-- Tools: src/pages/Tools/index.tsx 是一张注册表（slug / 图标 / 标题 / 副标题 / hooks 自带的 Component），新增工具只需加一条 + 一条路由。JSON / SQL / 时间戳 / UUID+密码 / 文件哈希 / 万年历这七个工具纯本地计算（哈希走 `hash-wasm`，8MB 分块读完再算，WASM 直到真的开始算才 `import()`；万年历走 `lunar-javascript`，农历、节气、节日与法定放假/调休都按天缓存，页头与工具页共用 src/utils/lunar.ts）；共享剪切板走后端 src/api/clips.ts（POST /clips 生成 32 位 uuid4 短链、GET /clips/:code 免登录读、DELETE /clips/:code 撤销），内容存 D1 的 cache_entries（`clip:` 前缀、24h TTL），GET 有每 ip 60 次/分 + 每 code 120 次/分的独立预算（429 rate_limited）。复制反馈统一走 src/hooks/useCopy（工具按钮）与 src/utils/clipboard（Markdown 代码块、后台复制），不再各自写 navigator.clipboard。
+- Tools: src/pages/Tools/index.tsx 是一张注册表（slug / 图标 / 标题 / 副标题 / hooks 自带的 Component），新增工具只需加一条 + 一条路由。JSON / SQL / 时间戳 / UUID+密码 / 文件哈希 / 万年历 / MBTI+星座这八个工具纯本地计算（哈希走 `hash-wasm`，8MB 分块读完再算，WASM 直到真的开始算才 `import()`；万年历走 `lunar-javascript`，农历、节气、节日与法定放假/调休都按天缓存，页头与工具页共用 src/utils/lunar.ts）；共享剪切板走后端 src/api/clips.ts（POST /clips 生成 32 位 uuid4 短链、GET /clips/:code 免登录读、DELETE /clips/:code 撤销），内容存 D1 的 cache_entries（`clip:` 前缀、24h TTL），GET 有每 ip 60 次/分 + 每 code 120 次/分的独立预算（429 rate_limited）。复制反馈统一走 src/hooks/useCopy（工具按钮）与 src/utils/clipboard（Markdown 代码块、后台复制），不再各自写 navigator.clipboard。
 - 放假与调休（万年历）：`lunar-javascript` 的 `HolidayUtil` 内置国务院放假安排，数据在库里、不联网、不调 API；本站用它画格子角标（`休` / `班`）和详情卡那行「休假 · 国庆节（10 月 1 日 – 10 月 7 日，共 7 天）」。库目前覆盖 **2001–2027**，更远的年份 `getHoliday` 返回 null，页面按「没有安排」静默处理（不会报错、也不会瞎标）。国务院每年 11–12 月公布次年安排，届时 `npm update lunar-javascript` 升版本即可，不用改代码。
-- Bundle: 分包做在「重依赖」上，而不是按页面铺开。页面级只懒加载三个把 react-markdown / Prism / rehype 带进来的页面（Docs / Blog / PostDetail）；工具箱的七个工具组件各自 `lazy()`（JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool / CalendarTool），写作面板里的 MarkdownView 也是懒加载。Home、DocsHome、Space、Admin、Tools 入口、Profile 仍在主包（`docs/assets/index-*.js`），切常用页不闪占位。
+- Bundle: 分包做在「重依赖」上，而不是按页面铺开。页面级只懒加载三个把 react-markdown / Prism / rehype 带进来的页面（Docs / Blog / PostDetail）；工具箱的八个工具组件各自 `lazy()`（JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool / CalendarTool / PersonalityTool），写作面板里的 MarkdownView 也是懒加载。Home、DocsHome、Space、Admin、Tools 入口、Profile 仍在主包（`docs/assets/index-*.js`），切常用页不闪占位。
 - Styling & UX: 极简低饱和配色（#1f2937 正文、#4b5563 次要文字、#e5e7eb 边框），PC 优先响应式；组件样式就近放在同名 *.css，由组件内 import。
 - Print Rule: 所有非打印 UI 加 className="no-print"，@media print 隐藏；简历页使用 A4 版式。
 - Resume: 后台 `?tab=resumes` 管理多份 HTML 简历（标题 / 备注 / 正文），默认简历供 `/profile`，分享按 1 小时 / 24 小时 / 7 天 / 30 天签发 12 位短码（`/r/<code>`）。正文入库保留原文，渲染前统一过 `src/utils/resumeHtml.ts` 白名单（标签、类名、`href` 协议），后台编辑器预览与阅读页同一套净化。
@@ -52,7 +52,7 @@ You are a senior full-stack/frontend engineer maintaining this repository.
 - **静态文档知识库**：构建期只把 `raw-docs` 的 md 复制成 `/wiki/<slug>.md`、html 产成 `/wiki-files/<slug>.html`（放在 SPA 路由之外，避免 Pages 的 `.html` 兜底抢走 `/wiki/<slug>`），站内列表读 `index.json`；md 运行时渲染、可一键全屏阅读，html 用 iframe 直连或独立页打开
 - **GitHub 风格排版**：`github-markdown-css` + `react-markdown` + `prism-one-light`
 - **专业简历导出**：`react-to-print` 一键导出 PDF，A4 打印样式与 `no-print` 隐藏规则
-- **工具箱**：`/tools` 七张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）、万年历（农历 / 节气 / 放假调休，可跳到空间看当天待办）
+- **工具箱**：`/tools` 八张入口卡，点进去是整页工具——JSON 格式化（树形折叠 / 文本）、SQL 格式化和高亮、时间戳换算、UUID（v4/v7）+ 密码生成、共享剪切板（24 小时免登录短链）、文件哈希（MD5 / SHA-1 / SHA-256 / SHA-512，拖放即算）、万年历（农历 / 节气 / 放假调休，可跳到空间看当天待办）、MBTI 精简版 + 星座速查（12 组二选一，四维结果；按公历生日查太阳星座）
 - **GitHub Pages 部署**：`.github/workflows/build.yml` 在 push `main` 时 lint + test + build，用 `upload-pages-artifact` / `deploy-pages` 发布 `docs/`，产物不入库；`public/404.html` 兜底 SPA 深链刷新
 
 ---
@@ -85,7 +85,7 @@ npm run preview
 # 运行 oxlint
 npm run lint
 
-# 跑单元测试（vitest，23 个文件 170 例）
+# 跑单元测试（vitest，24 个文件 203 例）
 npm run test
 ```
 
@@ -180,7 +180,7 @@ npm run test
 
 ## 🧰 工具箱
 
-`/tools` 是入口页（七张图标卡，容器 928px 下按 4 列排），点任意一张进入独占整页的工具；`/tools/<slug>` 与 `/tools/clip/<code>` 共用同一个 `Tools` 组件，靠 `slug` / `code` 分派。
+`/tools` 是入口页（八张图标卡，容器 928px 下按 4 列排），点任意一张进入独占整页的工具；`/tools/<slug>` 与 `/tools/clip/<code>` 共用同一个 `Tools` 组件，靠 `slug` / `code` 分派。
 
 | slug | 工具 | 数据来源 |
 | --- | --- | --- |
@@ -191,6 +191,7 @@ npm run test
 | `clip` | 共享剪切板：贴日志生成免登录短链 | 后端 `/clips` + D1 cache |
 | `hash` | 文件哈希：拖放 / 点选文件，MD5・SHA-1・SHA-256・SHA-512 多选 | 本地（`hash-wasm`，8MB 分块，WASM 按需 `import()`） |
 | `calendar` | 万年历：月视图带农历、节气、节日与放假 / 调休角标 | 本地（`lunar-javascript`，按天缓存） |
+| `mbti` | MBTI 精简版：12 组二选一，E/I・S/N・T/F・J/P 四维结果；星座速查：按公历生日查太阳星座 | 本地（纯数据 + 评分函数） |
 
 ### 共享剪切板的接口约定
 
@@ -248,7 +249,7 @@ linx-zhang.github.io/
 │  │  ├─ Blog/              # 列表 + 写作面板、详情 + 评论
 │  │  ├─ Admin/             # 管理后台（PostsTab / InvitesTab / UsersTab / UserEditDialog / ResetPasswordDialog / ResumesTab / ResumeEditor / ShareDialog / ActivityTab / AnalyticsTab）
 │  │  ├─ Space/             # 个人空间（备忘录 / 待办 + 自绘日历 + 消耗品周期看板）
-│  │  ├─ Tools/             # 工具箱：index.tsx 注册表 + JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool / CalendarTool
+│  │  ├─ Tools/             # 工具箱：index.tsx 注册表 + JsonTool / SqlTool / TimestampTool / RandomTool / ClipTool / HashTool / CalendarTool / PersonalityTool
 │  │  └─ Profile/           # 独立简历页（PDF 导出；默认简历取 API，无默认回退模板）
 │  ├─ hooks/
 │  │  ├─ useCopy.ts         # 复制按钮统一反馈（copiedKey 区分同屏多个按钮）
