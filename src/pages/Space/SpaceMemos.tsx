@@ -88,6 +88,7 @@ export async function loadCalendarMemos(range: CalendarRange): Promise<Memo[]> {
 const MEMO_COLLAPSE_LINES = 4
 // 量不到 scrollHeight 时的兜底（测试环境 / 首帧）；正常宽度由实际溢出决定
 const MEMO_COLLAPSE_FALLBACK_CHARS = 110
+const MEMO_COLLAPSE_LINE_HEIGHT_FALLBACK = 23.6
 
 function MemoText({
   body,
@@ -101,12 +102,52 @@ function MemoText({
   const [expanded, setExpanded] = useState(false)
   const [overflowing, setOverflowing] = useState(false)
   const textRef = useRef<HTMLButtonElement>(null)
+  const measuredWidthRef = useRef(0)
+  const clampedRef = useRef(false)
 
-  useLayoutEffect(() => {
+  /**
+   * 先临时摘掉 line-clamp 再量完整内容高度：截断后的 scrollHeight 在窄屏或部分
+   * 手机浏览器里不可靠；量完立刻恢复 class，不会闪一帧。
+   */
+  const measureOverflow = useCallback(() => {
     const node = textRef.current
     if (!node) return
-    setOverflowing(node.scrollHeight > node.clientHeight + 1)
-  }, [body, expanded])
+    const clamped = clampedRef.current
+    if (clamped) node.classList.remove('is-clamped')
+    const style = window.getComputedStyle(node)
+    const fontSize = parseFloat(style.fontSize)
+    const lineHeight = parseFloat(style.lineHeight)
+    const lineHeightPx =
+      Number.isFinite(lineHeight) && lineHeight > 0
+        ? lineHeight
+        : Number.isFinite(fontSize) && fontSize > 0
+          ? fontSize * 1.55
+          : MEMO_COLLAPSE_LINE_HEIGHT_FALLBACK
+    const maxHeight = lineHeightPx * MEMO_COLLAPSE_LINES
+    const next = node.scrollHeight > maxHeight + 1
+    if (clamped) node.classList.add('is-clamped')
+    measuredWidthRef.current = node.clientWidth
+    setOverflowing(next)
+  }, [])
+
+  useLayoutEffect(() => {
+    clampedRef.current = !expanded
+    measureOverflow()
+  }, [body, expanded, measureOverflow])
+
+  // 窗口/容器变窄后行数会变多，必须重新判断是否还装得下四行
+  useEffect(() => {
+    const node = textRef.current
+    if (!node || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? node.clientWidth
+      if (Math.abs(width - measuredWidthRef.current) < 1) return
+      measuredWidthRef.current = width
+      measureOverflow()
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [measureOverflow])
 
   const longByText =
     body.length > MEMO_COLLAPSE_FALLBACK_CHARS ||
