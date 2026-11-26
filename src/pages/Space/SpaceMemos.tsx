@@ -541,11 +541,7 @@ export default function SpaceMemos({ userId, view, initialDay }: Props) {
                   >
                     收起
                   </button>
-                  {composeError ? (
-                    <p className="space-error">{composeError}</p>
-                  ) : (
-                    <p className="space-hint">Ctrl / ⌘ + Enter 保存</p>
-                  )}
+                  {composeError && <p className="space-error">{composeError}</p>}
                 </div>
               </>
             )}

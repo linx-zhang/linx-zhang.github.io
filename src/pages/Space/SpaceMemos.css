@@ -343,7 +343,6 @@
   margin-top: 0.35rem;
 }
 
-.space-dock-foot .space-hint,
 .space-dock-foot .space-error {
   margin-top: 0;
 }
@@ -487,7 +486,6 @@
     padding: 0.65rem 0.75rem;
   }
 
-  .space-hint,
   .space-error {
     text-align: right;
   }
