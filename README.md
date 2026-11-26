@@ -384,8 +384,8 @@ LLM 的上下文会被压缩/丢弃，写进对话的结论等于没写。下面
 
 GitHub Pages 为纯静态托管，直接访问或刷新 `/wiki/xxx`、`/blog/xxx`、`/admin`、`/profile` 会命中 404 页面。项目通过 `public/404.html` 自动恢复：
 
-1. `404.html` 仅在路径属于已知深链时，把 `pathname + search + hash` 写入 `sessionStorage`，随后 `location.replace('/')`
-2. 入口 `src/main.tsx` 在 `BrowserRouter` 初始化之前读取并清除该值，用 `history.replaceState` 把地址栏恢复为原始路径
+1. `404.html` 仅在路径属于已知深链时，把 `pathname + search + hash` 写入 `sessionStorage`，随后 `location.replace('/?v=' + Date.now())`。带时间戳是为了绕开 GitHub Pages 对 `index.html` 的缓存，避免发布后手机/浏览器仍加载旧资源
+2. 入口 `src/main.tsx` 在 `BrowserRouter` 初始化之前读取并清除该值，用 `history.replaceState` 把地址栏恢复为原始路径（时间戳查询参数随之丢掉）
 3. React Router 随后正常命中目标路由，用户不会停在 404 或白屏
 
 - 通过站内链接正常跳转时不会触发 404.html

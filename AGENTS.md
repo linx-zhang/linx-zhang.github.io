@@ -116,6 +116,7 @@ node scripts/check-contract.mjs --api "D:\this_code\cloudflare-workers\api-worke
 - **迁移无 dry-run**：`tests/test_migrations.py` 只查文件名、编号连续和文件非空；没有"部署前确认迁移已应用"的检查，先 deploy 后迁移不会报错，只会行为不对。
 - **契约检查只覆盖前端一侧**：后端单独改 `models.py` 时，后端 CI 不跑 `check-contract.mjs`，要等下次前端 push 才暴露。
 - **部署后冒烟是手敲的**，没脚本化。
+- **Pages 的 `index.html` 有缓存**：`public/404.html` 回根路径必须带 `?v=Date.now()`；改回 `location.replace('/')` 会让手机深链刷新继续加载旧资源，表现为“发布没生效”。
 
 ## 7. 已验证的边界（别重复踩）
 

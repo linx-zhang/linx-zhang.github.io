@@ -22,7 +22,9 @@
           }
         }
 
-        window.location.replace('/')
+        // 带时间戳回根路径，避开 GitHub Pages 对 index.html 的缓存；
+        // 否则新版本发布后，深链刷新仍会加载上一次的旧资源
+        window.location.replace('/?v=' + Date.now())
       })()
     </script>
   </head>
