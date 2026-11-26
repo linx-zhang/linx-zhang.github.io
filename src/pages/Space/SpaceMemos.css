@@ -125,28 +125,35 @@
   overflow: hidden;
 }
 
-/* 展开条：铺满正文宽度，只留一枚宽扁箭头；收起时转 180° */
+/* 展开条放进底部信息行，贴着正文和日期，不单独占一块 */
 .space-memo-toggle {
-  display: flex;
+  display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 24px;
-  margin: 0.28rem 0 0;
-  padding: 0.3rem 0 0.12rem;
+  gap: 0.22rem;
+  margin: 0;
+  padding: 0.1rem 0;
   border: none;
   background: none;
-  color: #6b7280;
+  color: #9ca3af;
+  font: inherit;
+  font-size: 0.74rem;
   cursor: pointer;
 }
 
 .space-memo-toggle:hover {
-  color: #1f2937;
+  color: #4b5563;
+}
+
+.space-memo-toggle:focus-visible {
+  outline: 2px solid #cbd5e1;
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 .space-memo-toggle svg {
-  width: 38px;
-  height: 13px;
+  width: 14px;
+  height: 7px;
   flex: 0 0 auto;
   transition: transform 0.18s ease;
 }
@@ -204,12 +211,20 @@
   margin-left: auto;
 }
 
+.space-memo-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
 .space-memo-meta {
   display: flex;
+  flex: 1;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.3rem;
+  min-width: 0;
   color: #9ca3af;
   font-size: 0.76rem;
 }

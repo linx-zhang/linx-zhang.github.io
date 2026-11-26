@@ -173,6 +173,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #fff;
+  cursor: pointer;
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -181,8 +182,8 @@
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
 }
 
-.space-item:not(.is-open) {
-  cursor: pointer;
+.space-item-detail {
+  cursor: default;
 }
 
 .space-item.is-due {

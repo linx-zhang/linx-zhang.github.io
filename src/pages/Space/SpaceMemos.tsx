@@ -124,21 +124,24 @@ function MemoText({
       >
         {body}
       </button>
-      {showToggle && (
-        <button
-          type="button"
-          className="space-memo-toggle"
-          aria-label={expanded ? '收起' : '展开全文'}
-          aria-expanded={expanded}
-          title={expanded ? '收起' : '展开全文'}
-          onClick={() => setExpanded((value) => !value)}
-        >
-          <svg viewBox="0 0 30 10" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-            <path d="M3 2.5 15 7.5 27 2.5" />
-          </svg>
-        </button>
-      )}
-      <span className="space-memo-meta">{children}</span>
+      <div className="space-memo-foot">
+        <span className="space-memo-meta">{children}</span>
+        {showToggle && (
+          <button
+            type="button"
+            className="space-memo-toggle"
+            aria-label={expanded ? '收起' : '展开全文'}
+            aria-expanded={expanded}
+            title={expanded ? '收起' : '展开全文'}
+            onClick={() => setExpanded((value) => !value)}
+          >
+            <span>{expanded ? '收起' : '展开全文'}</span>
+            <svg viewBox="0 0 16 8" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+              <path d="M2 2.5 8 6 14 2.5" />
+            </svg>
+          </button>
+        )}
+      </div>
     </div>
   )
 }

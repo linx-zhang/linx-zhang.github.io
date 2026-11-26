@@ -191,14 +191,20 @@ describe('SpaceConsumables', () => {
     expect(screen.queryByText('周期历史')).toBeNull()
   })
 
-  it('点卡片进入详情，卡片内的操作按钮不会顺手把详情再切走', async () => {
+  it('点卡片展开详情，再点一次收起，卡片内的操作按钮不会误触', async () => {
     api.list.mockResolvedValue({ items: [item({})] })
     render(<SpaceConsumables />)
 
-    fireEvent.click(await screen.findByText('厨房纸巾'))
+    const title = await screen.findByText('厨房纸巾')
+    fireEvent.click(title)
     expect(await screen.findByText('还没有完整的周期。')).toBeTruthy()
     expect(screen.getByText('周期历史')).toBeTruthy()
 
+    fireEvent.click(title)
+    await waitFor(() => expect(screen.queryByText('周期历史')).toBeNull())
+
+    fireEvent.click(title)
+    expect(await screen.findByText('周期历史')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: '用完了' }))
     expect(screen.getByText(/这一轮用了/)).toBeTruthy()
     expect(screen.getByText('周期历史')).toBeTruthy()

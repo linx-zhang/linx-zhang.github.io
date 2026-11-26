@@ -34,9 +34,9 @@ export default function ConsumableCard({
 
   /** 点卡片空白处进入详情；卡片里的按钮、展开后的表单保持各自行为 */
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
-    if (expanded || finishing) return
+    if (finishing) return
     const target = event.target as HTMLElement
-    if (target.closest('button, input, textarea, select, a')) return
+    if (target.closest('button, input, textarea, select, a, .space-item-detail')) return
     onToggleDetail()
   }
 
