@@ -8,6 +8,7 @@
 .tools-page.is-tool {
   max-width: 1360px;
   width: 100%;
+  box-sizing: border-box;
   padding: 1.4rem 1.6rem 1.6rem;
 }
 
@@ -30,18 +31,22 @@
 
 /* 入口：中等大小的图标 + 名字，一屏放得下，别挤成一排小链接 */
 .tools-grid {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   /* 4 列：容器 928px 下每格 224px，提示文案正好一行；6 列会压到 145px 把文案挤成三行。
-     固定列数而不是 auto-fit，避免窄一点就多算一列。8 个工具时排 4+4。 */
-  grid-template-columns: repeat(4, 1fr);
+     固定列数而不是 auto-fit，避免窄一点就多算一列。最后一行不够 4 个时保持左侧起始位置，
+     不居中、不重排。 */
   gap: 0.7rem;
   margin-top: 1.4rem;
 }
 
 .tool-tile {
   display: flex;
+  flex: 0 0 calc((100% - 2.1rem) / 4);
   flex-direction: column;
   align-items: flex-start;
+  box-sizing: border-box;
   /* 分两段：图标钉在顶部，说明文字往下排。
      这里绝不能 center：说明文字换行变高后整块内容会被垂直居中，
      图标就被往上顶，一行说明和两行说明的卡片图标高度就不齐了。 */
@@ -409,12 +414,9 @@ a.tool-button {
     padding: 1.4rem 1rem 2.5rem;
   }
 
-  .tools-grid {
-    grid-template-columns: 1fr;
-  }
-
   .tool-tile {
     flex-direction: row;
+    flex-basis: 100%;
     align-items: center;
     justify-content: flex-start;
     gap: 0.9rem;
@@ -447,8 +449,8 @@ a.tool-button {
 
 /* 中等宽度放三列：五个入口排成 3 + 2，最后一行不会孤零零剩一个 */
 @media (min-width: 721px) and (max-width: 1000px) {
-  .tools-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .tool-tile {
+    flex-basis: calc((100% - 1.4rem) / 3);
   }
 }
 
@@ -462,31 +464,64 @@ a.tool-button {
   justify-content: flex-end;
 }
 
-/* 文本 / 树形切换：两个小胶囊拼在一起，不抢眼但看得懂 */
+/* 视图切换：统一用分段按钮，激活项深色，避免浅灰底看不清 */
 .tool-seg {
   display: inline-flex;
+  gap: 4px;
+  padding: 4px;
   border: 1px solid #e5e7eb;
-  border-radius: 7px;
-  overflow: hidden;
+  border-radius: 10px;
+  background: #f7f8fa;
+}
+
+.tool-seg.is-wide {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  max-width: 26rem;
 }
 
 .tool-seg-item {
   padding: 0.22rem 0.55rem;
   border: none;
+  border-radius: 7px;
   background: #fff;
   color: #6b7280;
   font: inherit;
   font-size: 0.72rem;
   cursor: pointer;
-}
-
-.tool-seg-item + .tool-seg-item {
-  border-left: 1px solid #f3f4f6;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
 }
 
 .tool-seg-item.is-active {
   background: #f3f4f6;
   color: #1f2937;
+}
+
+.tool-seg > .tool-seg-item {
+  padding: 0.52rem 1rem;
+  background: transparent;
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.tool-seg > .tool-seg-item:hover {
+  background: rgb(31 41 55 / 6%);
+  color: #1f2937;
+}
+
+.tool-seg > .tool-seg-item.is-active,
+.tool-seg > .tool-seg-item.is-active:hover {
+  background: #1f2937;
+  color: #fff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 10%);
+}
+
+.tool-seg > .tool-seg-item:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
 }
 
 /* 高亮输出：跟 textarea 同样的高度和留白，切换视图时不跳 */

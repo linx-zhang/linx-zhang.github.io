@@ -1,0 +1,148 @@
+/* ===== 文本 Diff ===== */
+
+.diff-file-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.diff-file-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  background: #fafafa;
+  color: #6b7280;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.diff-file-box:hover,
+.diff-file-box.is-over {
+  border-color: #9ca3af;
+  background: #f3f4f6;
+}
+
+.diff-file-title {
+  color: #1f2937;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.diff-file-hint {
+  min-width: 0;
+  overflow: hidden;
+  color: #9ca3af;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diff-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+.diff-editor {
+  min-height: 220px;
+  resize: vertical;
+}
+
+.diff-result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.diff-result-head > div {
+  min-width: 0;
+}
+
+.diff-view {
+  max-height: 520px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.diff-row {
+  display: grid;
+  grid-template-columns: 3.2rem 3.2rem 1.4rem minmax(0, 1fr);
+  align-items: baseline;
+  min-width: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 21px;
+}
+
+.diff-row + .diff-row {
+  border-top: 1px solid #f5f6f7;
+}
+
+.diff-line-no {
+  padding: 0.15rem 0.45rem;
+  color: #b6bcc6;
+  text-align: right;
+  user-select: none;
+}
+
+.diff-sign {
+  padding: 0.15rem 0;
+  color: #9ca3af;
+  text-align: center;
+  user-select: none;
+}
+
+.diff-text {
+  min-width: 0;
+  padding: 0.15rem 0.65rem 0.15rem 0;
+  color: #1f2937;
+  white-space: pre;
+}
+
+.diff-row.diff-add {
+  background: #f0fdf4;
+}
+
+.diff-row.diff-add .diff-sign {
+  color: #15803d;
+}
+
+.diff-row.diff-del {
+  background: #fef2f2;
+}
+
+.diff-row.diff-del .diff-sign {
+  color: #b91c1c;
+}
+
+.diff-row.diff-equal .diff-text {
+  color: #6b7280;
+}
+
+@media (max-width: 900px) {
+  .diff-file-grid,
+  .diff-editor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .diff-row {
+    grid-template-columns: 2.2rem 2.2rem 1.2rem minmax(0, 1fr);
+  }
+
+  .diff-view {
+    font-size: 12px;
+  }
+}

@@ -1,0 +1,254 @@
+/* ===== 图片压缩 ===== */
+
+.image-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 172px;
+  padding: 1.2rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  background: #fbfbfc;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.image-drop:hover,
+.image-drop.is-over {
+  border-color: #93c5fd;
+  background: #f8fbff;
+}
+
+.image-drop-title {
+  color: #1f2937;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.image-drop-hint {
+  color: #9ca3af;
+  font-size: 0.74rem;
+}
+
+.image-file-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.image-file-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.image-file-meta strong {
+  overflow: hidden;
+  color: #1f2937;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-file-meta span {
+  color: #9ca3af;
+  font-size: 0.74rem;
+}
+
+.image-file-actions {
+  display: flex;
+  flex: none;
+  gap: 0.4rem;
+}
+
+.image-controls {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1.3fr;
+  gap: 0.75rem 1rem;
+  align-items: end;
+}
+
+.image-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  color: #6b7280;
+  font-size: 0.78rem;
+}
+
+.image-control > .tool-select {
+  width: 100%;
+}
+
+.image-control.is-muted {
+  opacity: 0.62;
+}
+
+.image-quality-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 36px;
+}
+
+.image-quality-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #1f2937;
+}
+
+.image-quality-row span {
+  flex: none;
+  width: 2.7rem;
+  color: #4b5563;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.image-result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.image-result-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.image-saved,
+.image-grew {
+  padding: 0.2rem 0.45rem;
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.image-saved {
+  background: #ecfdf3;
+  color: #047857;
+}
+
+.image-grew {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.image-preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.image-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.image-preview-card figcaption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+  color: #6b7280;
+  font-size: 0.76rem;
+}
+
+.image-preview-card figcaption span {
+  color: #9ca3af;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+}
+
+.image-canvas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  max-height: 340px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+}
+
+.image-canvas-checker {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #eceef1 25%, transparent 25%),
+    linear-gradient(-45deg, #eceef1 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #eceef1 75%),
+    linear-gradient(-45deg, transparent 75%, #eceef1 75%);
+  background-position:
+    0 0,
+    0 6px,
+    6px -6px,
+    -6px 0;
+  background-size: 12px 12px;
+}
+
+.image-canvas img {
+  display: block;
+  max-width: 100%;
+  max-height: 340px;
+  object-fit: contain;
+}
+
+.image-preview-placeholder {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+  .image-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .image-control:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .image-file-bar,
+  .image-result-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .image-controls,
+  .image-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .image-control:last-child {
+    grid-column: auto;
+  }
+
+  .image-result-actions {
+    flex-wrap: wrap;
+  }
+
+  .image-canvas {
+    min-height: 180px;
+    max-height: 280px;
+  }
+
+  .image-canvas img {
+    max-height: 280px;
+  }
+}

@@ -1,0 +1,135 @@
+/* ===== Cron 解析 / 生成 ===== */
+
+.cron-input {
+  flex: none;
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 16px;
+}
+
+.cron-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.cron-result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.cron-result-head > div {
+  min-width: 0;
+}
+
+.cron-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.cron-fields > div {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.cron-fields dt {
+  color: #9ca3af;
+  font-size: 0.76rem;
+}
+
+.cron-fields dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.cron-chip {
+  padding: 0.12rem 0.38rem;
+  border-radius: 5px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+}
+
+.cron-chip.is-all {
+  color: #9ca3af;
+}
+
+.cron-runs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cron-runs li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #f1f2f4;
+  border-radius: 7px;
+  background: #fbfbfc;
+}
+
+.cron-run-no {
+  flex: none;
+  width: 1.1rem;
+  color: #9ca3af;
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.cron-runs code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+}
+
+.cron-build-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.9rem;
+  align-items: center;
+}
+
+.cron-expression-view {
+  display: block;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fbfbfc;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .cron-result-head {
+    flex-direction: column;
+  }
+
+  .cron-fields > div {
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+  }
+
+  .cron-build-grid {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
